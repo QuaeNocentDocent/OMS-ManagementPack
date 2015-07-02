@@ -1,0 +1,177 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        
+        <!-- In this section, modify the attributes based on your needs. Ensure the
+             Base attribute matches the application you are modeling.
+             More information can be found in the Management Pack Development Kit: 
+             http://msdn.microsoft.com/en-us/library/ee533867.aspx -->
+        <ClassType ID="QND.OMS.ManagedSystem" Base="System!System.Device" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          
+          <!-- Inside this section, you can add and remove properties as needed.
+               More information can be found in the Management Pack Development Kit: 
+               http://msdn.microsoft.com/en-us/library/ee533714.aspx -->
+          <Property ID="Computer" Key="true" Type="string" />
+          <!-- <Property ID="Workspace" Key="true" Type="string" /> -->
+        </ClassType>
+      
+      </ClassTypes>
+      <RelationshipTypes>
+        <RelationshipType ID="QND.OMS.WorkspaceContainsSystem" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
+          <Source ID="Workspace" Type="QND.OMS.Workspace"/>
+          <Target ID="System" Type="QND.OMS.ManagedSystem"/>
+        </RelationshipType>
+      </RelationshipTypes>
+    </EntityTypes>
+  </TypeDefinitions>
+
+  <Monitoring>
+    <Discoveries>
+      <!--
+      <Discovery ID="QND.OMS.MAPSME.ManagedSystem.Discovery" Enabled="true" Target="QND.OMS.Monitoring.Pool" ConfirmDelivery="true" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="SC!Microsoft.SystemCenter.ManagementActionPointShouldManageEntity" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="SC!Microsoft.SystemCenter.GroupPopulator">
+          <RuleId>$MPElement$</RuleId>
+          <GroupInstanceId>$Target/Id$</GroupInstanceId>
+          <MembershipRules>
+            <MembershipRule>
+              <MonitoringClass>$MPElement[Name="QND.OMS.ManagedSystem"]$</MonitoringClass>
+              <RelationshipClass>$MPElement[Name="SC!Microsoft.SystemCenter.ManagementActionPointShouldManageEntity"]$</RelationshipClass>
+            </MembershipRule>
+          </MembershipRules>
+        </DataSource>
+      </Discovery> -->
+      <!--
+      <Discovery ID="QND.OMS.WorkspaceContainsSystem.Discovery" Enabled="false" Target="QND.OMS.Azure.Workspace" ConfirmDelivery="true" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="QND.OMS.WorkspaceContainsSystem" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="SC!Microsoft.SystemCenter.GroupPopulator">
+          <RuleId>$MPElement$</RuleId>
+          <GroupInstanceId>$Target/Id$</GroupInstanceId>
+          <MembershipRules>
+            <MembershipRule>
+              <MonitoringClass>$MPElement[Name="QND.OMS.ManagedSystem"]$</MonitoringClass>
+              <RelationshipClass>$MPElement[Name="QND.OMS.WorkspaceContainsSystem"]$</RelationshipClass>
+              <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <Property>$MPElement[Name="QND.OMS.ManagedSystem"]/Workspace$</Property>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value>$Target/Property[Type="QND.OMS.Workspace"]/Id$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+              </Expression>
+
+            </MembershipRule>
+          </MembershipRules>
+        </DataSource>
+      </Discovery>      -->
+      <Discovery ID="QND.OMS.ManagedSystem.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="QND.OMS.Workspace">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.Workspace" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.OMS.Entity.Discovery.DS">
+          <TraceLevel>2</TraceLevel>
+          <IntervalSeconds>14417</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TenantADName>$Target/Host/Property[Type="QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <SubscriptionId>$Target/Host/Property[Type="QND.OMS.Azure.Subscription"]/Id$</SubscriptionId>
+          <Workspace>$Target/Property[Type="QND.OMS.Workspace"]/Id$</Workspace>
+          <ResourceGroup>$Target/Property[Type="QND.OMS.Workspace"]/ResourceGroup$</ResourceGroup>
+          <AADUserName>$RunAs[Name="QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <Type>System</Type>
+          <LookbackHours>240</LookbackHours>          
+        </DataSource>
+      </Discovery>    
+    </Discoveries>
+    <Monitors>
+      <UnitMonitor ID="QND.OMS.ManagedSystemLastData.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.ManagedSystem" 
+                   ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.ManagedSystem.Communication.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Target/Property[Type="QND.OMS.ManagedSystem"]/Computer$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="AgeHours"]$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="Late" MonitorTypeStateID="Late" HealthState="Warning" />
+          <OperationalState ID="Obsolete" MonitorTypeStateID="Obsolete" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>3611</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <DelayLateHours>1</DelayLateHours>
+          <DelayObsoleteHours>24</DelayObsoleteHours>
+          <TenantADName>$Target/Host/Host/Property[Type="QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <SubscriptionId>$Target/Host/Host/Property[Type="QND.OMS.Azure.Subscription"]/Id$</SubscriptionId>
+          <Workspace>$Target/Host/Property[Type="QND.OMS.Workspace"]/Id$</Workspace>
+          <ResourceGroup>$Target/Host/Property[Type="QND.OMS.Workspace"]/ResourceGroup$</ResourceGroup>
+          <AADUserName>$RunAs[Name="QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <Computer>$Target/Property[Type="QND.OMS.ManagedSystem"]/Computer$</Computer>
+        </Configuration>
+      </UnitMonitor>
+    </Monitors>
+  </Monitoring>
+    <Presentation>
+    <StringResources>
+      <StringResource ID="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage"/>
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        
+        <!-- This is the string users of the Operations Console and Web Console will see. 
+             Descriptions are also helpful when the user is doing a search in the Console. -->
+        <DisplayString ElementID="QND.OMS.ManagedSystem">
+          <Name>QND - OMS Managed System</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.ManagedSystem" SubElementID="Computer">
+          <Name>Computer Name</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.WorkspaceContainsSystem">
+          <Name>QND -OMS Workspace contains managed systems</Name>
+        </DisplayString>
+        <!--
+        <DisplayString ElementID="QND.OMS.MAPSME.ManagedSystem.Discovery">
+          <Name>QND - Pool should manage System Discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.WorkspaceContainsSystem.Discovery">
+          <Name>QND - OMS workspace contains Managed System discovery</Name>
+        </DisplayString> -->
+        <DisplayString ElementID="QND.OMS.ManagedSystem.Discovery">
+          <Name>QND - OMS Managed System Discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.ManagedSystemLastData.Monitor">
+          <Name>Last Data Point</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage">
+          <Name> QND - OMS System Data obsolete</Name>
+          <Description>{0} data is obsolete. Last data point received {1} hours ago</Description>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

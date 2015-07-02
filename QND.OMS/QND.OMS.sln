@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS", "QND.OMS.mpproj", "{A5239F19-F154-4CD2-A3AD-679E8969286B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A5239F19-F154-4CD2-A3AD-679E8969286B}.Debug|x86.ActiveCfg = Debug|x86
+		{A5239F19-F154-4CD2-A3AD-679E8969286B}.Debug|x86.Build.0 = Debug|x86
+		{A5239F19-F154-4CD2-A3AD-679E8969286B}.Release|x86.ActiveCfg = Release|x86
+		{A5239F19-F154-4CD2-A3AD-679E8969286B}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

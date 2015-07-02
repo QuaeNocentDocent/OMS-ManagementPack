@@ -1,0 +1,124 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        
+        <!-- In this section, modify the attributes based on your needs. Ensure the
+             Base attribute matches the application you are modeling.
+             More information can be found in the Management Pack Development Kit: 
+             http://msdn.microsoft.com/en-us/library/ee533867.aspx -->
+        <ClassType ID="QND.OMS.AAD.Tenant" Base="System!System.Service" Accessibility="Public" Abstract="false" Hosted="false" Singleton="false">
+          
+          <!-- Inside this section, you can add and remove properties as needed.
+               More information can be found in the Management Pack Development Kit: 
+               http://msdn.microsoft.com/en-us/library/ee533714.aspx -->
+          <Property ID="Domain" Key="true" Type="string" />
+        </ClassType>
+        <ClassType ID="QND.OMS.AAD.Tenant.Group" Base="MSIL!Microsoft.SystemCenter.InstanceGroup" Accessibility="Public" Abstract="false" Hosted="false" Singleton="false">
+          <Property ID="Domain" Key="true" Type="string" />
+        </ClassType>
+      </ClassTypes>
+      <RelationshipTypes>
+        <RelationshipType ID="QND.OMS.AAD.TenantGroupContainsEntity" Abstract="false" Base="System!System.Containment" Accessibility="Public">
+          <Source ID="Tenant" Type="QND.OMS.AAD.Tenant.Group" />
+          <Target ID="Entity" Type="System!System.Entity"/> 
+        </RelationshipType>
+      </RelationshipTypes>
+    </EntityTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="QND.OMS.MAPSME.AADTenant.Discovery" Enabled="true" Target="QND.OMS.Monitoring.Pool" ConfirmDelivery="true" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="SC!Microsoft.SystemCenter.ManagementActionPointShouldManageEntity" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="SC!Microsoft.SystemCenter.GroupPopulator">
+          <RuleId>$MPElement$</RuleId>
+          <GroupInstanceId>$Target/Id$</GroupInstanceId>
+          <MembershipRules>
+            <MembershipRule>
+              <MonitoringClass>$MPElement[Name="QND.OMS.AAD.Tenant"]$</MonitoringClass>
+              <RelationshipClass>$MPElement[Name="SC!Microsoft.SystemCenter.ManagementActionPointShouldManageEntity"]$</RelationshipClass>
+            </MembershipRule>
+          </MembershipRules>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.TenantContainsEntity.Discovery" Enabled="true" Target="QND.OMS.AAD.Tenant.Group" ConfirmDelivery="true" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="QND.OMS.AAD.TenantGroupContainsEntity" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="SC!Microsoft.SystemCenter.GroupPopulator">
+          <RuleId>$MPElement$</RuleId>
+          <GroupInstanceId>$Target/Id$</GroupInstanceId>
+          <GroupMonitoringClass>$MPElement[Name="QND.OMS.AAD.Tenant.Group"]$</GroupMonitoringClass>
+          <MembershipRules>
+            <MembershipRule>
+              <MonitoringClass>$MPElement[Name="System!System.Entity"]$</MonitoringClass>
+              <RelationshipClass>$MPElement[Name="QND.OMS.AAD.TenantGroupContainsEntity"]$</RelationshipClass>
+              <Expression>
+                <Contained>
+                  <MonitoringClass>$MPElement[Name="QND.OMS.AAD.Tenant"]$</MonitoringClass>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <Property>$MPElement[Name="QND.OMS.AAD.Tenant"]/Domain$</Property>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value>$Target/Property[Type="QND.OMS.AAD.Tenant.Group"]/Domain$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+
+                </Contained>
+              </Expression>
+            </MembershipRule>
+          </MembershipRules>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.AAD.Tenant.Discovery" Enabled="true" ConfirmDelivery="true" Priority="Normal" Remotable="true" Target="QND.OMS.Monitoring.Pool">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.AAD.Tenant" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.OMS.AAD.Tenant.Discovery.DS">
+          <TraceLevel>2</TraceLevel>
+          <IntervalSeconds>86400</IntervalSeconds>
+          <SyncTime />
+          <TimeoutSeconds>30</TimeoutSeconds>
+          <TenantsFilePath>c:\QND\AADTenants.xml</TenantsFilePath>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+    <Rules>
+    </Rules>
+  </Monitoring>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        
+        <!-- This is the string users of the Operations Console and Web Console will see. 
+             Descriptions are also helpful when the user is doing a search in the Console. -->
+        <DisplayString ElementID="QND.OMS.AAD.Tenant">
+          <Name>QND - Azure Active Directory Tenant</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AAD.Tenant" SubElementID="Domain">
+          <Name>Tenant Domain Name</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.MAPSME.AADTenant.Discovery">
+          <Name>QND - Pool should manage AAD Tenant Discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AAD.Tenant.Discovery">
+          <Name>QND - Discovers AAD Tenants</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AAD.Tenant.Group">
+          <Name>QND - AAD Tenant Group</Name>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ProjectGuid>{a5239f19-f154-4cd2-a3ad-679e8969286b}</ProjectGuid>
+    <RootNamespace>QND.OMS</RootNamespace>
+    <Name>QND.OMS</Name>
+    <ManagementPackName>QND.OMS</ManagementPackName>
+    <Version>1.0.0.0</Version>
+    <MpFrameworkVersion>v7.0.2</MpFrameworkVersion>
+    <MpFrameworkProfile>OM</MpFrameworkProfile>
+    <ProductVersion>1.1.0.0</ProductVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <GenerateSealed>True</GenerateSealed>
+    <Company>Quae Nocent Nocent (QND)</Company>
+    <Copyright>Copyright (c) QND. All rights reserved.</Copyright>
+    <DelaySigning>False</DelaySigning>
+    <AssemblyOriginatorKeyFile>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\Firma\QND1.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <DelaySigning>false</DelaySigning>
+    <Company>MyCompany</Company>
+    <Copyright>Copyright (c) MyCompany. All rights reserved.</Copyright>
+    <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile />
+  </PropertyGroup>
+  <ItemGroup>
+    <ManagementPackReference Include="Microsoft.SystemCenter.InstanceGroup.Library">
+      <HintPath>C:\Program Files (x86)\System Center 2012 Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.InstanceGroup.Library.mp</HintPath>
+      <Alias>MSIL</Alias>
+      <MinVersion>7.5.8501.0</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.Library">
+      <Alias>SC</Alias>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.Windows.Library">
+      <Alias>Windows</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="System.Health.Library">
+      <Alias>Health</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="System.Library">
+      <Alias>System</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.Visualization.Library">
+      <Alias>Visualization</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Folders.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ManagementPack.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Modules.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OMSSearch.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Pool.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="QND.OMS.AAD.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="QND.OMS.ManagedSystem.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="QND.OMS.Subscription.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="QND.OMS.Workspace.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views.mptg.mpx">
+      <SubType>Code</SubType>
+      <DependentUpon>Views.mptg</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="QND" />
+    <Folder Include="Scripts" />
+    <Folder Include="OMSSearch" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="OMSSearch\License.txt">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Views.mptg">
+      <SubType>Content</SubType>
+      <Generator>FragmentGenerator</Generator>
+    </Content>
+    <EmbeddedResource Include="OMSSearch\Microsoft.IdentityModel.Clients.ActiveDirectory.dll">
+      <SubType>Content</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="OMSSearch\OMSSearch.psm1">
+      <SubType>Content</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="QND\aadtenants.xml" />
+    <EmbeddedResource Include="Scripts\Get-AADMonitoredTenants.ps1" />
+    <EmbeddedResource Include="Scripts\Get-OMSManagedSystemLastData.ps1" />
+    <EmbeddedResource Include="Scripts\Get-OMSManagedSystems.ps1" />
+    <EmbeddedResource Include="Scripts\Get-OMSManagedSystemsData.ps1" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
+</Project>

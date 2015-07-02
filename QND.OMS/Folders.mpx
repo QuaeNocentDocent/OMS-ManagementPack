@@ -1,0 +1,37 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Presentation>
+    <Folders>
+      
+      <!-- In this section, you can create more folders. Edit the DisplayString for this folder 
+           to change the name the user sees in the console. More information can be found in 
+           the Management Pack Development Kit: http://msdn.microsoft.com/en-us/library/ee533810.aspx -->
+      <Folder ID="QND.OMS.Folders" Accessibility="Internal" ParentFolder="SC!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
+    
+    </Folders>
+
+    <FolderItems>
+      
+      <!-- In this section, uncomment and edit the ElementID to reference a View or Folder
+           you've created to place that item into the Folder referenced by the Folder attribute.
+           FolderItems do not need display strings; The referenced ElementID's DisplayString
+           is used and shown to the user. More information can be found in the Management 
+           Pack Development Kit: http://msdn.microsoft.com/en-us/library/ee533579.aspx -->
+      <!--
+      <FolderItem ID="QND.OMS.FolderItem1" ElementID="" Folder="QND.OMS.Folders" />
+      -->
+    </FolderItems>
+    
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        
+        <DisplayString ElementID="QND.OMS.Folders">
+          <Name>QND - OMS</Name>
+          <Description></Description>
+        </DisplayString>
+        
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

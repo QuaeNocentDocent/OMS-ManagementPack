@@ -1,0 +1,135 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        
+        <!-- In this section, modify the attributes based on your needs. Ensure the
+             Base attribute matches the application you are modeling.
+             More information can be found in the Management Pack Development Kit: 
+             http://msdn.microsoft.com/en-us/library/ee533867.aspx -->
+        <ClassType ID="QND.OMS.Azure.Subscription" Base="System!System.ApplicationComponent" Accessibility="Public" Abstract="false" Hosted="false" Singleton="false">
+          
+          <!-- Inside this section, you can add and remove properties as needed.
+               More information can be found in the Management Pack Development Kit: 
+               http://msdn.microsoft.com/en-us/library/ee533714.aspx -->
+          <Property ID="Id" Key="true" Type="string" />
+          <Property ID="Name" Key="false" Type="string" />
+          <Property ID="Tenant" Key="false" Type="string" />
+        </ClassType>
+      
+      </ClassTypes>
+      <RelationshipTypes>
+        <RelationshipType ID="QND.OMS.TenantContainsSubscription" Abstract="false" Accessibility="Public" Base="System!System.Containment">
+          <Source ID="Tenant" Type="QND.OMS.AAD.Tenant"/>
+          <Target ID="Subscription" Type="QND.OMS.Azure.Subscription"/>
+        </RelationshipType>
+      </RelationshipTypes>
+    </EntityTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="QND.OMS.MAPSME.Subscription.Discovery" Enabled="true" Target="QND.OMS.Monitoring.Pool" ConfirmDelivery="true" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="SC!Microsoft.SystemCenter.ManagementActionPointShouldManageEntity" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="SC!Microsoft.SystemCenter.GroupPopulator">
+          <RuleId>$MPElement$</RuleId>
+          <GroupInstanceId>$Target/Id$</GroupInstanceId>
+          <MembershipRules>
+            <MembershipRule>
+              <MonitoringClass>$MPElement[Name="QND.OMS.Azure.Subscription"]$</MonitoringClass>
+              <RelationshipClass>$MPElement[Name="SC!Microsoft.SystemCenter.ManagementActionPointShouldManageEntity"]$</RelationshipClass>
+            </MembershipRule>
+          </MembershipRules>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.TenantContainsSubscription.Discovery" Enabled="true" Target="QND.OMS.AAD.Tenant" ConfirmDelivery="true" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="QND.OMS.TenantContainsSubscription" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="SC!Microsoft.SystemCenter.GroupPopulator">
+          <RuleId>$MPElement$</RuleId>
+          <GroupInstanceId>$Target/Id$</GroupInstanceId>
+          <GroupMonitoringClass>$MPElement[Name="QND.OMS.AAD.Tenant"]$</GroupMonitoringClass>
+          <MembershipRules>
+            <MembershipRule>
+              <MonitoringClass>$MPElement[Name="QND.OMS.Azure.Subscription"]$</MonitoringClass>
+              <RelationshipClass>$MPElement[Name="QND.OMS.TenantContainsSubscription"]$</RelationshipClass>
+              <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <Property>$MPElement[Name="QND.OMS.Azure.Subscription"]/Tenant$</Property>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value>$Target/Property[Type="QND.OMS.AAD.Tenant"]/Domain$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+              </Expression>
+
+            </MembershipRule>
+          </MembershipRules>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.Azure.Subscription.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="QND.OMS.AAD.Tenant">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.Azure.Subscription" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.OMS.Entity.Discovery.DS">
+          <TraceLevel>2</TraceLevel>
+          <IntervalSeconds>86400</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TenantADName>$Target/Property[Type="QND.OMS.AAD.Tenant"]/Domain$</TenantADName>
+          <SubscriptionId></SubscriptionId>
+          <Workspace></Workspace>
+          <ResourceGroup></ResourceGroup>
+          <AADUserName>$RunAs[Name="QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <Type>Subscription</Type>
+          <LookbackHours>240</LookbackHours>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+  </Monitoring>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        
+        <!-- This is the string users of the Operations Console and Web Console will see. 
+             Descriptions are also helpful when the user is doing a search in the Console. -->
+        <DisplayString ElementID="QND.OMS.Azure.Subscription">
+          <Name>QND - Azure Subscription</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Azure.Subscription" SubElementID="Id">
+          <Name>Subscription Id</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Azure.Subscription" SubElementID="Name">
+          <Name>Name</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Azure.Subscription" SubElementID="Tenant">
+          <Name>Tenant</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.TenantContainsSubscription">
+          <Name>QND - Tenant contains Azure subscription</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.MAPSME.Subscription.Discovery">
+          <Name>QND - Pool should manage Azure Subscription Discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.TenantContainsSubscription.Discovery">
+          <Name>QND - Tenant comntains Azure Subscription discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Azure.Subscription.Discovery">
+          <Name>QND - Azure Subscription Discovery</Name>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

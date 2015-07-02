@@ -1,0 +1,90 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <!-- Credits to http://blogs.msdn.com/b/rslaten/archive/2014/03/09/how-to-make-an-operations-manager-resource-pool-host-your-custom-class.aspx -->
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="QND.OMS.Monitoring.Pool" Accessibility="Public" Abstract="false" Base="SC!Microsoft.SystemCenter.ManagementServicePool" Hosted="false" Singleton="true" Extension="false" />
+      </ClassTypes>
+    </EntityTypes>
+    <ModuleTypes>
+    <DataSourceModuleType ID="QND.OMS.Monitoring.Pool.Discovery.DS" Accessibility="Public" Batching="false">
+      <Configuration>
+        <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+      </Configuration>
+      <OverrideableParameters>
+        <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+      </OverrideableParameters>
+      <ModuleImplementation Isolation="Any">
+        <Composite>
+          <MemberModules>
+            <DataSource ID="Scheduler" TypeID="System!System.Discovery.Scheduler">
+              <Scheduler>
+                <SimpleReccuringSchedule>
+                  <Interval>$Config/IntervalSeconds$</Interval>
+                  <SyncTime />
+                </SimpleReccuringSchedule>
+                <ExcludeDates />
+              </Scheduler>
+            </DataSource>
+            <ConditionDetection ID="Mapper" TypeID="System!System.Discovery.ClassSnapshotDataMapper">
+              <ClassId>$MPElement[Name="SC!Microsoft.SystemCenter.ManagementServicePoolWatcher"]$</ClassId>
+              <InstanceSettings>
+                <Settings>
+                  <Setting>
+                    <Name>$MPElement[Name="SC!Microsoft.SystemCenter.ManagementServicePoolWatcher"]/PoolId$</Name>
+                    <Value>$Target/Id$</Value>
+                  </Setting>
+                  <Setting>
+                    <Name>$MPElement[Name="SC!Microsoft.SystemCenter.ManagementServicePoolWatcher"]/PoolName$</Name>
+                    <Value>$Target/Property[Type="System!System.Entity"]/DisplayName$</Value>
+                  </Setting>
+                  <Setting>
+                    <Name>$MPElement[Name="System!System.Entity"]/DisplayName$</Name>
+                    <Value>$Target/Property[Type="System!System.Entity"]/DisplayName$ Watcher</Value>
+                  </Setting>
+                </Settings>
+              </InstanceSettings>
+            </ConditionDetection>
+          </MemberModules>
+          <Composition>
+            <Node ID="Mapper">
+              <Node ID="Scheduler" />
+            </Node>
+          </Composition>
+        </Composite>
+      </ModuleImplementation>
+      <OutputType>System!System.Discovery.Data</OutputType>
+    </DataSourceModuleType>
+    </ModuleTypes>
+
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="QND.OMS.Monitoring.Pool.Discovery" Enabled="true" Target="QND.OMS.Monitoring.Pool" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="SC!Microsoft.SystemCenter.ManagementServicePoolWatcher">
+            <Property TypeID="System!System.Entity" PropertyID="DisplayName" />
+            <Property PropertyID="PoolId" />
+            <Property PropertyID="PoolName" />
+          </DiscoveryClass>
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.OMS.Monitoring.Pool.Discovery.DS">
+          <IntervalSeconds>86400</IntervalSeconds>
+        </DataSource>
+      </Discovery>     
+    </Discoveries>
+  </Monitoring>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="QND.OMS.Monitoring.Pool">
+          <Name>QND OMS Monitoring Pool</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Monitoring.Pool.Discovery">
+          <Name>QND - OMS Monitoring Pool Discovery</Name>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

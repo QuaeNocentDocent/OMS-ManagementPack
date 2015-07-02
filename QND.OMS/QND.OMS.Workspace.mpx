@@ -1,0 +1,196 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        
+        <!-- In this section, modify the attributes based on your needs. Ensure the
+             Base attribute matches the application you are modeling.
+             More information can be found in the Management Pack Development Kit: 
+             http://msdn.microsoft.com/en-us/library/ee533867.aspx -->
+        <ClassType ID="QND.OMS.Workspace" Base="System!System.ApplicationComponent" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          
+          <!-- Inside this section, you can add and remove properties as needed.
+               More information can be found in the Management Pack Development Kit: 
+               http://msdn.microsoft.com/en-us/library/ee533714.aspx -->
+          <Property ID="Id" Key="true" Type="string" />
+          <Property ID="Name" Key="false" Type="string" />
+          <Property ID="Subscription" Key="false" Type="string" />
+          <Property ID="ResourceGroup" Key="false" Type="string" />
+        </ClassType>
+      
+      </ClassTypes>
+      <RelationshipTypes>
+        <RelationshipType ID="QND.OMS.SubscriptionContainsWorkspace" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
+          <Source ID="Subscription" Type="QND.OMS.Azure.Subscription"/>
+          <Target ID="Workspace" Type="QND.OMS.Workspace"/>
+        </RelationshipType>
+      </RelationshipTypes>
+    </EntityTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <!--
+      <Discovery ID="QND.OMS.MAPSME.Workspace.Discovery" Enabled="true" Target="QND.OMS.Monitoring.Pool" ConfirmDelivery="true" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="SC!Microsoft.SystemCenter.ManagementActionPointShouldManageEntity" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="SC!Microsoft.SystemCenter.GroupPopulator">
+          <RuleId>$MPElement$</RuleId>
+          <GroupInstanceId>$Target/Id$</GroupInstanceId>
+          <MembershipRules>
+            <MembershipRule>
+              <MonitoringClass>$MPElement[Name="QND.OMS.Workspace"]$</MonitoringClass>
+              <RelationshipClass>$MPElement[Name="SC!Microsoft.SystemCenter.ManagementActionPointShouldManageEntity"]$</RelationshipClass>
+            </MembershipRule>
+          </MembershipRules>
+        </DataSource>
+      </Discovery> -->
+      <!-- <Discovery ID="QND.OMS.SubscriptionContainsWorkspace.Discovery" Enabled="false" Target="QND.OMS.Azure.Subscription" ConfirmDelivery="true" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="QND.OMS.SubscriptionContainsWorkspace" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="SC!Microsoft.SystemCenter.GroupPopulator">
+          <RuleId>$MPElement$</RuleId>
+          <GroupInstanceId>$Target/Id$</GroupInstanceId>
+          <MembershipRules>
+            <MembershipRule>
+              <MonitoringClass>$MPElement[Name="QND.OMS.Workspace"]$</MonitoringClass>
+              <RelationshipClass>$MPElement[Name="QND.OMS.SubscriptionContainsWorkspace"]$</RelationshipClass>
+              <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <Property>$MPElement[Name="QND.OMS.Workspace"]/Subscription$</Property>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value>$Target/Property[Type="QND.OMS.Azure.Subscription"]/Id$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+              </Expression>
+
+            </MembershipRule>
+          </MembershipRules>
+        </DataSource>
+      </Discovery> -->
+      <Discovery ID="QND.OMS.Workspace.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="QND.OMS.Azure.Subscription">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.Workspace" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.OMS.Entity.Discovery.DS">
+          <TraceLevel>2</TraceLevel>
+          <IntervalSeconds>86400</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TenantADName>$Target/Property[Type="QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <SubscriptionId>$Target/Property[Type="QND.OMS.Azure.Subscription"]/Id$</SubscriptionId>
+          <Workspace></Workspace>
+          <ResourceGroup></ResourceGroup>
+          <AADUserName>$RunAs[Name="QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <Type>Workspace</Type>
+          <LookbackHours>240</LookbackHours>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+    <Monitors>
+      <UnitMonitor ID="QND.OMS.Workspace.Connectivity.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Workspace"
+ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Workspace.Connectivity.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Workspace.Connectivity.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter2>$Data/Context/Property[@Name="Description"]$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="OverThreshold2" MonitorTypeStateID="UnReachable" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>3611</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <TenantADName>$Target/Host/Property[Type="QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <SubscriptionId>$Target/Host/Property[Type="QND.OMS.Azure.Subscription"]/Id$</SubscriptionId>
+          <Workspace>$Target/Property[Type="QND.OMS.Workspace"]/Id$</Workspace>
+          <ResourceGroup>$Target/Property[Type="QND.OMS.Workspace"]/ResourceGroup$</ResourceGroup>
+          <AADUserName>$RunAs[Name="QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+        </Configuration>
+      </UnitMonitor>
+      <DependencyMonitor ID="QND.OMS.WorkspaceToSystem.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.ManagedSystemLastData.Monitor" ParentMonitorID="Health!System.Health.AvailabilityState" Priority="Normal"
+                         RelationshipType="QND.OMS.WorkspaceContainsSystem" Remotable="true" Target="QND.OMS.Workspace">
+        <Category>AvailabilityHealth</Category>
+        <Algorithm>Percentage</Algorithm>
+        <AlgorithmParameter>30</AlgorithmParameter>
+        <MemberInMaintenance>Success</MemberInMaintenance>
+          <MemberUnAvailable>Warning</MemberUnAvailable>
+        </DependencyMonitor>
+      
+    </Monitors>
+  </Monitoring>
+  <Presentation>
+    <StringResources>
+      <StringResource ID="QND.OMS.Workspace.Connectivity.Monitor.AlertMessage"/>
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        
+        <!-- This is the string users of the Operations Console and Web Console will see. 
+             Descriptions are also helpful when the user is doing a search in the Console. -->
+        <DisplayString ElementID="QND.OMS.Workspace">
+          <Name>QND - OMS Workspace</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace" SubElementID="Id">
+          <Name>Workspace Id</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace" SubElementID="Name">
+          <Name>Name</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace" SubElementID="Subscription">
+          <Name>Subscription Id</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace" SubElementID="ResourceGroup">
+          <Name>Resource Group</Name>
+          <Description></Description>
+        </DisplayString>        
+        <DisplayString ElementID="QND.OMS.SubscriptionContainsWorkspace">
+          <Name>QND - Azure Subscription contains OMS workspace</Name>
+        </DisplayString>
+        <!--
+        <DisplayString ElementID="QND.OMS.MAPSME.Workspace.Discovery">
+          <Name>QND - Pool should manage Workspace Discovery</Name>
+        </DisplayString> -->
+        <!-- <DisplayString ElementID="QND.OMS.SubscriptionContainsWorkspace.Discovery">
+          <Name>QND - Azure Subscription contains OMS workspace discovery</Name>
+        </DisplayString> -->
+        <DisplayString ElementID="QND.OMS.Workspace.Discovery">
+          <Name>QND - OMS Workspace discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.WorkspaceToSystem.DepMonitor">
+          <Name>Managed Systems</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace.Connectivity.Monitor.AlertMessage">
+          <Name>QND - OMS Workspace Unreachable</Name>
+          <Description>The workspace is unreachable. Error:{0}</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace.Connectivity.Monitor">
+          <Name>Connectivity</Name>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

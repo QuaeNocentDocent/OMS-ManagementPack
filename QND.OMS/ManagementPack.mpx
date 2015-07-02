@@ -1,0 +1,63 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <SecureReferences>
+      <SecureReference ID="QND.OMS.AAD.Account.SR" Accessibility="Public" Context="System!System.Entity" />
+    </SecureReferences>
+  </TypeDefinitions>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="QND.OMS">
+          <Name>QND - Microsoft OMS monitoring</Name>
+          <Description>QND Community Management Pack for monitoring Microsoft Operations Management Suite #MSOMS</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AAD.Account.SR">
+          <Name>QND - OMS Azure AD connection</Name>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles>
+
+        <KnowledgeArticle ElementID="QND.OMS">
+          <MamlContent>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Summary</maml:title>
+              <maml:para>This community based management pack check for OMS health. It currently implements:</maml:para>
+              <maml:list>
+                <maml:listItem>
+                  <maml:para>Check for Search API availability.</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Check for managed systems connectivity and data flow.</maml:para>
+                </maml:listItem>
+              </maml:list>
+              <maml:para>The management pack disocvers the following artifacts:</maml:para>
+              <maml:list>
+                <maml:listItem>
+                  <maml:para>Azure Active Directory tenants involved (see configuration)</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Azure Subscriptions, contained in AAD tenants</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>OMS Workspaces, hosted by Azure Subscriptions</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>OMS Managed Systems (computer), hosted by OMS workspaces</maml:para>
+                </maml:listItem>
+              </maml:list>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Configuration</maml:title>
+              <maml:para>
+                For more info on MP configuration see                   <maml:navigationLink>
+                  <maml:linkText>http://go.microsoft.com/fwlink/?LinkId=28867</maml:linkText>
+                  <maml:uri href="http://go.microsoft.com/fwlink/?LinkId=28867" />
+                </maml:navigationLink>
+                </maml:para>
+            </maml:section>
+          </MamlContent>
+        </KnowledgeArticle>
+      </KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>
