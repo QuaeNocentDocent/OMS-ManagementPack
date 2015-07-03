@@ -30,7 +30,7 @@
                   <maml:para>Check for managed systems connectivity and data flow.</maml:para>
                 </maml:listItem>
               </maml:list>
-              <maml:para>The management pack disocvers the following artifacts:</maml:para>
+              <maml:para>The management pack discovers the following artifacts:</maml:para>
               <maml:list>
                 <maml:listItem>
                   <maml:para>Azure Active Directory tenants involved (see configuration)</maml:para>
@@ -49,9 +49,9 @@
             <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
               <maml:title>Configuration</maml:title>
               <maml:para>
-                For more info on MP configuration see                   <maml:navigationLink>
-                  <maml:linkText>http://go.microsoft.com/fwlink/?LinkId=28867</maml:linkText>
-                  <maml:uri href="http://go.microsoft.com/fwlink/?LinkId=28867" />
+                For more info on MP configuration see<maml:navigationLink>
+                  <maml:linkText>GitHub Wiki Home page for the project</maml:linkText>
+                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki" />
                 </maml:navigationLink>
                 </maml:para>
             </maml:section>

@@ -1,0 +1,228 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <KnowledgeArticles>
+
+        <KnowledgeArticle ElementID="QND.OMS.Workspace.Connectivity.Monitor">
+          <MamlContent>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Summary</maml:title>
+              <maml:para>The monitor check for SearchAPI reachability. It executes a simple query using the defined credentials for the tenant the workspace is in. Possibile states</maml:para>
+              <maml:list>
+                <maml:listItem>
+                  <maml:para>Healthy: the connection is available.</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Error: resource pool servers cannot erach the search api for the workspace.</maml:para>
+                </maml:listItem>
+              </maml:list>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Configuration</maml:title>
+              <maml:para>The following options can be configured on this monitor:</maml:para>
+              <maml:table>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>Option</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Definition</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Default</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>IntervalSeconds</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Amount of time in seconds between checks of the connectivity status</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>3611 seconds</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>Sync Time</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Optional time wihtin the hour to sync the check exectuion to</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para></maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>TimeoutSeconds</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Amount of time in seconds to wait for script execution and hance for API Search response</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>30 seconds</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>TraceLevel</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Debugging level (0-5) anything above 2 will log clear text password in eventlog</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>2</maml:para>
+                  </maml:entry>
+                </maml:row>
+              </maml:table>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Causes</maml:title>
+              <maml:para>There three known causes of errors</maml:para>
+              <maml:list>
+                <maml:listItem>
+                  <maml:para>OMS service has issues</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Your proxy /connectivity infrastructure to the cloud has issue</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>The runas account used to connect to the workspace is no longer valid / has an expired password</maml:para>
+                </maml:listItem>
+              </maml:list>
+              <maml:para>The alert context tries to give a specific cause for any issue</maml:para>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Resolutions</maml:title>
+              <maml:para>Check the three known causes and fix any issue</maml:para>
+              </maml:section>
+          </MamlContent>
+        </KnowledgeArticle>
+        <KnowledgeArticle ElementID="QND.OMS.ManagedSystemLastData.Monitor">
+          <MamlContent>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Summary</maml:title>
+              <maml:para>The monitor checks the last data point submitted to OMS for every manged system and alerts if any of them is not sending data accordingly to two different thresholds. 
+              By default the monitor alerts only on obsolete data (older than 24 hours by defualt). If an alert is raised is highly probable your loosing data in an unrecoverrable way.
+              Possibile states</maml:para>
+              <maml:list>
+                <maml:listItem>
+                  <maml:para>Up to date / Healthy: the data is within the hour.</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Delayed / warning: the last data point is older than 1 hours (defualt)</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Obsolete / error: the last data point is oldern than 24 hours (default)</maml:para>
+                </maml:listItem>
+
+              </maml:list>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Configuration</maml:title>
+              <maml:para>The following options can be configured on this monitor:</maml:para>
+              <maml:table>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>Option</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Definition</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Default</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>IntervalSeconds</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Amount of time in seconds between checks of the connectivity status</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>3611 seconds</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>Sync Time</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Optional time wihtin the hour to sync the check exectuion to</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para></maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>TimeoutSeconds</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Amount of time in seconds to wait for script execution and hance for API Search response</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>30 seconds</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>TraceLevel</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Debugging level (0-5) anything above 2 will log clear text password in eventlog</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>2</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>DelayLateHours</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Number of hours after which consider an agent in a late/delayed state</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>1</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>DelayObsoleteHours</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Number of hours after which consider an agent in a obsolete critical state</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>24</maml:para>
+                  </maml:entry>
+                </maml:row>
+              </maml:table>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Causes</maml:title>
+              <maml:para>There two known causes of errors if the issue affects a small part of your managed system</maml:para>
+              <maml:list>
+                <maml:listItem>
+                  <maml:para>MMA agent has issues on those specific systems</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Your proxy /connectivity infrastructure to the cloud has issue for those specific agents. Proxy / NAT authorization missing?</maml:para>
+                </maml:listItem>
+              </maml:list>
+              <maml:para>The alert context tries to give a specific cause for any issue</maml:para>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Resolutions</maml:title>
+              <maml:para>Check the two known causes and fix any issue</maml:para>
+            </maml:section>
+          </MamlContent>
+        </KnowledgeArticle>
+      </KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks>  
+</ManagementPackFragment>

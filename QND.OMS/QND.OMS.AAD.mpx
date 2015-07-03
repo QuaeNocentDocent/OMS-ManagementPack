@@ -85,7 +85,7 @@
         </DiscoveryTypes>
         <DataSource ID="DS" TypeID="QND.OMS.AAD.Tenant.Discovery.DS">
           <TraceLevel>2</TraceLevel>
-          <IntervalSeconds>86400</IntervalSeconds>
+          <IntervalSeconds>3601</IntervalSeconds>
           <SyncTime />
           <TimeoutSeconds>30</TimeoutSeconds>
           <TenantsFilePath>c:\QND\AADTenants.xml</TenantsFilePath>

@@ -61,6 +61,9 @@
     <Compile Include="Folders.mpx">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="KBArticles.mpx">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ManagementPack.mpx">
       <SubType>Code</SubType>
     </Compile>
@@ -91,6 +94,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="SquaredUp" />
     <Folder Include="QND" />
     <Folder Include="Scripts" />
     <Folder Include="OMSSearch" />
@@ -114,6 +118,7 @@
     <EmbeddedResource Include="Scripts\Get-OMSManagedSystemLastData.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSManagedSystems.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSManagedSystemsData.ps1" />
+    <EmbeddedResource Include="SquaredUp\OMS-Overview.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>
