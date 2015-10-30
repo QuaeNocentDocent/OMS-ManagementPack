@@ -1,0 +1,218 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Monitoring>
+    <Monitors>
+      <UnitMonitor ID="QND.OMS.Automation.Runbook.ExecStatus.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Runbook"
+             ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatusGenericCooked.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Automation.Runbook.ExecStatus.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="Failures"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="MaxFailures"]$</AlertParameter2>
+            <AlertParameter3>$Data/Context/Property[@Name="JobsSelected"]$</AlertParameter3>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Successful" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="Failed" MonitorTypeStateID="UnHealthy" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>3601</IntervalSeconds>
+          <SyncTime></SyncTime>
+          
+          <Property>Failures</Property>
+          <MaxThreshold>0</MaxThreshold>
+
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <TenantADName>$Target/Host/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <AccountId>$Target/Host/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>        
+          <RunbookId>$Target/Property[Type="QND.OMS.Automation.Runbook"]/Id$</RunbookId>
+          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <LastNJobs>1</LastNJobs>
+          <MaxFailures>0</MaxFailures>
+          <FailureCondition>^[4|9]$</FailureCondition>
+          <MaxAgeHours>-1</MaxAgeHours>
+          <MaxRuntimeMinutes>-1</MaxRuntimeMinutes>
+
+        </Configuration>
+      </UnitMonitor>
+      
+      <UnitMonitor ID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Runbook"
+             ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookWebHookExpirationCooked.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor.AlertMessage">
+          <AlertOnState>Warning</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="DaysToExpiration"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="WebHookName"]$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Valid" MonitorTypeStateID="Valid" HealthState="Success" />
+          <OperationalState ID="AboutToExpire" MonitorTypeStateID="AboutToExpire" HealthState="Warning" />          
+          <OperationalState ID="Expired" MonitorTypeStateID="Expired" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>86400</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <TenantADName>$Target/Host/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <AccountId>$Target/Host/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
+          <RunbookId>$Target/Property[Type="QND.OMS.Automation.Runbook"]/Id$</RunbookId>
+          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <LastNJobs>1</LastNJobs>
+          <MaxFailures>0</MaxFailures>
+          <FailureCondition>^[4|9]$</FailureCondition>
+          <MaxAgeHours>-1</MaxAgeHours>
+          <MaxRuntimeMinutes>-1</MaxRuntimeMinutes>
+          <WebHookExpirationDays>30</WebHookExpirationDays>
+          <WebHookExpirationSilence>30</WebHookExpirationSilence>
+        </Configuration>
+      </UnitMonitor>      
+      
+      <UnitMonitor ID="QND.OMS.Automation.Runbook.RunAge.Monitor" Accessibility="Public" Enabled="false" Target="QND.OMS.Automation.Runbook"
+             ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatusGenericNotCooked.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Automation.Runbook.RunAge.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="LastJobExecutionTime"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="LastJobExecutionAgeHours"]$</AlertParameter2>
+            <AlertParameter3>$Data/Context/Property[@Name="MaxAge"]$</AlertParameter3>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Successful" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="Failed" MonitorTypeStateID="UnHealthy" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>3617</IntervalSeconds>
+          <SyncTime></SyncTime>
+
+          <Property>LastJobExecutionAgeHours</Property>
+          <MaxThreshold>24</MaxThreshold>
+
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <TenantADName>$Target/Host/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <AccountId>$Target/Host/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
+          <RunbookId>$Target/Property[Type="QND.OMS.Automation.Runbook"]/Id$</RunbookId>
+          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <LastNJobs>1</LastNJobs>
+          <MaxFailures>0</MaxFailures>
+          <FailureCondition>^[4|9]$</FailureCondition>
+          <MaxAgeHours>24</MaxAgeHours>
+          <MaxRuntimeMinutes>-1</MaxRuntimeMinutes>
+        </Configuration>
+      </UnitMonitor>
+
+      <UnitMonitor ID="QND.OMS.Automation.Runbook.LongRunning.Monitor" Accessibility="Public" Enabled="false" Target="QND.OMS.Automation.Runbook"
+       ParentMonitorID="Health!System.Health.PerformanceState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatusGenericNotCooked.MT" ConfirmDelivery="false">
+        <Category>PerformanceHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Automation.Runbook.LongRunning.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="LastJobRuntimeMinutes"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="MaxRuntime"]$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Successful" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="Failed" MonitorTypeStateID="UnHealthy" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>3737</IntervalSeconds>
+          <SyncTime></SyncTime>
+
+          <Property>LastJobRuntimeMinutes</Property>
+          <MaxThreshold>30</MaxThreshold>
+
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <TenantADName>$Target/Host/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <AccountId>$Target/Host/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
+          <RunbookId>$Target/Property[Type="QND.OMS.Automation.Runbook"]/Id$</RunbookId>
+          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <LastNJobs>1</LastNJobs>
+          <MaxFailures>0</MaxFailures>
+          <FailureCondition>^[4|9]$</FailureCondition>
+          <MaxAgeHours>-1</MaxAgeHours>
+          <MaxRuntimeMinutes>30</MaxRuntimeMinutes>        
+        </Configuration>
+      </UnitMonitor>
+    </Monitors>
+  </Monitoring>
+  <Presentation>
+    <StringResources>
+      <StringResource ID="QND.OMS.Automation.Runbook.ExecStatus.Monitor.AlertMessage"/>
+      <StringResource ID="QND.OMS.Automation.Runbook.RunAge.Monitor.AlertMessage"/>
+      <StringResource ID="QND.OMS.Automation.Runbook.LongRunning.Monitor.AlertMessage"/>
+      <StringResource ID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor.AlertMessage"/>      
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="QND.OMS.Automation.Runbook.ExecStatus.Monitor">
+          <Name>Execution Result</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Automation.Runbook.ExecStatus.Monitor.AlertMessage">
+          <Name>QND - Azure Automation Runbook execution failed</Name>
+          <Description>The runbook failures count {0} is over the threshold set {1} over the last {2} runs.
+              More details in the alert context
+          </Description>
+        </DisplayString>
+        
+        <DisplayString ElementID="QND.OMS.Automation.Runbook.RunAge.Monitor">
+          <Name>Last Run Age</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Automation.Runbook.RunAge.Monitor.AlertMessage">
+          <Name>QND - Azure Automation Runbook last execution too old</Name>
+          <Description>The runbook last run is dated {0} the age in hours {1} is over the threshold set at {2} hours.
+              More details in the alert context
+          </Description>
+        </DisplayString>
+
+        <DisplayString ElementID="QND.OMS.Automation.Runbook.LongRunning.Monitor">
+          <Name>Execution time</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Automation.Runbook.LongRunning.Monitor.AlertMessage">
+          <Name>QND - Azure Automation Runbook execution is taking too long</Name>
+          <Description>
+            The last runbook execution took {0} minutes which is over the set threshold of {1}.
+            More details in the alert context
+          </Description>
+        </DisplayString>
+
+        <DisplayString ElementID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor">
+          <Name>WebHook Validity</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor.AlertMessage">
+          <Name>QND - Azure Automation Runbook webhook expired or near expiration</Name>
+          <Description>
+            One or more web hooks are expired or about to expire. Days to expiration {0} sample web hook name {1}.
+            More details in the alert context
+          </Description>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

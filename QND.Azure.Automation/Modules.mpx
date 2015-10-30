@@ -1,0 +1,810 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <ModuleTypes>
+      <DataSourceModuleType ID="QND.OMS.Automation.Discovery.DS" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="TraceLevel" type="xsd:integer" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+          <xsd:element name="TimeoutSeconds" type="xsd:integer" />
+          <xsd:element name="TenantADName" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="ExcludedAccountsList" type="xsd:string" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="ExcludedAccountsList" Selector="$Config/ExcludedAccountsList$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.TimedPowerShell.DiscoveryProvider">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+                <ScriptName>Discover-AzureAutomation.ps1</ScriptName>
+                <ScriptBody>
+                  $IncludeFileContent/Scripts/Discover-AzureAutomation.ps1$
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SourceId</Name>
+                    <Value>$MPElement$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ManagedEntityId</Name>
+                    <Value>$Target/Id$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>TenantADName</Name>
+                    <Value>$Config/TenantADName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SubscriptionId</Name>
+                    <Value>$Config/SubscriptionId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Username</Name>
+                    <Value>$Config/AADUserName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Password</Name>
+                    <Value>$Config/AADPassword$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ExcludedAccounts</Name>
+                    <Value>$Config/ExcludedAccountsList$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ProxyUrl</Name>
+                    <Value></Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+                <!-- true only for Tasks -->
+              </DataSource>
+            </MemberModules>
+            <Composition>
+              <Node ID="DS" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
+      <DataSourceModuleType ID="QND.OMS.Automation.RunbookStatus.DS" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+          
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+          <xsd:element name="TenantADName" type="xsd:string" />
+          <xsd:element name="AccountId" type="xsd:string" />
+          <xsd:element name="RunbookId" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="LastNJobs" type="xsd:int" default="1" />
+          <xsd:element name="MaxFailures" type="xsd:int" default="0"/>
+          <xsd:element name="FailureCondition" type="xsd:string" default="^[4|9]$" />
+          <xsd:element name="MaxAgeHours" type="xsd:int" default="-1" />
+          <xsd:element name="MaxRuntimeMinutes" type="xsd:int" default="-1" />
+          <xsd:element name="WebHookExpirationDays" type="xsd:int" default="-1" />
+          <xsd:element name="WebHookExpirationSilence" type="xsd:int" default="-1" />
+          <xsd:element name="RunMode" type="xsd:string" default="Data" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$"/>
+          <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$"/>
+          <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$"/>
+          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
+          <OverrideableParameter ID="MaxRuntimeMinutes" ParameterType="int" Selector="$Config/MaxRuntimeMinutes$"/>
+          <OverrideableParameter ID="WebHookExpirationDays" ParameterType="int" Selector="$Config/WebHookExpirationDays$"/>
+          <OverrideableParameter ID="WebHookExpirationSilence" ParameterType="int" Selector="$Config/WebHookExpirationSilence$"/>
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+              </DataSource>
+              <ProbeAction ID="Probe" TypeID="QND.OMS.Automation.RunbookStatus.PT">
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <TraceLevel>$Config/TraceLevel$</TraceLevel>
+                <TenantADName>$Config/TenantADName$</TenantADName>
+                <AccountId>$Config/AccountId$</AccountId>
+                <RunbookId>$Config/RunbookId$</RunbookId>
+                <AADUserName>$Config/AADUserName$</AADUserName>
+                <AADPassword>$Config/AADPassword$</AADPassword>
+                <LastNJobs>$Config/LastNJobs$</LastNJobs>
+                <MaxFailures>$Config/MaxFailures$</MaxFailures>
+                <FailureCondition>$Config/FailureCondition$</FailureCondition>
+                <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
+                <MaxRuntimeMinutes>$Config/MaxRuntimeMinutes$</MaxRuntimeMinutes>
+                <WebHookExpirationDays>$Config/WebHookExpirationDays$</WebHookExpirationDays>
+                <WebHookExpirationSilence>$Config/WebHookExpirationSilence$</WebHookExpirationSilence>
+                <RunMode>$Config/RunMode$</RunMode>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID ="Probe">
+                <Node ID="Scheduler"></Node>
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>
+      <ProbeActionModuleType ID="QND.OMS.Automation.RunbookStatus.PT" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+          <xsd:element name="TenantADName" type="xsd:string" />
+          <xsd:element name="AccountId" type="xsd:string" />
+          <xsd:element name="RunbookId" type="xsd:string" />          
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="LastNJobs" type="xsd:int" />
+          <xsd:element name="MaxFailures" type="xsd:int" />
+          <xsd:element name="FailureCondition" type="xsd:string" />
+          <xsd:element name="MaxAgeHours" type="xsd:int" />
+          <xsd:element name="MaxRuntimeMinutes" type="xsd:int" />
+          <xsd:element name="WebHookExpirationDays" type="xsd:int" />  
+          <xsd:element name="WebHookExpirationSilence" type="xsd:int" />
+          <xsd:element name="RunMode" type="xsd:string" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$"/>
+          <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$"/>
+          <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$"/>
+          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
+          <OverrideableParameter ID="WebHookExpirationDays" ParameterType="int" Selector="$Config/WebHookExpirationDays$"/>
+          <OverrideableParameter ID="WebHookExpirationSilence" ParameterType="int" Selector="$Config/WebHookExpirationSilence$"/>          
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <ProbeAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+                <ScriptName>Get-AutomationRunbookStatus.ps1</ScriptName>
+                <ScriptBody>
+                  $IncludeFileContent/Scripts/Get-AutomationRunbookStatus.ps1$
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>TenantADName</Name>
+                    <Value>$Config/TenantADName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>AccountId</Name>
+                    <Value>$Config/AccountId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Username</Name>
+                    <Value>$Config/AADUserName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Password</Name>
+                    <Value>$Config/AADPassword$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ProxyUrl</Name>
+                    <Value></Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>LastnJobs</Name>
+                    <Value>$Config/LastNJobs$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>MaxFailures</Name>
+                    <Value>$Config/MaxFailures$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>FailureCondition</Name>
+                    <Value>$Config/FailureCondition$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>MaxAge</Name>
+                    <Value>$Config/MaxAgeHours$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>MaxRuntime</Name>
+                    <Value>$Config/MaxRuntimeMinutes$</Value>
+                  </Parameter>                  
+                  <Parameter>
+                    <Name>RunbookId</Name>
+                    <Value>$Config/RunbookId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>WebHookExpirationDays</Name>
+                    <Value>$Config/WebHookExpirationDays$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>WebHookExpirationSilence</Name>
+                    <Value>$Config/WebHookExpirationSilence$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>RunMode</Name>
+                    <Value>$Config/RunMode$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+                <!-- true only for Tasks -->
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="POSH" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </ProbeActionModuleType>
+    </ModuleTypes>
+    <MonitorTypes>
+      <!-- two monitor types for getting runbook status. The first one uses cookdown and should be used for monitors that are useful and have the same thresholds for the vast majority of tunbooks
+      the second one should be used for disabled by defualt monitors with threshold and settings specific for well known runbooks-->
+      <UnitMonitorType ID="QND.OMS.Automation.RunbookStatusGenericCooked.MT" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="Healthy"/>
+          <MonitorTypeState ID="UnHealthy"/>
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+          <!-- I'm lazy and don't want to copy and paste the same monitor type so let's do some redundancy at the parameter level -->
+          <xsd:element name="Property" type="xsd:string" />
+          <xsd:element name="MaxThreshold" type="xsd:int" />
+          
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+          <xsd:element name="TenantADName" type="xsd:string" />
+          <xsd:element name="AccountId" type="xsd:string" />
+          <xsd:element name="RunbookId" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="LastNJobs" type="xsd:int" default="1" />
+          <xsd:element name="MaxFailures" type="xsd:int" default="0"/>
+          <xsd:element name="FailureCondition" type="xsd:string" default="^[4|9]$" />
+          <xsd:element name="MaxAgeHours" type="xsd:int" default="-1" />
+          <xsd:element name="MaxRuntimeMinutes" type="xsd:int" default="-1" />        
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$"/>
+          <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$"/>
+          <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$"/>
+          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
+          <OverrideableParameter ID="MaxRuntimeMinutes" ParameterType="int" Selector="$Config/MaxRuntimeMinutes$"/>
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="QND.OMS.Automation.RunbookStatus.DS">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <TenantADName>$Config/TenantADName$</TenantADName>
+              <AccountId>$Config/AccountId$</AccountId>
+              <!-- RunbookId is not used in this monitor -->
+              <RunbookId></RunbookId>
+              <AADUserName>$Config/AADUserName$</AADUserName>
+              <AADPassword>$Config/AADPassword$</AADPassword>
+              <LastNJobs>$Config/LastNJobs$</LastNJobs>
+              <MaxFailures>$Config/MaxFailures$</MaxFailures>
+              <FailureCondition>$Config/FailureCondition$</FailureCondition>
+              <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
+              <MaxRuntimeMinutes>$Config/MaxRuntimeMinutes$</MaxRuntimeMinutes>
+              <WebHookExpirationDays>-1</WebHookExpirationDays>
+              <WebHookExpirationSilence>-1</WebHookExpirationSilence>              
+              <RunMode>Data</RunMode>
+            </DataSource>
+            <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Data</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="String">Property[@Name='RunbookId']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value Type="String">$Config/RunbookId$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="HealthyCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>LessEqual</Operator>
+                  <ValueExpression>
+                    <Value Type="Double">$Config/MaxThreshold$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="UnHealthyCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Greater</Operator>
+                  <ValueExpression>
+                    <Value Type="Double">$Config/MaxThreshold$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="Healthy">
+              <Node ID="HealthyCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                <Node ID="DS" />
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="UnHealthy">
+              <Node ID="UnHealthyCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                    <Node ID="DS"></Node>
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+      
+      <UnitMonitorType ID="QND.OMS.Automation.RunbookStatusGenericNotCooked.MT" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="Healthy"/>
+          <MonitorTypeState ID="UnHealthy"/>
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+          <!-- I'm lazy and don't want to copy and paste the same monitor type so let's do some redundancy at the parameter level -->
+          <xsd:element name="Property" type="xsd:string" />
+          <xsd:element name="MaxThreshold" type="xsd:int" />
+
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+          <xsd:element name="TenantADName" type="xsd:string" />
+          <xsd:element name="AccountId" type="xsd:string" />
+          <xsd:element name="RunbookId" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="LastNJobs" type="xsd:int" default="1" />
+          <xsd:element name="MaxFailures" type="xsd:int" default="0"/>
+          <xsd:element name="FailureCondition" type="xsd:string" default="^[4|9]$" />
+          <xsd:element name="MaxAgeHours" type="xsd:int" default="-1" />
+          <xsd:element name="MaxRuntimeMinutes" type="xsd:int" default="-1" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$"/>
+          <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$"/>
+          <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$"/>
+          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
+          <OverrideableParameter ID="MaxRuntimeMinutes" ParameterType="int" Selector="$Config/MaxRuntimeMinutes$"/>        
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="QND.OMS.Automation.RunbookStatus.DS">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <TenantADName>$Config/TenantADName$</TenantADName>
+              <AccountId>$Config/AccountId$</AccountId>
+              <RunbookId>$Config/RunbookId$</RunbookId>
+              <AADUserName>$Config/AADUserName$</AADUserName>
+              <AADPassword>$Config/AADPassword$</AADPassword>
+              <LastNJobs>$Config/LastNJobs$</LastNJobs>
+              <MaxFailures>$Config/MaxFailures$</MaxFailures>
+              <FailureCondition>$Config/FailureCondition$</FailureCondition>
+              <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
+              <MaxRuntimeMinutes>$Config/MaxRuntimeMinutes$</MaxRuntimeMinutes>
+              <WebHookExpirationDays>-1</WebHookExpirationDays>
+              <WebHookExpirationSilence>-1</WebHookExpirationSilence>
+              <RunMode>Data</RunMode>
+            </DataSource>
+            <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Data</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='RunbookId']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">$Config/RunbookId$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="HealthyCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>LessEqual</Operator>
+                  <ValueExpression>
+                    <Value Type="Double">$Config/MaxThreshold$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="UnHealthyCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Greater</Operator>
+                  <ValueExpression>
+                    <Value Type="Double">$Config/MaxThreshold$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="Healthy">
+              <Node ID="HealthyCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                    <Node ID="DS" />
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="UnHealthy">
+              <Node ID="UnHealthyCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                    <Node ID="DS"></Node>
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+      <UnitMonitorType ID="QND.OMS.Automation.RunbookWebHookExpirationCooked.MT" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="Valid"/>
+          <MonitorTypeState ID="AboutToExpire"/>
+          <MonitorTypeState ID="Expired"/>        
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+          <xsd:element name="TenantADName" type="xsd:string" />
+          <xsd:element name="AccountId" type="xsd:string" />
+          <xsd:element name="RunbookId" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="LastNJobs" type="xsd:int" default="1" />
+          <xsd:element name="MaxFailures" type="xsd:int" default="0"/>
+          <xsd:element name="FailureCondition" type="xsd:string" default="^[4|9]$" />
+          <xsd:element name="MaxAgeHours" type="xsd:int" default="-1" />
+          <xsd:element name="MaxRuntimeMinutes" type="xsd:int" default="-1" />
+          <xsd:element name="WebHookExpirationDays" type="xsd:int" default="-1" />
+          <xsd:element name="WebHookExpirationSilence" type="xsd:int" default="-1" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$"/>
+          <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$"/>
+          <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$"/>
+          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
+          <OverrideableParameter ID="MaxRuntimeMinutes" ParameterType="int" Selector="$Config/MaxRuntimeMinutes$"/>
+          <OverrideableParameter ID="WebHookExpirationDays" ParameterType="int" Selector="$Config/WebHookExpirationDays$"/>
+          <OverrideableParameter ID="WebHookExpirationSilence" ParameterType="int" Selector="$Config/WebHookExpirationSilence$"/>
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="QND.OMS.Automation.RunbookStatus.DS">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <TenantADName>$Config/TenantADName$</TenantADName>
+              <AccountId>$Config/AccountId$</AccountId>
+              <!-- RunbookId is not used in this monitor -->
+              <RunbookId></RunbookId>
+              <AADUserName>$Config/AADUserName$</AADUserName>
+              <AADPassword>$Config/AADPassword$</AADPassword>
+              <LastNJobs>$Config/LastNJobs$</LastNJobs>
+              <MaxFailures>$Config/MaxFailures$</MaxFailures>
+              <FailureCondition>$Config/FailureCondition$</FailureCondition>
+              <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
+              <MaxRuntimeMinutes>$Config/MaxRuntimeMinutes$</MaxRuntimeMinutes>
+              <WebHookExpirationDays>$Config/WebHookExpirationDays$</WebHookExpirationDays>
+              <WebHookExpirationSilence>$Config/WebHookExpirationSilence$</WebHookExpirationSilence>
+              <RunMode>Data</RunMode>
+            </DataSource>
+            <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Data</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='RunbookId']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">$Config/RunbookId$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="ValidCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">Property[@Name='DaysToExpiration']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Greater</Operator>
+                  <ValueExpression>
+                    <Value Type="Double">$Config/WebHookExpirationDays$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="AboutToExpireCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <And>
+                  <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">Property[@Name='DaysToExpiration']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>LessEqual</Operator>
+                  <ValueExpression>
+                    <Value Type="Double">$Config/WebHookExpirationDays$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+                  </Expression>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Double">Property[@Name='DaysToExpiration']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Greater</Operator>
+                      <ValueExpression>
+                        <Value Type="Double">0</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                </And>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="ExpiredCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">Property[@Name='DaysToExpiration']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Less</Operator>
+                  <ValueExpression>
+                    <Value Type="Double">0</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>            
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="Valid">
+              <Node ID="ValidCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                    <Node ID="DS" />
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="AboutToExpire">
+              <Node ID="AboutToExpireCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                    <Node ID="DS"></Node>
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="Expired">
+              <Node ID="ExpiredCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                    <Node ID="DS"></Node>
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>      
+      <UnitMonitorType ID="QND.OMS.Automation.Connectivity.MT" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="Healthy"/>
+          <MonitorTypeState ID="UnReachable"/>
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+          <xsd:element name="TenantADName" type="xsd:string" />
+          <xsd:element name="AccountId" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="QND.OMS.Automation.RunbookStatus.DS">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <TenantADName>$Config/TenantADName$</TenantADName>
+              <AccountId>$Config/AccountId$</AccountId>
+              <RunbookId></RunbookId>
+              <AADUserName>$Config/AADUserName$</AADUserName>
+              <AADPassword>$Config/AADPassword$</AADPassword>
+              <LastNJobs>1</LastNJobs>
+              <MaxFailures>0</MaxFailures>
+              <FailureCondition>^[4|9]$</FailureCondition>
+              <MaxAgeHours>-1</MaxAgeHours>
+              <MaxRuntimeMinutes>-1</MaxRuntimeMinutes>
+              <WebHookExpirationDays>-1</WebHookExpirationDays>
+              <WebHookExpirationSilence>-1</WebHookExpirationSilence>
+              <RunMode>Status</RunMode>
+            </DataSource>
+            <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Status</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="ConnectOKCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='Status']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">OK</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="ConnectKOCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">Property[@Name='Status']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Error</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="Healthy">
+              <Node ID="ConnectOKCD">
+                <Node ID="Filter">
+                  <Node ID="DS" />
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="UnReachable">
+              <Node ID="ConnectKOCD">
+                <Node ID="Filter">
+                  <Node ID="DS"></Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>      
+    </MonitorTypes>
+  </TypeDefinitions>
+</ManagementPackFragment>

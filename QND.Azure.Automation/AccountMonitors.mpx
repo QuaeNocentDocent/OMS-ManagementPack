@@ -1,0 +1,112 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Monitoring>
+    <Monitors>
+      <!-- missing rollup for Execution and Age under Availability, direct connection for runtime-->
+      <AggregateMonitor ID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Accessibility="Public" Enabled="true" 
+                        ParentMonitorID="Health!System.Health.AvailabilityState" Priority="Normal" Remotable="true" Target="QND.OMS.Automation.Account">
+        <Category>AvailabilityHealth</Category>
+        <Algorithm>WorstOf</Algorithm>
+      </AggregateMonitor>
+                          
+      <UnitMonitor ID="QND.OMS.Automation.Account.Connectivity.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Account"
+        ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.Connectivity.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Automation.Account.Connectivity.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter2>$Data/Context/Property[@Name="Description"]$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="UnHealthy" MonitorTypeStateID="UnReachable" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>3611</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <TenantADName>$Target/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <AccountId>$Target/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
+          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+        </Configuration>
+      </UnitMonitor>
+      <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookExecStatus.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.ExecStatus.Monitor"
+          ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountContainsRunbook"
+          Remotable="true" Target="QND.OMS.Automation.Account">
+        <Category>AvailabilityHealth</Category>
+        <Algorithm>Percentage</Algorithm>
+        <AlgorithmParameter>30</AlgorithmParameter>
+        <MemberInMaintenance>Success</MemberInMaintenance>
+        <MemberUnAvailable>Warning</MemberUnAvailable>
+      </DependencyMonitor>
+      <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookRunAge.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.RunAge.Monitor"
+          ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountContainsRunbook"
+          Remotable="true" Target="QND.OMS.Automation.Account">
+        <Category>AvailabilityHealth</Category>
+        <Algorithm>Percentage</Algorithm>
+        <AlgorithmParameter>30</AlgorithmParameter>
+        <MemberInMaintenance>Success</MemberInMaintenance>
+        <MemberUnAvailable>Warning</MemberUnAvailable>
+      </DependencyMonitor>
+    <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookWebHookExpiration.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor"
+          ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountContainsRunbook"
+          Remotable="true" Target="QND.OMS.Automation.Account">
+        <Category>AvailabilityHealth</Category>
+        <Algorithm>Percentage</Algorithm>
+        <AlgorithmParameter>30</AlgorithmParameter>
+        <MemberInMaintenance>Success</MemberInMaintenance>
+        <MemberUnAvailable>Warning</MemberUnAvailable>
+      </DependencyMonitor>      
+      <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookLongRunning.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.LongRunning.Monitor"
+          ParentMonitorID="Health!System.Health.PerformanceState" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountContainsRunbook"
+          Remotable="true" Target="QND.OMS.Automation.Account">
+        <Category>AvailabilityHealth</Category>
+        <Algorithm>Percentage</Algorithm>
+        <AlgorithmParameter>30</AlgorithmParameter>
+        <MemberInMaintenance>Success</MemberInMaintenance>
+        <MemberUnAvailable>Warning</MemberUnAvailable>
+      </DependencyMonitor>
+    </Monitors>
+  </Monitoring>
+  <Presentation>
+    <StringResources>
+      <StringResource ID="QND.OMS.Automation.Account.Connectivity.Monitor.AlertMessage"/>
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+
+        <DisplayString ElementID="QND.OMS.Automation.AccountToRunbookExecStatus.DepMonitor">
+          <Name>Execution Status</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Automation.Account.Connectivity.Monitor.AlertMessage">
+          <Name>QND - Azure Automation Account Unreachable</Name>
+          <Description>The account is unreachable. Error:{0}</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Automation.Account.Connectivity.Monitor">
+          <Name>Connectivity</Name>
+        </DisplayString>
+
+        <DisplayString ElementID="QND.OMS.Automation.AccountToRunbookRunAge.DepMonitor">
+          <Name>Last Exectuion Time</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Automation.AccountToRunbookLongRunning.DepMonitor">
+          <Name>Runbooks running time</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Automation.AccountToRunbookWebHookExpiration.DepMonitor">
+          <Name>WebHooks Validity</Name>
+        </DisplayString>        
+
+        <DisplayString ElementID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor">
+          <Name>Runbooks</Name>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

@@ -1,0 +1,103 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Presentation>
+      <Views>
+    <View ID="QND.OMS.Automation.AccountState.View" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Account" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+      <Category>Operations</Category>
+      <Criteria>
+        <InMaintenanceMode>false</InMaintenanceMode>
+      </Criteria>
+      <Presentation>
+        <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
+          <Name>State</Name>
+          <Id>QND.OMS.Automation.Account</Id>
+        </ColumnInfo>
+        <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+          <Name>Maintenance Mode</Name>
+          <Id>InMaintenanceMode</Id>
+        </ColumnInfo>
+        <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+          <Name>Name</Name>
+          <Id>Name</Id>
+        </ColumnInfo>
+        <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+          <Name>Path</Name>
+          <Id>Path</Id>
+        </ColumnInfo>
+        <ColumnInfo Index="4" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+          <Name>Display Name</Name>
+          <Id>System.Entity/DisplayName</Id>
+        </ColumnInfo>
+      </Presentation>
+      <Target />
+    </View>
+      <View ID="QND.OMS.Automation.RunbookState.View" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Runbook" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Operations</Category>
+        <Criteria>
+ 
+        </Criteria>
+        <Presentation>
+          <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
+            <Name>State</Name>
+            <Id>QND.OMS.Automation.Runbook</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Maintenance Mode</Name>
+            <Id>InMaintenanceMode</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Path</Name>
+            <Id>Path</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="4" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Display Name</Name>
+            <Id>System.Entity/DisplayName</Id>
+          </ColumnInfo>
+        </Presentation>
+        <Target />
+
+      </View>
+
+      </Views>
+
+    <Folders>
+      <Folder ID="QND.OMS.Automation.Folder" ParentFolder="OMS!QND.OMS.Folders" Accessibility="Public"/>
+    </Folders>
+    <FolderItems>
+      
+      <!-- In this section, uncomment and edit the ElementID to reference a View or Folder
+           you've created to place that item into the Folder referenced by the Folder attribute.
+           FolderItems do not need display strings; The referenced ElementID's DisplayString
+           is used and shown to the user. More information can be found in the Management 
+           Pack Development Kit: http://msdn.microsoft.com/en-us/library/ee533579.aspx -->
+
+      <FolderItem ID="QND.OMS.Automation.AccountState.FldrItem" ElementID="QND.OMS.Automation.AccountState.View" Folder="QND.OMS.Automation.Folder" />
+      <FolderItem ID="QND.OMS.Automation.RunbookState.FldrItem" ElementID="QND.OMS.Automation.RunbookState.View" Folder="QND.OMS.Automation.Folder" />
+
+    </FolderItems>
+    
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        
+        <DisplayString ElementID="QND.OMS.Automation.Folder">
+          <Name>Azure Automation</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Automation.AccountState.View">
+          <Name>Accounts State</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Automation.RunbookState.View">
+          <Name>Runbook States</Name>
+          <Description></Description>
+        </DisplayString>
+
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

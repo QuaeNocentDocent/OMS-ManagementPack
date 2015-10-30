@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack ContentReadable="true" SchemaVersion="2.0" OriginalSchemaVersion="1.1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <Manifest>
+    <Identity>
+      <ID>QND.Azure.Test</ID>
+      <Version>1.0.0.0</Version>
+    </Identity>
+    <Name>QND Azure Monitoring Test</Name>
+    <References>
+      <Reference Alias="MicrosoftSystemCenterWindowsAzure">
+        <ID>Microsoft.SystemCenter.WindowsAzure</ID>
+        <Version>1.3.1.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="AzureGenSCDW">
+        <ID>Microsoft.SystemCenter.DataWarehouse.Library</ID>
+        <Version>7.0.10226.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="AzureGenPerformance">
+        <ID>System.Performance.Library</ID>
+        <Version>7.0.8433.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="AzureGenSystem">
+        <ID>System.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="SystemCenter">
+        <ID>Microsoft.SystemCenter.Library</ID>
+        <Version>7.0.8427.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="AzureGenHealth">
+        <ID>System.Health.Library</ID>
+        <Version>7.0.8427.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="QND.Azure.automation.automationaccount" Accessibility="Public" Abstract="false" Base="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.ArmService" Hosted="true" Singleton="false" Extension="false" />
+        <ClassType ID="QND.Azure.automation.configurations" Accessibility="Public" Abstract="false" Base="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.ArmResource" Hosted="true" Singleton="false" Extension="false" />
+        <ClassType ID="QND.Azure.automation.modules" Accessibility="Public" Abstract="false" Base="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.ArmResource" Hosted="true" Singleton="false" Extension="false" />
+        <ClassType ID="QND.Azure.automation.runbooks" Accessibility="Public" Abstract="false" Base="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.ArmResource" Hosted="true" Singleton="false" Extension="false" />
+      </ClassTypes>
+    </EntityTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="QND.Azure.automation.Discovery" Enabled="true" Target="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.Subscription" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.ResourceGroup" />
+          <DiscoveryClass TypeID="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.ArmService" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.ResourceGroup.Discovery.DS">
+          <IntervalSeconds>120</IntervalSeconds>
+          <TimeoutSeconds>120</TimeoutSeconds>
+          <Proxy>$Target/Property[Type="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <SubscriptionId>$Target/Property[Type="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <ClientId>$Target/Property[Type="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.Subscription"]/ClientId$</ClientId>
+          <AuthBaseAddress>$Target/Property[Type="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Property[Type="MicrosoftSystemCenterWindowsAzure!Microsoft.SystemCenter.WindowsAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <TargetId>$Target/Id$</TargetId>
+          <SourceId>$MPElement[Name="QND.Azure.automation.Discovery"]$</SourceId>
+          <ResourceTypeSettings>
+
+            <ResourceTypeClass>
+              <ResourceType>Microsoft.Automation/automationAccounts</ResourceType>
+              <ResourceClass>$MPElement[Name="QND.Azure.automation.automationaccount"]$</ResourceClass>
+              <ResourceExcludeList />
+            </ResourceTypeClass>
+            <ResourceTypeClass>
+              <ResourceType>Microsoft.Automation/automationAccounts/configurations</ResourceType>
+              <ResourceClass>$MPElement[Name="QND.Azure.automation.configurations"]$</ResourceClass>
+              <ResourceExcludeList />
+            </ResourceTypeClass>
+            <ResourceTypeClass>
+              <ResourceType>Microsoft.Automation/AutomationAccounts/Modules</ResourceType>
+              <ResourceClass>$MPElement[Name="QND.Azure.automation.modules"]$</ResourceClass>
+              <ResourceExcludeList />
+            </ResourceTypeClass>
+            <ResourceTypeClass>
+              <ResourceType>Microsoft.Automation/AutomationAccounts/Runbooks</ResourceType>
+              <ResourceClass>$MPElement[Name="QND.Azure.automation.runbooks"]$</ResourceClass>
+              <ResourceExcludeList />
+            </ResourceTypeClass>
+          </ResourceTypeSettings>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+  </Monitoring>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="false">
+      <DisplayStrings>
+        <DisplayString ElementID="QND.Azure.Test">
+          <Name>QND - Azure Monitoring Test</Name>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPack>

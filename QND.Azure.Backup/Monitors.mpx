@@ -1,0 +1,140 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><Monitoring>
+    <Monitors>
+      <UnitMonitor ID="QND.OMS.Backup.Policy.Age.Monitor" Accessibility="Internal" Enabled="true" Target="QND.OMS.Backup.Agent.Policy" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Backup.Policy.Age.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Backup.Policy.Age.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="BackupAgeHours"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name"LastBackupTime"]$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="TooOld" MonitorTypeStateID="TooOld" HealthState="Error" />
+          <OperationalState ID="UpToDate" MonitorTypeStateID="UpToDate" HealthState="Success" />
+        </OperationalStates>
+        <Configuration>
+          <TraceLevel>2</TraceLevel>
+          <ScriptTimeout>300</ScriptTimeout>
+          <IntervalSeconds>300</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <ThresholdAgeHours>25</ThresholdAgeHours>
+          <ThresholdSizeMB>20</ThresholdSizeMB>
+          <PolicyName>$Target/Property[Type="QND.OMS.Backup.Agent.Policy"]/PolicyName$</PolicyName>
+        </Configuration>
+      </UnitMonitor>
+      <UnitMonitor ID="QND.OMS.Backup.Size.Monitor" Accessibility="Internal" Enabled="true" Target="QND.OMS.Backup.Agent" ParentMonitorID="Health!System.Health.PerformanceState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Backup.Size.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Backup.Size.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="MachineUsageMB"]$</AlertParameter1>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="TooBig" MonitorTypeStateID="TooBig" HealthState="Error" />
+          <OperationalState ID="WithinLimits" MonitorTypeStateID="WithinLimits" HealthState="Success" />
+        </OperationalStates>
+        <Configuration>
+          <TraceLevel>2</TraceLevel>
+          <ScriptTimeout>300</ScriptTimeout>
+          <IntervalSeconds>300</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <ThresholdAgeHours>25</ThresholdAgeHours>
+          <ThresholdSizeMB>20</ThresholdSizeMB>
+        </Configuration>
+      </UnitMonitor>
+    </Monitors>
+  </Monitoring><Presentation>
+    <StringResources>
+      <StringResource ID="QND.OMS.Backup.Policy.Age.Monitor.AlertMessage" />
+      <StringResource ID="QND.OMS.Backup.Size.Monitor.AlertMessage" />
+    </StringResources>
+  </Presentation><LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="QND.OMS.Backup.Policy.Age.Monitor">
+          <Name>Backup Age</Name>
+          <Description>Detects the age of the latest backup set on the Azure Vault</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Backup.Policy.Age.Monitor.AlertMessage">
+          <Name>Windows Azure Backup Age</Name>
+          <Description>Backup data is too old. Current age is {0} hours. Last backup date is {1}</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Backup.Policy.Age.Monitor" SubElementID="TooOld">
+          <Name>TooOld</Name>
+          <Description>TooOld</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Backup.Policy.Age.Monitor" SubElementID="UpToDate">
+          <Name>UpToDate</Name>
+          <Description>UpToDate</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Backup.Size.Monitor">
+          <Name>Backup Size</Name>
+          <Description>Detects the allocated size in the Windows Azure Backup Vault</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Backup.Size.Monitor.AlertMessage">
+          <Name>Windows Azure Backup Size</Name>
+          <Description>Backup data is too big. Current size is {0} MB.</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Backup.Size.Monitor" SubElementID="TooBig">
+          <Name>Too Big</Name>
+          <Description>Too Big</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Backup.Size.Monitor" SubElementID="WithinLimits">
+          <Name>WithinLimits</Name>
+          <Description>Within Limits</Description>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles>
+        <KnowledgeArticle ElementID="QND.OMS.Backup.Size.Monitor">
+          <MamlContent>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Summary</title>
+              <para>This monitor is disabled by default. Once enabled it checks for the dataset size on Windows Azure Backup Vault and raises an alert if it's over the configure threshold</para>
+              <para>The backup vault size it's not an isse per se, alerting is useful to proactively keeping under control the billing for the Vault</para>
+            </section>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Causes</title>
+              <para>The Windows Azure Backup Agent policy is too wide in scopre, or the amount of data to be backed up has grown</para>
+            </section>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Solution</title>
+              <para>Check the policy and set it appropriately</para>
+            </section>
+          </MamlContent>          
+        </KnowledgeArticle>
+        <KnowledgeArticle ElementID="QND.OMS.Backup.Policy.Age.Monitor">
+          <MamlContent>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Summary</title>
+              <para>This monitor checks for the age of the latest backup set and raises an alert if it is older then the configured threshold.</para>
+              <para>A dated backup set indcates some sort of issue on the backup process either on the protectd machine or on Azure Backup Vault.</para>
+            </section>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Causes</title>
+              <para>It is highly probable an issue with the agent you should connect to the affected machine and check for:</para>
+              <list>
+                <listItem>
+                  <para>Backup Certificate correctness. Is it expired?</para>
+                </listItem>
+                <listItem>
+                  <para>Encryption key correctness. Is the encryption key still set? It can be check via powershell: Import-Module MSOnlineBackup; Get-OBMachineSetting</para>
+                </listItem>
+              </list>
+            </section>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Solution</title>
+              <para>Check the agent status</para>
+            </section>
+          </MamlContent>
+        </KnowledgeArticle>
+      </KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks></ManagementPackFragment>

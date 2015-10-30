@@ -5,7 +5,7 @@
       <!-- In this section, you can create more folders. Edit the DisplayString for this folder 
            to change the name the user sees in the console. More information can be found in 
            the Management Pack Development Kit: http://msdn.microsoft.com/en-us/library/ee533810.aspx -->
-      <Folder ID="QND.OMS.Folders" Accessibility="Internal" ParentFolder="SC!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
+      <Folder ID="QND.OMS.Folders" Accessibility="Public" ParentFolder="SC!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
     
     </Folders>
 

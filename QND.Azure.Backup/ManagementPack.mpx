@@ -1,0 +1,37 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="QND.OMS.Backup">
+          <Name>QND - Azure OMS Backup</Name>
+          <Description>Community based Azure OMS Backup monitoring</Description>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles>
+        <KnowledgeArticle ElementID="QND.OMS.Backup">
+          <MamlContent>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Summary</title>
+              <para>This management pack monitors the OMS Azure Backup service.</para>
+              <para>The management pack checks for:</para>
+              <list>
+                <listItem>
+                  <para>Latest backup set age - if the backup set is too old (by default 25 hours) it raises an alert</para>
+                </listItem>
+                <listItem>
+                  <para>Backup set size - this monitor, disabled by default, checks if the allocated size if over a given threshold</para>
+                </listItem>
+              </list>
+              <para>Every monitor check for the value returned in the first row in the specified column number. Column numbering starts from 1.</para>
+            </section>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Configuration</title>
+              <para>The Size monitor needs to be enabled and the threhsold configured.</para>
+            </section>
+          </MamlContent>
+        </KnowledgeArticle>
+      </KnowledgeArticles>
+
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>
