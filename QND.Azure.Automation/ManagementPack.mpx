@@ -7,6 +7,27 @@
           <Description>Community based monitoring for Azure OMS Automation</Description>
         </DisplayString>
       </DisplayStrings>
+      <KnowledgeArticles>
+
+        <KnowledgeArticle ElementID="QND.OMS.Automation">
+          <MamlContent>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Summary</maml:title>
+              <maml:para>This community based management pack check for OMS Automation health.</maml:para>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Configuration</maml:title>
+              <maml:para>
+                For more info on MP configuration see <maml:navigationLink>
+                  <maml:linkText>GitHub Wiki Home page for the project</maml:linkText>
+                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki" />
+                </maml:navigationLink>
+                </maml:para>
+            </maml:section>
+          </MamlContent>
+        </KnowledgeArticle>
+      </KnowledgeArticles>
+      
     </LanguagePack>
   </LanguagePacks>
 </ManagementPackFragment>

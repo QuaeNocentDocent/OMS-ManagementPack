@@ -80,6 +80,7 @@
         </Configuration>
       </UnitMonitor>      
       
+      <!-- this can be improved checking only on runbooks with a schedule set -->
       <UnitMonitor ID="QND.OMS.Automation.Runbook.RunAge.Monitor" Accessibility="Public" Enabled="false" Target="QND.OMS.Automation.Runbook"
              ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatusGenericNotCooked.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>

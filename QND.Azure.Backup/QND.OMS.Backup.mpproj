@@ -30,6 +30,9 @@
     <AssemblyOriginatorKeyFile />
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="KBArticles.mpx">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="VaultAndContainerMonitors.mpx">
       <SubType>Code</SubType>
     </Compile>

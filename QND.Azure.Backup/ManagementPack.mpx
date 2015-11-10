@@ -27,6 +27,8 @@
             <section xmlns="http://schemas.microsoft.com/maml/2004/10">
               <title>Configuration</title>
               <para>The Size monitor needs to be enabled and the threhsold configured.</para>
+              <para>For more and up to date information on this MP and its configuration see <navigationLink><linkText>GitHub Wiki Home page for the project</linkText><uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki" /></navigationLink>
+            </para>
             </section>
           </MamlContent>
         </KnowledgeArticle>
@@ -35,3 +37,5 @@
     </LanguagePack>
   </LanguagePacks>
 </ManagementPackFragment>
+
+
