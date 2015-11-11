@@ -16,7 +16,7 @@
                   <maml:para>Error: resource pool servers cannot erach the search api for the workspace.</maml:para>
                 </maml:listItem>
               </maml:list>
-              <maml:para>For more info see <maml:navigationLink><maml:linkText>GitHub Wiki</maml:linkText><maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/automation/connectivitymonitor" /></maml:navigationLink></maml:para>              
+              <maml:para>For more info see <maml:navigationLink><maml:linkText>GitHub Wiki</maml:linkText><maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Automation-Connectivity-Monitor" /></maml:navigationLink></maml:para>              
             </maml:section>
             <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
               <maml:title>Configuration</maml:title>
@@ -118,7 +118,7 @@
               <maml:para>
                 For more info see <maml:navigationLink>
                   <maml:linkText>GitHub Wiki</maml:linkText>
-                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/automation/runbookexecstatusmonitor" />
+                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Automation-Runbook-Exec-Status-Monitor" />
                 </maml:navigationLink>
               </maml:para>
 
@@ -147,7 +147,7 @@
               <maml:para>
                 For more info see <maml:navigationLink>
                   <maml:linkText>GitHub Wiki</maml:linkText>
-                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/automation/runbookwebhookexpirationmonitor" />
+                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Automation-Runbook-Webhook-Expiration-Monitor" />
                 </maml:navigationLink>
               </maml:para>
 
@@ -173,7 +173,7 @@
               <maml:para>
                 For more info see <maml:navigationLink>
                   <maml:linkText>GitHub Wiki</maml:linkText>
-                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/automation/runbookrunagemonitor" />
+                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Automation-Runbook-Run-Age-Monitor" />
                 </maml:navigationLink>
               </maml:para>
 
@@ -199,7 +199,7 @@
               <maml:para>
                 For more info see <maml:navigationLink>
                   <maml:linkText>GitHub Wiki</maml:linkText>
-                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/automation/runbooklongrunningmonitor" />
+                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Automation-Runbook-Longrunning-Monitor" />
                 </maml:navigationLink>
               </maml:para>
 

@@ -198,7 +198,7 @@
               <maml:para>
                 For more info see <maml:navigationLink>
                   <maml:linkText>GitHub Wiki</maml:linkText>
-                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Backup-Recoverypoint-Age-Monitor" />
+                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Backup-Job-Failure-Rate-Monitor" />
                 </maml:navigationLink>
               </maml:para>
 
@@ -226,7 +226,7 @@
               <maml:para>
                 For more info see <maml:navigationLink>
                   <maml:linkText>GitHub Wiki</maml:linkText>
-                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/backup/recoverypointagemonitor" />
+                  <maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Backup-Recoverypoint-Age-Monitor" />
                 </maml:navigationLink>
               </maml:para>
 
