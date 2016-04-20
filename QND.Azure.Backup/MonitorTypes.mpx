@@ -10,7 +10,7 @@
           <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="ThresholdAgeHours" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="ThresholdSizeMB" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdSizeGB" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
@@ -18,7 +18,7 @@
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
           <OverrideableParameter ID="ThresholdAgeHours" Selector="$Config/ThresholdAgeHours$" ParameterType="int" />
-          <OverrideableParameter ID="ThresholdSizeMB" Selector="$Config/ThresholdSizeMB$" ParameterType="int" />
+          <OverrideableParameter ID="ThresholdSizeGB" Selector="$Config/ThresholdSizeGB$" ParameterType="int" />
         </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
@@ -40,8 +40,8 @@
                     <Value>$Config/ThresholdAgeHours$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>thresholdSizeMB</Name>
-                    <Value>$Config/ThresholdSizeMB$</Value>
+                    <Name>thresholdSizeGB</Name>
+                    <Value>$Config/ThresholdSizeGB$</Value>
                   </Parameter>
                 </Parameters>
                 <TimeoutSeconds>$Config/ScriptTimeout$</TimeoutSeconds>
@@ -69,7 +69,7 @@
           <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="ThresholdAgeHours" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="ThresholdSizeMB" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdSizeGB" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="PolicyName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
         </Configuration>
         <OverrideableParameters>
@@ -78,7 +78,7 @@
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
           <OverrideableParameter ID="ThresholdAgeHours" Selector="$Config/ThresholdAgeHours$" ParameterType="int" />
-          <OverrideableParameter ID="ThresholdSizeMB" Selector="$Config/ThresholdSizeMB$" ParameterType="int" />
+          <OverrideableParameter ID="ThresholdSizeGB" Selector="$Config/ThresholdSizeGB$" ParameterType="int" />
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
@@ -88,7 +88,7 @@
               <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
               <SyncTime>$Config/SyncTime$</SyncTime>
               <ThresholdAgeHours>$Config/ThresholdAgeHours$</ThresholdAgeHours>
-              <ThresholdSizeMB>$Config/ThresholdSizeMB$</ThresholdSizeMB>
+              <ThresholdSizeGB>$Config/ThresholdSizeGB$</ThresholdSizeGB>
             </DataSource>
             <ConditionDetection ID="NormalCD" TypeID="System!System.ExpressionFilter">
               <Expression>
@@ -159,7 +159,7 @@
           <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="ThresholdAgeHours" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="ThresholdSizeMB" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdSizeGB" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
@@ -167,7 +167,7 @@
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
           <OverrideableParameter ID="ThresholdAgeHours" Selector="$Config/ThresholdAgeHours$" ParameterType="int" />
-          <OverrideableParameter ID="ThresholdSizeMB" Selector="$Config/ThresholdSizeMB$" ParameterType="int" />
+          <OverrideableParameter ID="ThresholdSizeGB" Selector="$Config/ThresholdSizeGB$" ParameterType="int" />
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
@@ -177,7 +177,7 @@
               <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
               <SyncTime>$Config/SyncTime$</SyncTime>
               <ThresholdAgeHours>$Config/ThresholdAgeHours$</ThresholdAgeHours>
-              <ThresholdSizeMB>$Config/ThresholdSizeMB$</ThresholdSizeMB>
+              <ThresholdSizeGB>$Config/ThresholdSizeGB$</ThresholdSizeGB>
             </DataSource>
             <ConditionDetection ID="NormalCD" TypeID="System!System.ExpressionFilter">
               <Expression>

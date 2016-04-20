@@ -30,6 +30,9 @@
     <AssemblyOriginatorKeyFile />
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="DPMCheat.mpx">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="KBArticles.mpx">
       <SubType>Code</SubType>
     </Compile>
@@ -66,56 +69,62 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ManagementPackReference Include="Microsoft.SystemCenter.DataProtectionManager.2012.Library">
+      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\Microsoft.SystemCenter.DataProtectionManager.2012.Library.mp</HintPath>
+      <Alias>DPM</Alias>
+      <MinVersion>4.2.1276.0</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.SystemCenter.InstanceGroup.Library">
-      <HintPath>C:\Program Files (x86)\System Center 2012 Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.InstanceGroup.Library.mp</HintPath>
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.InstanceGroup.Library.mp</HintPath>
       <Alias>MSIL</Alias>
       <MinVersion>7.5.8501.0</MinVersion>
     </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.SystemCenter.Library">
-      <HintPath>C:\Program Files (x86)\System Center 2012 Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.Library.mp</HintPath>
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.Library.mp</HintPath>
       <Alias>SC</Alias>
       <MinVersion>7.0.8433.0</MinVersion>
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.Windows.Library">
-      <HintPath>C:\Program Files (x86)\System Center 2012 Visual Studio Authoring Extensions\References\OM2012\Microsoft.Windows.Library.mp</HintPath>
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012\Microsoft.Windows.Library.mp</HintPath>
       <Alias>Windows</Alias>
       <MinVersion>7.5.8501.0</MinVersion>
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="System.AdminItem.Library">
-      <HintPath>C:\Program Files (x86)\System Center 2012 Visual Studio Authoring Extensions\References\OM2012\System.AdminItem.Library.mp</HintPath>
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012\System.AdminItem.Library.mp</HintPath>
       <Alias>Alias3</Alias>
       <MinVersion>7.5.8501.0</MinVersion>
     </ManagementPackReference>
     <ManagementPackReference Include="System.ApplicationLog.Library">
-      <HintPath>C:\Program Files (x86)\System Center 2012 Visual Studio Authoring Extensions\References\OM2012\System.ApplicationLog.Library.mp</HintPath>
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012\System.ApplicationLog.Library.mp</HintPath>
       <Alias>AppLog</Alias>
       <MinVersion>7.0.8427.0</MinVersion>
     </ManagementPackReference>
     <ManagementPackReference Include="System.Health.Library">
-      <HintPath>C:\Program Files (x86)\System Center 2012 Visual Studio Authoring Extensions\References\OM2012\System.Health.Library.mp</HintPath>
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012\System.Health.Library.mp</HintPath>
       <Alias>Health</Alias>
       <MinVersion>7.0.8427.0</MinVersion>
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="System.Library">
-      <HintPath>C:\Program Files (x86)\System Center 2012 Visual Studio Authoring Extensions\References\OM2012\System.Library.mp</HintPath>
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012\System.Library.mp</HintPath>
       <Alias>System</Alias>
       <MinVersion>7.5.8501.0</MinVersion>
     </ManagementPackReference>
     <ManagementPackReference Include="System.Performance.Library">
-      <HintPath>C:\Program Files (x86)\System Center 2012 Visual Studio Authoring Extensions\References\OM2012\System.Performance.Library.mp</HintPath>
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012\System.Performance.Library.mp</HintPath>
       <Alias>SystemPerf</Alias>
       <MinVersion>7.0.8427.0</MinVersion>
     </ManagementPackReference>
     <ManagementPackReference Include="System.Snmp.Library">
-      <HintPath>C:\Program Files (x86)\System Center 2012 Visual Studio Authoring Extensions\References\OM2012\System.Snmp.Library.mp</HintPath>
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012\System.Snmp.Library.mp</HintPath>
       <Alias>SNMP</Alias>
       <MinVersion>7.0.8427.0</MinVersion>
     </ManagementPackReference>
     <ManagementPackReference Include="System.Software.Library">
-      <HintPath>C:\Program Files (x86)\System Center 2012 Visual Studio Authoring Extensions\References\OM2012\System.Software.Library.mp</HintPath>
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012\System.Software.Library.mp</HintPath>
       <Alias>Alias9</Alias>
       <MinVersion>7.5.8501.0</MinVersion>
     </ManagementPackReference>

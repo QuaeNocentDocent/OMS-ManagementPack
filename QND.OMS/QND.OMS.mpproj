@@ -31,7 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ManagementPackReference Include="Microsoft.SystemCenter.InstanceGroup.Library">
-      <HintPath>C:\Program Files (x86)\System Center 2012 Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.InstanceGroup.Library.mp</HintPath>
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.InstanceGroup.Library.mp</HintPath>
       <Alias>MSIL</Alias>
       <MinVersion>7.5.8501.0</MinVersion>
       <PackageToBundle>False</PackageToBundle>

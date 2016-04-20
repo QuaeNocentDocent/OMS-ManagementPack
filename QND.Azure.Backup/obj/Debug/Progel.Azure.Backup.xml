@@ -1,0 +1,1160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack SchemaVersion="2.0" ContentReadable="true" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Manifest>
+    <Identity>
+      <ID>Progel.Azure.Backup</ID>
+      <Version>1.0.0.29</Version>
+    </Identity>
+    <Name>Progel.Azure.Backup</Name>
+    <References>
+      <Reference Alias="SC">
+        <ID>Microsoft.SystemCenter.Library</ID>
+        <Version>7.0.8427.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Windows">
+        <ID>Microsoft.Windows.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="SystemHealth">
+        <ID>System.Health.Library</ID>
+        <Version>7.0.8427.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="System">
+        <ID>System.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="Progel.Azure.Backup.Agent" Accessibility="Public" Abstract="false" Base="Windows!Microsoft.Windows.LocalApplication" Hosted="true" Singleton="false" Extension="false" />
+        <ClassType ID="Progel.Azure.Backup.Policy" Accessibility="Public" Abstract="false" Base="Windows!Microsoft.Windows.ApplicationComponent" Hosted="true" Singleton="false" Extension="false">
+          <Property ID="PolicyName" Type="string" AutoIncrement="false" Key="true" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="RetentionDays" Type="int" AutoIncrement="false" Key="false" CaseSensitive="false" Required="false" Scale="0" />
+        </ClassType>
+      </ClassTypes>
+      <RelationshipTypes>
+        <RelationshipType ID="Progel.Azure.BackupAgentHostsPolicy" Abstract="false" Base="System!System.Hosting" Accessibility="Public">
+          <Source ID="Source" Type="Progel.Azure.Backup.Agent" />
+          <Target ID="Target" Type="Progel.Azure.Backup.Policy" />
+        </RelationshipType>
+      </RelationshipTypes>
+    </EntityTypes>
+    <ModuleTypes>
+      <DataSourceModuleType ID="Progel.Windows.Azure.Backup.Policy.Status.DS" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="TraceLevel" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScriptTimeout" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdAgeHours" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdSizeMB" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="ScriptTimeout" Selector="$Config/ScriptTimeout$" ParameterType="int" />
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="ThresholdAgeHours" Selector="$Config/ThresholdAgeHours$" ParameterType="int" />
+          <OverrideableParameter ID="ThresholdSizeMB" Selector="$Config/ThresholdSizeMB$" ParameterType="int" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+              </DataSource>
+              <ProbeAction ID="Script" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+                <ScriptName>WABStatus.ps1</ScriptName>
+                <ScriptBody><![CDATA[
+#Template Notes
+#basic error handling with -ErrorVariable -ErrorAction
+#EV is myErr set to null/cleared before any critical code section and tested for Count -eq 0 after, if different we have an error
+#plain and simple waiting for try/ctach in powershell 2.0
+#then every sensitive function should have a trap statement see http://huddledmasses.org/trap-exception-in-powershell/
+
+#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
+#SET ErrorLevel to 5 so show discovery info
+
+#*************************************************************************
+# Script Name - 
+# Author	  -  - Progel srl
+# Version	  - 1.1 24.09.2007
+# Purpose     - 
+#               
+# Assumptions - 
+#				
+#               
+# Parameters  - TraceLevel
+#             - ComputerName
+#				- SourceId
+#				- ManagedEntityId
+# Command Line - .\test.ps1 4 "serverName" '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}' '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}'
+# If discovery must be added the followinf parameters
+#				SourceId ($MPElement$ )
+#				ManagedEntityId ($Target/Id$)
+#
+# Output properties
+#
+# Status
+#
+# Version History
+#	  1.0 06.08.2010 DG First Release
+#     1.5 15.02.2014 DG minor cosmetics
+#
+# (c) Copyright 2010, Progel srl, All Rights Reserved
+# Proprietary and confidential to Progel srl              
+#
+#*************************************************************************
+
+
+# Get the named parameters
+param([int]$traceLevel=$(throw 'must have a value'),
+[int]$thresholdHours=$(throw 'must have a value'),
+[string]$thresholdSizeMB=$(throw 'must have a value'))
+
+	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
+    [Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
+	
+#Constants used for event logging
+$SCRIPT_NAME			= "Progel.Azure.Backup.GetRecovery"
+$SCRIPT_ARGS = 3
+
+$SCRIPT_STARTED			= 831
+$PROPERTYBAG_CREATED	= 832
+$SCRIPT_ENDED			= 835
+
+$SCRIPT_VERSION = "1.0"
+
+#Trace Level Costants
+$TRACE_NONE 	= 0
+$TRACE_ERROR 	= 1
+$TRACE_WARNING = 2
+$TRACE_INFO 	= 3
+$TRACE_VERBOSE = 4
+$TRACE_DEBUG = 5
+
+#Event Type Constants
+$EVENT_TYPE_SUCCESS      = 0
+$EVENT_TYPE_ERROR        = 1
+$EVENT_TYPE_WARNING      = 2
+$EVENT_TYPE_INFORMATION  = 4
+$EVENT_TYPE_AUDITSUCCESS = 8
+$EVENT_TYPE_AUDITFAILURE = 16
+
+#Standard Event IDs
+$FAILURE_EVENT_ID = 4000		#errore generico nello script
+$SUCCESS_EVENT_ID = 1101
+$START_EVENT_ID = 1102
+$STOP_EVENT_ID = 1103
+
+#TypedPropertyBag
+$AlertDataType = 0
+$EventDataType	= 2
+$PerformanceDataType = 2
+$StateDataType       = 3
+
+function Log-Params
+{
+	param([string] $CmdLine)	
+	trap { continue; }
+	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. " + $CmdLine) $TRACE_INFO
+}
+
+function Log-Event
+{
+	param($eventID, $eventType, $msg, $level)
+	
+	Write-Verbose ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+	if($level -le $P_TraceLevel)
+	{
+		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+		$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
+	}
+}
+
+#Start by setting up API object.
+	$P_TraceLevel = $TRACE_VERBOSE
+	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
+	#$g_RegistryStatePath = "HKLM\" + $g_API.GetScriptStateKeyPath($SCRIPT_NAME)
+
+	$dtStart = Get-Date
+
+	$P_TraceLevel = $traceLevel
+#same story for dumping the command line	
+#manul stuff today in v2 we could use $PSBoundParameters
+	Log-Params ([string]$traceLevel + " " + $computerName + " " + $sourceID + " " + $ManagedEntityId)
+try
+{
+    Import-Module MSOnlineBackup
+    $lastRec = Get-OBAllRecoveryPoints | Sort-Object BackupTime -Descending | Select-Object -First 1
+    $machineUSage = Get-OBMachineUsage
+	$policies = Get-OBPolicy | Where {$_.State -eq 'Existing'}
+    $elapsed = ([DateTime]::Now - $lastRec.BackupTime).TotalHours
+    Write-Verbose $elapsed
+    if ($elapsed -le $thresholdHours)
+    {
+        $backupStatus = 'UpToDate'
+    }
+    else
+    {
+        $backupStatus = 'TooOld'
+    }
+    if (($machineUsage.StorageUsedByMachineInBytes / (1024*1024)) -ge $thresholdSizeMB)
+    {
+        $sizeStatus = 'TooBig'
+    }
+    else
+    {
+        $sizeStatus = 'OK'
+    }
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+}
+Catch [Exception] {
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
+	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+    $sizeStatus = 'Fail';
+    $backupStatus = 'Fail';
+}
+finally
+{
+# in the current WAB version we have just one policy per agent, let's build something that can accomodate more policies and keep cook down'
+	if ($policies)
+	{
+		 foreach ($pol in $policies)
+		 {
+			$bag = $g_API.CreateTypedPropertyBag($StateDataType)
+			$bag.AddValue('PolicyName', $pol.PolicyName)
+
+			$bag.AddValue('LastBackupTime', $lastRec.BackupTime)
+			$bag.AddValue('BackupAgeHours', $elapsed)
+
+			$bag.AddValue('BackupStatus', $backupStatus)
+			$bag.AddValue('MachineUsageMB', $machineUSage.StorageUsedByMachineInBytes/(1024*1024))
+			$bag.AddValue('SizeStatus', $sizeStatus)				
+			$bag	#this is the way to return data to OpsMgr
+			If ($P_TraceLevel -eq $TRACE_DEBUG)
+			{
+				$message = "BackupTime: $($lastRec.BackupTime)`nBackupStatus: $($backupStatus)`nBackup Age hours: $elapsed`nMachine USage MB: $($machineUSage.StorageUsedByMachineInBytes/(1024*1024))`nSize Status: $sizeStatus" 
+				Log-Event $SUCCESS_EVENT_ID $EVENT_TYPE_INFORMATION $message $TRACE_DEBUG
+			}
+		}
+	}
+}]]></ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>traceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>thresholdHours</Name>
+                    <Value>$Config/ThresholdAgeHours$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>thresholdSizeMB</Name>
+                    <Value>$Config/ThresholdSizeMB$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/ScriptTimeout$</TimeoutSeconds>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="Script">
+                <Node ID="Scheduler" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>
+      <DataSourceModuleType ID="Progel.Azure.Backup.Policy.Discovery.DS" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="TraceLevel" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TargetComputer" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScriptTimeout" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="ScriptTimeout" Selector="$Config/ScriptTimeout$" ParameterType="int" />
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.TimedPowerShell.DiscoveryProvider">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+                <ScriptName>OBPolicyDiscovery.ps1</ScriptName>
+                <ScriptBody>
+                  <![CDATA[
+#Template Notes
+#basic error handling with -ErrorVariable -ErrorAction
+#EV is myErr set to null/cleared before any critical code section and tested for Count -eq 0 after, if different we have an error
+#plain and simple waiting for try/ctach in powershell 2.0
+#then every sensitive function should have a trap statement see http://huddledmasses.org/trap-exception-in-powershell/
+
+#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
+#SET ErrorLevel to 5 so show discovery info
+
+#*************************************************************************
+# Script Name - 
+# Author	  -  - Progel srl
+# Version	  - 1.1 24.09.2007
+# Purpose     - 
+#               
+# Assumptions - 
+#				
+#               
+# Parameters  - TraceLevel
+#             - ComputerName
+#				- SourceId
+#				- ManagedEntityId
+# Command Line - .\test.ps1 4 "serverName" '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}' '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}'
+# If discovery must be added the followinf parameters
+#				SourceId ($MPElement$ )
+#				ManagedEntityId ($Target/Id$)
+#
+# Output properties
+#
+# Status
+#
+# Version History
+#	  1.0 06.08.2010 DG First Release
+#     1.5 15.02.2014 DG minor cosmetics
+#
+# (c) Copyright 2010, Progel srl, All Rights Reserved
+# Proprietary and confidential to Progel srl              
+#
+#*************************************************************************
+
+
+# Get the named parameters
+param([int]$traceLevel=$(throw 'must have a value'),
+[string]$computerName=$(throw 'must have a value'),
+[string]$sourceID=$(throw 'must have a value'),
+[string]$ManagedEntityId=$(throw 'must have a value'))
+
+	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
+    [Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
+	
+#Constants used for event logging
+$SCRIPT_NAME			= "Progel.Azure.Backup.GetPolicies"
+$SCRIPT_ARGS = 4
+
+$SCRIPT_STARTED			= 831
+$PROPERTYBAG_CREATED	= 832
+$SCRIPT_ENDED			= 835
+
+$SCRIPT_VERSION = "1.0"
+
+#Trace Level Costants
+$TRACE_NONE 	= 0
+$TRACE_ERROR 	= 1
+$TRACE_WARNING = 2
+$TRACE_INFO 	= 3
+$TRACE_VERBOSE = 4
+$TRACE_DEBUG = 5
+
+#Event Type Constants
+$EVENT_TYPE_SUCCESS      = 0
+$EVENT_TYPE_ERROR        = 1
+$EVENT_TYPE_WARNING      = 2
+$EVENT_TYPE_INFORMATION  = 4
+$EVENT_TYPE_AUDITSUCCESS = 8
+$EVENT_TYPE_AUDITFAILURE = 16
+
+#Standard Event IDs
+$FAILURE_EVENT_ID = 4000		#errore generico nello script
+$SUCCESS_EVENT_ID = 1101
+$START_EVENT_ID = 1102
+$STOP_EVENT_ID = 1103
+
+#TypedPropertyBag
+$AlertDataType = 0
+$EventDataType	= 2
+$PerformanceDataType = 2
+$StateDataType       = 3
+
+function Log-Params
+{
+	param([string] $CmdLine)	
+	trap { continue; }
+	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. " + $CmdLine) $TRACE_INFO
+}
+
+function Log-Event
+{
+	param($eventID, $eventType, $msg, $level)
+	
+	Write-Verbose ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+	if($level -le $P_TraceLevel)
+	{
+		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+		$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
+	}
+}
+
+Function Throw-EmptyDiscovery
+{
+	param($SourceId, $ManagedEntityId)
+
+	$oDiscoveryData = $g_API.CreateDiscoveryData(0, $SourceId, $ManagedEntityId)
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
+	$oDiscoveryData
+	If($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent
+		$g_API.Return($oDiscoveryData)
+	}
+}
+
+Function Throw-KeepDiscoveryInfo
+{
+param($SourceId, $ManagedEntityId)
+	$oDiscoveryData = $g_API.CreateDiscoveryData(0,$SourceId,$ManagedEntityId)
+	#Instead of Snapshot discovery, submit Incremental discovery data
+	$oDiscoveryData.IsSnapshot = $false
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
+	$oDiscoveryData    
+	If($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
+		$g_API.Return($oDiscoveryData)
+	}
+}
+
+
+
+#Start by setting up API object.
+	$P_TraceLevel = $TRACE_VERBOSE
+	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
+	#$g_RegistryStatePath = "HKLM\" + $g_API.GetScriptStateKeyPath($SCRIPT_NAME)
+
+	$dtStart = Get-Date
+#if we use named parameters then $Args is always 0, so the erroc hecking must be done differently
+
+#v2
+#if ($PsBoundParameters.Count -ne $SCRIPT_ARGS)
+#at the momento we must do specific command line validation or use the syntax
+#Param([string]$a=$(throw 'My exception - parameter a needed')
+#	If ($Args.Count -ne $SCRIPT_ARGS)
+#	{
+#		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR "called without proper arguments and was not executed."  $TRACE_ERROR
+#		exit -1
+#	}
+
+	$P_TraceLevel = $traceLevel
+#same story for dumping the command line	
+#manul stuff today in v2 we could use $PSBoundParameters
+	Log-Params ([string]$traceLevel + " " + $computerName + " " + $sourceID + " " + $ManagedEntityId)
+try
+{
+    Import-Module MSOnlineBackup
+    $policies = Get-OBPolicy | Where {$_.State -eq 'Existing'}
+    if ($policies)
+    {
+        $discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
+        foreach ($pol in $policies)
+        {
+			$PInstance = $discoveryData.CreateClassInstance("$MPElement[Name='Progel.Azure.Backup.Policy']$")
+			$PInstance.AddProperty("$MPElement[Name='Windows!Microsoft.Windows.Computer']/PrincipalName$", $computerName)
+			$PInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", "OB Policy ($($pol.PolicyName))")
+			$PInstance.AddProperty("$MPElement[Name='Progel.Azure.Backup.Policy']/PolicyName$", $pol.PolicyName)
+			$PInstance.AddProperty("$MPElement[Name='Progel.Azure.Backup.Policy']/RetentionDays$", $pol.RetentionPolicy.RetentionDays)
+			$discoveryData.AddInstance($PInstance)
+        }
+        $discoveryData
+    }
+    else
+    {
+        Throw-EmptyDiscovery $sourceID $ManagedEntityId
+    }
+
+	If ($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent		
+		$g_API.Return($discoveryData)
+	}
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+}
+Catch [Exception] {
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
+	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+}
+]]>
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>traceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>computerName</Name>
+                    <Value>$config/TargetComputer$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>sourceID</Name>
+                    <Value>$MPElement$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ManagedEntityId</Name>
+                    <Value>$Target/Id$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/ScriptTimeout$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+              </DataSource>
+            </MemberModules>
+            <Composition>
+              <Node ID="DS" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
+    </ModuleTypes>
+    <MonitorTypes>
+      <UnitMonitorType ID="Progel.Azure.Backup.Policy.Age.MT" Accessibility="Internal">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="UpToDate" NoDetection="false" />
+          <MonitorTypeState ID="TooOld" NoDetection="false" />
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="TraceLevel" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScriptTimeout" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdAgeHours" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdSizeMB" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="PolicyName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="ScriptTimeout" Selector="$Config/ScriptTimeout$" ParameterType="int" />
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="ThresholdAgeHours" Selector="$Config/ThresholdAgeHours$" ParameterType="int" />
+          <OverrideableParameter ID="ThresholdSizeMB" Selector="$Config/ThresholdSizeMB$" ParameterType="int" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="Status" TypeID="Progel.Windows.Azure.Backup.Policy.Status.DS">
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <ScriptTimeout>$Config/ScriptTimeout$</ScriptTimeout>
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <ThresholdAgeHours>$Config/ThresholdAgeHours$</ThresholdAgeHours>
+              <ThresholdSizeMB>$Config/ThresholdSizeMB$</ThresholdSizeMB>
+            </DataSource>
+            <ConditionDetection ID="NormalCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='BackupStatus']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">UpToDate</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="TooOldCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='BackupStatus']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>NotEqual</Operator>
+                  <ValueExpression>
+                    <Value Type="String">UpToDate</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="FilterCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='PolicyName']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">$Config/PolicyName$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="UpToDate">
+              <Node ID="NormalCD">
+                <Node ID="FilterCD">
+                  <Node ID="Status" />
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="TooOld">
+              <Node ID="TooOldCD">
+                <Node ID="FilterCD">
+                  <Node ID="Status" />
+                </Node>
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+      <UnitMonitorType ID="Progel.Azure.Backup.Size.MT" Accessibility="Internal">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="WithinLimits" NoDetection="false" />
+          <MonitorTypeState ID="TooBig" NoDetection="false" />
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="TraceLevel" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScriptTimeout" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdAgeHours" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdSizeMB" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="ScriptTimeout" Selector="$Config/ScriptTimeout$" ParameterType="int" />
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="ThresholdAgeHours" Selector="$Config/ThresholdAgeHours$" ParameterType="int" />
+          <OverrideableParameter ID="ThresholdSizeMB" Selector="$Config/ThresholdSizeMB$" ParameterType="int" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="Status" TypeID="Progel.Windows.Azure.Backup.Policy.Status.DS">
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <ScriptTimeout>$Config/ScriptTimeout$</ScriptTimeout>
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <ThresholdAgeHours>$Config/ThresholdAgeHours$</ThresholdAgeHours>
+              <ThresholdSizeMB>$Config/ThresholdSizeMB$</ThresholdSizeMB>
+            </DataSource>
+            <ConditionDetection ID="NormalCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='SizeStatus']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">OK</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="TooBigCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='SizeStatus']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>NotEqual</Operator>
+                  <ValueExpression>
+                    <Value Type="String">OK</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="WithinLimits">
+              <Node ID="NormalCD">
+                <Node ID="Status" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="TooBig">
+              <Node ID="TooBigCD">
+                <Node ID="Status" />
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+    </MonitorTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="Progel.Azure.Backup.Agent.Discovery" Enabled="true" Target="Windows!Microsoft.Windows.Computer" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="Progel.Azure.Backup.Agent" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.FilteredRegistryDiscoveryProvider">
+          <ComputerName>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/NetworkName$</ComputerName>
+          <RegistryAttributeDefinitions>
+            <RegistryAttributeDefinition>
+              <AttributeName>Start</AttributeName>
+              <Path>SYSTEM\CurrentControlSet\Services\obengine\Start</Path>
+              <PathType>1</PathType>
+              <AttributeType>2</AttributeType>
+            </RegistryAttributeDefinition>
+          </RegistryAttributeDefinitions>
+          <Frequency>86400</Frequency>
+          <ClassId>$MPElement[Name="Progel.Azure.Backup.Agent"]$</ClassId>
+          <InstanceSettings>
+            <Settings>
+              <Setting>
+                <Name>$MPElement[Name="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Name>
+                <Value>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name='System!System.Entity']/DisplayName$</Name>
+                <Value>Windows Azure Backup Agent ($Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$)</Value>
+              </Setting>
+            </Settings>
+          </InstanceSettings>
+          <Expression>
+            <SimpleExpression>
+              <ValueExpression>
+                <XPathQuery Type="Integer">Values/Start</XPathQuery>
+              </ValueExpression>
+              <Operator>Equal</Operator>
+              <ValueExpression>
+                <Value Type="Integer">3</Value>
+              </ValueExpression>
+            </SimpleExpression>
+          </Expression>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="Progel.Azure.Backup.Policy.Discovery" Enabled="true" Target="Progel.Azure.Backup.Agent" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="Progel.Azure.Backup.Policy">
+            <Property PropertyID="PolicyName" />
+            <Property PropertyID="RetentionDays" />
+          </DiscoveryClass>
+          <DiscoveryRelationship TypeID="Progel.Azure.BackupAgentHostsPolicy" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="Progel.Azure.Backup.Policy.Discovery.DS">
+          <TraceLevel>2</TraceLevel>
+          <TargetComputer>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</TargetComputer>
+          <ScriptTimeout>300</ScriptTimeout>
+          <IntervalSeconds>86400</IntervalSeconds>
+          <SyncTime />
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+    <Monitors>
+      <UnitMonitor ID="Progel.Azure.Backup.Policy.Age.Monitor" Accessibility="Internal" Enabled="true" Target="Progel.Azure.Backup.Policy" ParentMonitorID="SystemHealth!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Progel.Azure.Backup.Policy.Age.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Progel.Azure.Backup.Policy.Age.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="BackupAgeHours"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name"LastBackupTime"]$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="TooOld" MonitorTypeStateID="TooOld" HealthState="Error" />
+          <OperationalState ID="UpToDate" MonitorTypeStateID="UpToDate" HealthState="Success" />
+        </OperationalStates>
+        <Configuration>
+          <TraceLevel>2</TraceLevel>
+          <ScriptTimeout>300</ScriptTimeout>
+          <IntervalSeconds>300</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <ThresholdAgeHours>25</ThresholdAgeHours>
+          <ThresholdSizeMB>20</ThresholdSizeMB>
+          <PolicyName>$Target/Property[Type="Progel.Azure.Backup.Policy"]/PolicyName$</PolicyName>
+        </Configuration>
+      </UnitMonitor>
+      <UnitMonitor ID="Progel.Azure.Backup.Size.Monitor" Accessibility="Internal" Enabled="true" Target="Progel.Azure.Backup.Agent" ParentMonitorID="SystemHealth!System.Health.PerformanceState" Remotable="true" Priority="Normal" TypeID="Progel.Azure.Backup.Size.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Progel.Azure.Backup.Size.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="MachineUsageMB"]$</AlertParameter1>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="TooBig" MonitorTypeStateID="TooBig" HealthState="Error" />
+          <OperationalState ID="WithinLimits" MonitorTypeStateID="WithinLimits" HealthState="Success" />
+        </OperationalStates>
+        <Configuration>
+          <TraceLevel>2</TraceLevel>
+          <ScriptTimeout>300</ScriptTimeout>
+          <IntervalSeconds>300</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <ThresholdAgeHours>25</ThresholdAgeHours>
+          <ThresholdSizeMB>20</ThresholdSizeMB>
+        </Configuration>
+      </UnitMonitor>
+      <DependencyMonitor ID="Progel.Azure.Backup.Agent.Depends.Policy.DM" Accessibility="Internal" Enabled="true" Target="Progel.Azure.Backup.Agent" ParentMonitorID="SystemHealth!System.Health.AvailabilityState" Remotable="true" Priority="Normal" RelationshipType="Progel.Azure.BackupAgentHostsPolicy" MemberMonitor="Progel.Azure.Backup.Policy.Age.Monitor">
+        <Category>AvailabilityHealth</Category>
+        <Algorithm>WorstOf</Algorithm>
+      </DependencyMonitor>
+    </Monitors>
+  </Monitoring>
+  <Presentation>
+    <Views>
+      <View ID="Progel.Azure.Backup.AgentState.View" Accessibility="Public" Enabled="true" Target="Progel.Azure.Backup.Agent" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Operations</Category>
+        <Criteria>
+          <InMaintenanceMode>false</InMaintenanceMode>
+        </Criteria>
+        <Presentation>
+          <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
+            <Name>State</Name>
+            <Id>Progel.Azure.Backup.Agent</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Maintenance Mode</Name>
+            <Id>InMaintenanceMode</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Path</Name>
+            <Id>Path</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="4" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Display Name</Name>
+            <Id>System.Entity/DisplayName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="5" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Progel Azure Backup Policy</Name>
+            <Id>Progel.Azure.Backup.Policy</Id>
+          </ColumnInfo>
+        </Presentation>
+        <Target />
+      </View>
+      <View ID="Progel.Windows.Azure.Backup.Alert.View" Accessibility="Public" Enabled="true" Target="Progel.Azure.Backup.Agent" TypeID="SC!Microsoft.SystemCenter.AlertViewType" Visible="true">
+        <Category>Operations</Category>
+        <Criteria>
+          <ResolutionState>
+            <StateRange Operator="LessThan">255</StateRange>
+          </ResolutionState>
+        </Criteria>
+        <Presentation>
+          <ColumnInfo Index="0" SortIndex="0" Width="22" Grouped="true" Sorted="false" IsSortable="true" Visible="true" SortOrder="Descending">
+            <Name>Severity</Name>
+            <Id>Severity</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" SortIndex="-1" Width="54" Grouped="false" Sorted="false" IsSortable="false" Visible="true" SortOrder="Ascending">
+            <Name>Icon</Name>
+            <Id>Icon</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Path</Name>
+            <Id>MonitoringObjectPath</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Source</Name>
+            <Id>MonitoringObjectDisplayName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="4" SortIndex="-1" Width="22" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Maintenance Mode</Name>
+            <Id>MonitoringObjectInMaintenanceMode</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="5" SortIndex="-1" Width="250" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="6" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Resolution State</Name>
+            <Id>ResolutionState</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="7" SortIndex="-1" Width="150" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Created</Name>
+            <Id>TimeRaised</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="8" SortIndex="1" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Age</Name>
+            <Id>Age</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="9" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Type</Name>
+            <Id>Category</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="10" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Owner</Name>
+            <Id>Owner</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="11" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Priority</Name>
+            <Id>Priority</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="12" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Latency</Name>
+            <Id>Latency</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="13" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Description</Name>
+            <Id>Description</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="14" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Connector</Name>
+            <Id>ConnectorId</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="15" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Forwarding Status</Name>
+            <Id>ConnectorStatus</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="16" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Class</Name>
+            <Id>Class</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="17" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Time in State</Name>
+            <Id>TimeInState</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="18" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 1</Name>
+            <Id>CustomField1</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="19" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 2</Name>
+            <Id>CustomField2</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="20" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 3</Name>
+            <Id>CustomField3</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="21" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 4</Name>
+            <Id>CustomField4</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="22" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 5</Name>
+            <Id>CustomField5</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="23" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 6</Name>
+            <Id>CustomField6</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="24" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 7</Name>
+            <Id>CustomField7</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="25" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 8</Name>
+            <Id>CustomField8</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="26" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 9</Name>
+            <Id>CustomField9</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="27" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 10</Name>
+            <Id>CustomField10</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="28" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Resolved By</Name>
+            <Id>ResolvedBy</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="29" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Time Resolved</Name>
+            <Id>TimeResolved</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="30" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Last State Change</Name>
+            <Id>TimeResolutionStateLastModified</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="31" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Last Modified</Name>
+            <Id>LastModified</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="32" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Last Modified By</Name>
+            <Id>LastModifiedBy</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="33" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Management Group</Name>
+            <Id>ManagementGroup</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="34" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Site</Name>
+            <Id>SiteName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="35" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Repeat Count</Name>
+            <Id>RepeatCount</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="36" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Ticket ID</Name>
+            <Id>TicketId</Id>
+          </ColumnInfo>
+        </Presentation>
+        <Target />
+      </View>
+    </Views>
+    <Folders>
+      <Folder ID="Progel.Azure.Backup.Presentation.Folder" Accessibility="Internal" ParentFolder="SC!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
+    </Folders>
+    <FolderItems>
+      <FolderItem ID="Progel.Azure.Backup.AgentState.FldrItem" ElementID="Progel.Azure.Backup.AgentState.View" Folder="Progel.Azure.Backup.Presentation.Folder" />
+      <FolderItem ID="" ElementID="Progel.Windows.Azure.Backup.Alert.View" Folder="Progel.Azure.Backup.Presentation.Folder" />
+    </FolderItems>
+    <StringResources>
+      <StringResource ID="Progel.Azure.Backup.Policy.Age.Monitor.AlertMessage" />
+      <StringResource ID="Progel.Azure.Backup.Size.Monitor.AlertMessage" />
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="Progel.Azure.Backup.Policy.Age.Monitor">
+          <Name>Backup Age</Name>
+          <Description>Detects the age of the latest backup set on the Azure Vault</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Policy.Age.Monitor.AlertMessage">
+          <Name>Windows Azure Backup Age</Name>
+          <Description>Backup data is too old. Current age is {0} hours. Last backup date is {1}</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Policy.Age.Monitor" SubElementID="TooOld">
+          <Name>TooOld</Name>
+          <Description>TooOld</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Policy.Age.Monitor" SubElementID="UpToDate">
+          <Name>UpToDate</Name>
+          <Description>UpToDate</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Size.Monitor">
+          <Name>Backup Size</Name>
+          <Description>Detects the allocated size in the Windows Azure Backup Vault</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Size.Monitor.AlertMessage">
+          <Name>Windows Azure Backup Size</Name>
+          <Description>Backup data is too big. Current size is {0} MB.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Size.Monitor" SubElementID="TooBig">
+          <Name>Too Big</Name>
+          <Description>Too Big</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Size.Monitor" SubElementID="WithinLimits">
+          <Name>WithinLimits</Name>
+          <Description>Within Limits</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Presentation.Folder">
+          <Name>Windows Azure Backup</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.AgentState.View">
+          <Name>Windows Azure Backup Agent State</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Windows.Azure.Backup.Alert.View">
+          <Name>Alerts</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup">
+          <Name>Progel Azure Backup</Name>
+          <Description>The Progel Azure backup management pack monitors for Windows Azure Backup health</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Agent">
+          <Name>Progel Azure Backup Agent</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Agent.Discovery">
+          <Name>Discovery For Progel Azure Backup Agent</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Policy">
+          <Name>Progel Azure Backup Policy</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Policy" SubElementID="PolicyName">
+          <Name>PolicyName</Name>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Policy" SubElementID="RetentionDays">
+          <Name>RetentionDays</Name>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Agent.Depends.Policy.DM">
+          <Name>Policy Status</Name>
+          <Description>Description for new dependency monitor.</Description>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles>
+        <KnowledgeArticle ElementID="Progel.Azure.Backup.Size.Monitor">
+          <MamlContent>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Summary</title>
+              <para>This monitor is disabled by default. Once enabled it checks for the dataset size on Windows Azure Backup Vault and raises an alert if it's over the configure threshold</para>
+              <para>The backup vault size it's not an isse per se, alerting is useful to proactively keeping under control the billing for the Vault</para>
+            </section>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Causes</title>
+              <para>The Windows Azure Backup Agent policy is too wide in scopre, or the amount of data to be backed up has grown</para>
+            </section>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Solution</title>
+              <para>Check the policy and set it appropriately</para>
+            </section>
+          </MamlContent>
+        </KnowledgeArticle>
+        <KnowledgeArticle ElementID="Progel.Azure.Backup.Policy.Age.Monitor">
+          <MamlContent>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Summary</title>
+              <para>This monitor checks for the age of the latest backup set and raises an alert if it is older then the configured threshold.</para>
+              <para>A dated backup set indcates some sort of issue on the backup process either on the protectd machine or on Azure Backup Vault.</para>
+            </section>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Causes</title>
+              <para>It is highly probable an issue with the agent you should connect to the affected machine and check for:</para>
+              <list>
+                <listItem>
+                  <para>Backup Certificate correctness. Is it expired?</para>
+                </listItem>
+                <listItem>
+                  <para>Encryption key correctness. Is the encryption key still set? It can be check via powershell: Import-Module MSOnlineBackup; Get-OBMachineSetting</para>
+                </listItem>
+              </list>
+            </section>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Solution</title>
+              <para>Check the agent status</para>
+            </section>
+          </MamlContent>
+        </KnowledgeArticle>
+        <KnowledgeArticle ElementID="Progel.Azure.Backup">
+          <MamlContent>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Summary</title>
+              <para>This management pack monitors the Windows Azure Backup Agent backup sets.</para>
+              <para>The management pack checks for:</para>
+              <list>
+                <listItem>
+                  <para>Latest backup set age - if the backup set is too old (by default 25 hours) it raises an alert</para>
+                </listItem>
+                <listItem>
+                  <para>Backup set size - this monitor, disabled by default, checks if the allocated size if over a given threshold</para>
+                </listItem>
+              </list>
+              <para>Every monitor check for the value returned in the first row in the specified column number. Column numbering starts from 1.</para>
+            </section>
+            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
+              <title>Configuration</title>
+              <para>The Size monitor needs to be enabled and the threhsold configured.</para>
+            </section>
+          </MamlContent>
+        </KnowledgeArticle>
+      </KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPack>

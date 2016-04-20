@@ -22,14 +22,14 @@
           <IntervalSeconds>300</IntervalSeconds>
           <SyncTime></SyncTime>
           <ThresholdAgeHours>25</ThresholdAgeHours>
-          <ThresholdSizeMB>20</ThresholdSizeMB>
+          <ThresholdSizeGB>20</ThresholdSizeGB>
           <PolicyName>$Target/Property[Type="QND.OMS.Backup.Agent.Policy"]/PolicyName$</PolicyName>
         </Configuration>
       </UnitMonitor>
-      <UnitMonitor ID="QND.OMS.Backup.Size.Monitor" Accessibility="Internal" Enabled="true" Target="QND.OMS.Backup.Agent" ParentMonitorID="Health!System.Health.PerformanceState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Backup.Size.MT" ConfirmDelivery="false">
+      <UnitMonitor ID="QND.OMS.Backup.Size.Monitor" Accessibility="Internal" Enabled="false" Target="QND.OMS.Backup.Agent" ParentMonitorID="Health!System.Health.PerformanceState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Backup.Size.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.Backup.Size.Monitor.AlertMessage">
-          <AlertOnState>Error</AlertOnState>
+          <AlertOnState>Warning</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
@@ -38,7 +38,7 @@
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
-          <OperationalState ID="TooBig" MonitorTypeStateID="TooBig" HealthState="Error" />
+          <OperationalState ID="TooBig" MonitorTypeStateID="TooBig" HealthState="Warning" />
           <OperationalState ID="WithinLimits" MonitorTypeStateID="WithinLimits" HealthState="Success" />
         </OperationalStates>
         <Configuration>
@@ -47,7 +47,7 @@
           <IntervalSeconds>300</IntervalSeconds>
           <SyncTime></SyncTime>
           <ThresholdAgeHours>25</ThresholdAgeHours>
-          <ThresholdSizeMB>20</ThresholdSizeMB>
+          <ThresholdSizeGB>20</ThresholdSizeGB>
         </Configuration>
       </UnitMonitor>
     </Monitors>

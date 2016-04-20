@@ -43,7 +43,7 @@
 # Get the named parameters
 param([int]$traceLevel=$(throw 'must have a value'),
 [int]$thresholdHours=$(throw 'must have a value'),
-[string]$thresholdSizeMB=$(throw 'must have a value'))
+[string]$ThresholdSizeGB=$(throw 'must have a value'))
 
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
     [Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
@@ -118,7 +118,7 @@ function Log-Event
 	Log-Params ([string]$traceLevel + " " + $computerName + " " + $sourceID + " " + $ManagedEntityId)
 try
 {
-    Import-Module MSOnlineBackup
+	if (! (Get-Module -Name MSOnlineBackup)) {Import-Module MSOnlineBackup}
     $lastRec = Get-OBAllRecoveryPoints | Sort-Object BackupTime -Descending | Select-Object -First 1
     $machineUSage = Get-OBMachineUsage
 	$policies = Get-OBPolicy | Where {$_.State -eq 'Existing'}
@@ -132,7 +132,7 @@ try
     {
         $backupStatus = 'TooOld'
     }
-    if (($machineUsage.StorageUsedByMachineInBytes / (1024*1024)) -ge $thresholdSizeMB)
+    if (($machineUsage.StorageUsedByMachineInBytes / 1GB) -ge $ThresholdSizeGB)
     {
         $sizeStatus = 'TooBig'
     }
@@ -163,7 +163,7 @@ finally
 			$bag.AddValue('BackupAgeHours', $elapsed)
 
 			$bag.AddValue('BackupStatus', $backupStatus)
-			$bag.AddValue('MachineUsageMB', $machineUSage.StorageUsedByMachineInBytes/(1024*1024))
+			$bag.AddValue('MachineUsageGB', $machineUSage.StorageUsedByMachineInBytes/1GB)
 			$bag.AddValue('SizeStatus', $sizeStatus)				
 			$bag	#this is the way to return data to OpsMgr
 			If ($P_TraceLevel -eq $TRACE_DEBUG)

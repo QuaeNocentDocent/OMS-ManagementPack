@@ -161,7 +161,7 @@ param($SourceId, $ManagedEntityId)
 	Log-Params ([string]$traceLevel + " " + $computerName + " " + $sourceID + " " + $ManagedEntityId)
 try
 {
-    Import-Module MSOnlineBackup
+    if (! (Get-Module -Name MSOnlineBackup)) {Import-Module MSOnlineBackup}
     $policies = Get-OBPolicy | Where {$_.State -eq 'Existing'}
     if ($policies)
     {

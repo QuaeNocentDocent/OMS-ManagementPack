@@ -205,6 +205,12 @@ Function Discover-BackupVault
 #name       : iaasvmcontainer;brd-mcc;brd-mcc-1
 #type       : microsoft.backup/BackupVault/containers
 
+# DPM Sources
+#uniqueName    : fsrveuazbck01.furla.dom
+#containerType : Machine
+#properties    : @{containerId=482742; friendlyName=FSRVEUAZBCK01.FURLA.DOM; containerStampId=3f2a1395-55ed-4e55-8f40-de1f8a6c2a24; containerStampUri=https://pod01-prot1b.we.backup.windowsazure.com; 
+#                canReRegister=False; customerType=DPMVenus}
+
 
 
 Function Discover-BackupContainer
@@ -215,7 +221,7 @@ Function Discover-BackupContainer
 
     try {
 		if($obj.uniqueName) {
-			$containerType=$obj.ContainerType
+			$containerType=('{0}/{1}' -f $obj.ContainerType, $obj.properties.customerType )
 			$id=$obj.UniqueName
 			$name=$obj.UniqueName
 			$type='microsoft.backup/MachineContainer'
@@ -397,6 +403,7 @@ try
 				$uri='https://management.azure.com{0}/protectedItems?api-version=2014-09-01' -f $vault.Id
 				$items = @((Invoke-ARMGet -Token $token -Uri $uri).Value)
                 foreach($container in $containers.Value) {      
+					if ($container.properties.healthStatus -ieq 'Deleted') {continue}
                     Log-Event -eventID $INFO_EVENT_ID -eventType $EVENT_TYPE_INFORMATION -msg ('Discovering container {1} in backup vault {0}' -f $vault.Name, $container.Name) -level $TRACE_VERBOSE              
                     Discover-BackupContainer -obj $container -subscription $SubscriptionId -vaultName $vault.Name
 					#now disocver protcted items 

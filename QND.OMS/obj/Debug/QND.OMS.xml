@@ -1,0 +1,2838 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack SchemaVersion="2.0" ContentReadable="true" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Manifest>
+    <Identity>
+      <ID>QND.OMS</ID>
+      <Version>1.0.0.53</Version>
+    </Identity>
+    <Name>QND.OMS</Name>
+    <References>
+      <Reference Alias="MSIL">
+        <ID>Microsoft.SystemCenter.InstanceGroup.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="SC">
+        <ID>Microsoft.SystemCenter.Library</ID>
+        <Version>7.0.8433.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Windows">
+        <ID>Microsoft.Windows.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Health">
+        <ID>System.Health.Library</ID>
+        <Version>7.0.8433.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="System">
+        <ID>System.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="QND.OMS.Monitoring.Pool" Accessibility="Public" Abstract="false" Base="SC!Microsoft.SystemCenter.ManagementServicePool" Hosted="false" Singleton="true" Extension="false" />
+        <ClassType ID="QND.OMS.AAD.Tenant" Base="System!System.Service" Accessibility="Public" Abstract="false" Hosted="false" Singleton="false">
+          <!-- Inside this section, you can add and remove properties as needed.
+               More information can be found in the Management Pack Development Kit: 
+               http://msdn.microsoft.com/en-us/library/ee533714.aspx -->
+          <Property ID="Domain" Key="true" Type="string" />
+        </ClassType>
+        <ClassType ID="QND.OMS.AAD.Tenant.Group" Base="MSIL!Microsoft.SystemCenter.InstanceGroup" Accessibility="Public" Abstract="false" Hosted="false" Singleton="false">
+          <Property ID="Domain" Key="true" Type="string" />
+        </ClassType>
+        <ClassType ID="QND.OMS.ManagedSystem" Base="System!System.Device" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          <!-- Inside this section, you can add and remove properties as needed.
+               More information can be found in the Management Pack Development Kit: 
+               http://msdn.microsoft.com/en-us/library/ee533714.aspx -->
+          <Property ID="Computer" Key="true" Type="string" />
+          <!-- <Property ID="Workspace" Key="true" Type="string" /> -->
+        </ClassType>
+        <ClassType ID="QND.OMS.Azure.Subscription" Base="System!System.ApplicationComponent" Accessibility="Public" Abstract="false" Hosted="false" Singleton="false">
+          <!-- Inside this section, you can add and remove properties as needed.
+               More information can be found in the Management Pack Development Kit: 
+               http://msdn.microsoft.com/en-us/library/ee533714.aspx -->
+          <Property ID="Id" Key="true" Type="string" />
+          <Property ID="Name" Key="false" Type="string" />
+          <Property ID="Tenant" Key="false" Type="string" />
+        </ClassType>
+        <ClassType ID="QND.OMS.Workspace" Base="System!System.ApplicationComponent" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          <!-- Inside this section, you can add and remove properties as needed.
+               More information can be found in the Management Pack Development Kit: 
+               http://msdn.microsoft.com/en-us/library/ee533714.aspx -->
+          <Property ID="Id" Key="true" Type="string" />
+          <Property ID="Name" Key="false" Type="string" />
+          <Property ID="Subscription" Key="false" Type="string" />
+          <Property ID="ResourceGroup" Key="false" Type="string" />
+        </ClassType>
+      </ClassTypes>
+      <RelationshipTypes>
+        <RelationshipType ID="QND.OMS.AAD.TenantGroupContainsEntity" Abstract="false" Base="System!System.Containment" Accessibility="Public">
+          <Source ID="Tenant" Type="QND.OMS.AAD.Tenant.Group" />
+          <Target ID="Entity" Type="System!System.Entity" />
+        </RelationshipType>
+        <RelationshipType ID="QND.OMS.WorkspaceContainsSystem" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
+          <Source ID="Workspace" Type="QND.OMS.Workspace" />
+          <Target ID="System" Type="QND.OMS.ManagedSystem" />
+        </RelationshipType>
+        <RelationshipType ID="QND.OMS.TenantContainsSubscription" Abstract="false" Accessibility="Public" Base="System!System.Containment">
+          <Source ID="Tenant" Type="QND.OMS.AAD.Tenant" />
+          <Target ID="Subscription" Type="QND.OMS.Azure.Subscription" />
+        </RelationshipType>
+        <RelationshipType ID="QND.OMS.SubscriptionContainsWorkspace" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
+          <Source ID="Subscription" Type="QND.OMS.Azure.Subscription" />
+          <Target ID="Workspace" Type="QND.OMS.Workspace" />
+        </RelationshipType>
+      </RelationshipTypes>
+    </EntityTypes>
+    <SecureReferences>
+      <SecureReference ID="QND.OMS.AAD.Account.SR" Accessibility="Public" Context="System!System.Entity" />
+    </SecureReferences>
+    <ModuleTypes>
+      <DataSourceModuleType ID="QND.OMS.AAD.Tenant.Discovery.DS" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="TraceLevel" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TenantsFilePath" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="TenantsFilePath" Selector="$Config/TenantsFilePath$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.TimedPowerShell.DiscoveryProvider">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+                <ScriptName>Get-AADMonitoredTenants.ps1</ScriptName>
+                <ScriptBody>
+                  <![CDATA[
+
+#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
+#SET ErrorLevel to 5 so show discovery info
+
+#*************************************************************************
+# Script Name - Get-AADMonitoredTenants
+# Author	  -  - Progel spa
+# Version  - 1.0 24.09.2007
+# Purpose     - 
+#               
+# Assumptions - 
+#				
+#               
+# Parameters  - TraceLevel
+#             - ComputerName
+#				- SourceId
+#				- ManagedEntityId
+# Command Line - .\test.ps1 4 "serverName" '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}' '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}'
+# If discovery must be added the followinf parameters
+#				SourceId ($ MPElement $ )
+#				ManagedEntityId ($ Target/Id $)
+#
+# Output properties
+#
+# Status
+#
+# 1.0 History
+#	  1.0 06.08.2010 DG First Release
+#     1.5 15.02.2014 DG minor cosmetics
+#
+# (c) Copyright 2015, Progel spa, All Rights Reserved
+# Proprietary and confidential to Progel srl              
+#
+#*************************************************************************
+
+
+# Get the named parameters
+param([int]$traceLevel=$(throw 'must have a value'),
+[string]$sourceID=$(throw 'must have a value'),
+[string]$ManagedEntityId=$(throw 'must have a value'),
+[String]$TenantsFilePath
+)
+
+	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
+	[Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
+	
+#Constants used for event logging
+$SCRIPT_NAME			= "Get-AADMonitoredTenants"
+$SCRIPT_ARGS = 4
+$SCRIPT_STARTED			= 831
+$PROPERTYBAG_CREATED	= 832
+$SCRIPT_ENDED			= 835
+$SCRIPT_VERSION = "1.0"
+
+#region Constants
+#Trace Level Costants
+$TRACE_NONE 	= 0
+$TRACE_ERROR 	= 1
+$TRACE_WARNING = 2
+$TRACE_INFO 	= 3
+$TRACE_VERBOSE = 4
+$TRACE_DEBUG = 5
+
+#Event Type Constants
+$EVENT_TYPE_SUCCESS      = 0
+$EVENT_TYPE_ERROR        = 1
+$EVENT_TYPE_WARNING      = 2
+$EVENT_TYPE_INFORMATION  = 4
+$EVENT_TYPE_AUDITSUCCESS = 8
+$EVENT_TYPE_AUDITFAILURE = 16
+
+#Standard Event IDs
+$FAILURE_EVENT_ID = 4000		#errore generico nello script
+$SUCCESS_EVENT_ID = 1101
+$START_EVENT_ID = 1102
+$STOP_EVENT_ID = 1103
+
+#TypedPropertyBag
+$AlertDataType = 0
+$EventDataType	= 2
+$PerformanceDataType = 2
+$StateDataType       = 3
+#endregion
+
+#region Helper Functions
+function Log-Params
+{
+	param($Invocation)
+	$line=''
+	foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
+	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. Invocation Name:$($Invocation.InvocationName)`n Parameters`n $line") $TRACE_INFO
+}
+
+
+function Log-Event
+{
+	param($eventID, $eventType, $msg, $level)
+	
+	Write-Verbose ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+	if($level -le $P_TraceLevel)
+	{
+		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+		$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
+	}
+}
+
+Function Throw-EmptyDiscovery
+{
+	param($SourceId, $ManagedEntityId)
+
+	$oDiscoveryData = $g_API.CreateDiscoveryData(0, $SourceId, $ManagedEntityId)
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
+	$oDiscoveryData
+	If($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent
+		$g_API.Return($oDiscoveryData)
+	}
+}
+
+Function Throw-KeepDiscoveryInfo
+{
+param($SourceId, $ManagedEntityId)
+	$oDiscoveryData = $g_API.CreateDiscoveryData(0,$SourceId,$ManagedEntityId)
+	#Instead of Snapshot discovery, submit Incremental discovery data
+	$oDiscoveryData.IsSnapshot = $false
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
+	$oDiscoveryData    
+	If($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
+		$g_API.Return($oDiscoveryData)
+	}
+}
+#endregion
+
+
+#Start by setting up API object.
+	$P_TraceLevel = $TRACE_VERBOSE
+	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
+	#$g_RegistryStatePath = "HKLM\" + $g_API.GetScriptStateKeyPath($SCRIPT_NAME)
+
+	$dtStart = Get-Date
+	$P_TraceLevel = $traceLevel
+	Log-Params $MyInvocation
+
+if(! (Test-Path -Path $TenantsFilePath)) {
+	Log-Event $START_EVENT_ID $EVENT_TYPE_ERROR ("Get-AADMonitoredTenants tenants repository not found $TenantsFilePath") $TRACE_ERROR
+	Throw-EmptyDiscovery
+	exit 0
+}
+
+try {
+	$Tenants = [xml] (Get-Content -Path $TenantsFilePath)
+	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
+	foreach($tenant in $Tenants.Tenants.Tenant) {
+		$currentTenant = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.AAD.Tenant']$")		
+		$currentTenant.AddProperty("$MPElement[Name='QND.OMS.AAD.Tenant']/Domain$", $Tenant.Name)		
+		$currentTenant.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $Tenant.DisplayName)		
+		$discoveryData.AddInstance($currentTenant)
+		$Tenantgroup = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.AAD.Tenant.Group']$")		
+		$Tenantgroup.AddProperty("$MPElement[Name='QND.OMS.AAD.Tenant.Group']/Domain$", $Tenant.Name)		
+		$Tenantgroup.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $Tenant.DisplayName)		
+		$discoveryData.AddInstance($Tenantgroup)
+		$rel = $discoveryData.CreateRelationshipInstance("$MPElement[Name='QND.OMS.AAD.TenantGroupContainsEntity']$")
+		$rel.Source=$Tenantgroup
+		$rel.Target=$currentTenant
+		$discoveryData.AddInstance($rel)
+
+	}
+	$discoveryData
+	If ($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
+		#it breaks in exception when run insde OpsMgr and POSH IDE	
+		$g_API.Return($discoveryData)
+	}
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+}
+Catch [Exception] {
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
+	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+}
+]]>
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>TenantsFilePath</Name>
+                    <Value>$Config/TenantsFilePath$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SourceId</Name>
+                    <Value>$MPElement$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ManagedEntityId</Name>
+                    <Value>$Target/Id$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+                <!-- true only for Tasks -->
+              </DataSource>
+            </MemberModules>
+            <Composition>
+              <Node ID="DS" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
+      <DataSourceModuleType ID="QND.OMS.Entity.Discovery.DS" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="TraceLevel" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SubscriptionId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Workspace" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceGroup" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Type" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="LookbackHours" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="LookbackHours" Selector="$Config/LookbackHours$" ParameterType="int" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.TimedPowerShell.DiscoveryProvider">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+                <ScriptName>Get-OMSManagedSystems.ps1</ScriptName>
+                <ScriptBody>
+                  <![CDATA[
+
+## This discovery needs to be splitted 'cause potentially can discover a huge number of entities
+## Gorup memeberhsip must be changed and split in diffrent rules using the properties we're setting
+
+#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
+#SET ErrorLevel to 5 so show discovery info
+#https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
+
+#*************************************************************************
+# Script Name - Get-OMSManagedSystems
+# Author	  -  - Progel spa
+# Version  - 1.0 24.09.2007
+# Purpose     - 
+#               
+# Assumptions - 
+#				
+#               
+# Parameters  - TraceLevel
+#             - ComputerName
+#				- SourceId
+#				- ManagedEntityId
+# Command Line - .\test.ps1 4 "serverName" '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}' '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}'
+# If discovery must be added the followinf parameters
+#				SourceId ($ MPElement $ )
+#				ManagedEntityId ($ Target/Id $)
+#
+# Output properties
+#
+# Status
+#
+# 1.0 History
+#	  1.0 06.08.2010 DG First Release
+#     1.5 15.02.2014 DG minor cosmetics
+#
+# (c) Copyright 2015, Progel spa, All Rights Reserved
+# Proprietary and confidential to Progel srl              
+#
+#*************************************************************************
+
+
+# Get the named parameters
+param(
+[Parameter (Mandatory=$True)] [int]$traceLevel,
+[Parameter (Mandatory=$true)] [string]$sourceID,
+[Parameter (Mandatory=$true)] [string]$ManagedEntityId,
+[Parameter (Mandatory=$true)] [String]$TenantADName,
+[Parameter (Mandatory=$false)] [String]$Subscription,
+[Parameter (Mandatory=$false)] [String]$Workspace,
+[Parameter (Mandatory=$false)] [String]$ResourceGroup,
+[Parameter (Mandatory=$true)] [String]$Username,
+[Parameter (Mandatory=$true)] [String]$Password,
+[Parameter (Mandatory=$true)] [Int]$ValidHours,
+[Parameter (Mandatory=$true)]  [ValidateSet("Subscription", "Workspace", "System",ignorecase=$true)]
+[string]$discoveryType,
+[String]$Proxyurl #nyi
+
+)
+
+	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
+	[Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
+	
+#Constants used for event logging
+$SCRIPT_NAME			= "Get-OMSManagedSystems"
+$SCRIPT_ARGS = 11
+$SCRIPT_STARTED			= 831
+$PROPERTYBAG_CREATED	= 832
+$SCRIPT_ENDED			= 835
+$SCRIPT_VERSION = "1.0"
+
+#region Constants
+#Trace Level Costants
+$TRACE_NONE 	= 0
+$TRACE_ERROR 	= 1
+$TRACE_WARNING = 2
+$TRACE_INFO 	= 3
+$TRACE_VERBOSE = 4
+$TRACE_DEBUG = 5
+
+#Event Type Constants
+$EVENT_TYPE_SUCCESS      = 0
+$EVENT_TYPE_ERROR        = 1
+$EVENT_TYPE_WARNING      = 2
+$EVENT_TYPE_INFORMATION  = 4
+$EVENT_TYPE_AUDITSUCCESS = 8
+$EVENT_TYPE_AUDITFAILURE = 16
+
+#Standard Event IDs
+$FAILURE_EVENT_ID = 4000		#errore generico nello script
+$SUCCESS_EVENT_ID = 1101
+$START_EVENT_ID = 1102
+$STOP_EVENT_ID = 1103
+$INFO_EVENT_ID = 1104
+
+#TypedPropertyBag
+$AlertDataType = 0
+$EventDataType	= 2
+$PerformanceDataType = 2
+$StateDataType       = 3
+#endregion
+
+#region Helper Functions
+function Log-Params
+{
+	param($Invocation)
+	$line=''
+	foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
+	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. Invocation Name:$($Invocation.InvocationName)`n Parameters`n $line") $TRACE_INFO
+}
+
+
+function Log-Event
+{
+	param($eventID, $eventType, $msg, $level)
+	
+	Write-Verbose ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+	if($level -le $P_TraceLevel)
+	{
+		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+		$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
+	}
+}
+
+Function Throw-EmptyDiscovery
+{
+	param($SourceId, $ManagedEntityId)
+
+	$oDiscoveryData = $g_API.CreateDiscoveryData(0, $SourceId, $ManagedEntityId)
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
+	$oDiscoveryData
+	If($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent
+		$g_API.Return($oDiscoveryData)
+	}
+}
+
+Function Throw-KeepDiscoveryInfo
+{
+param($SourceId, $ManagedEntityId)
+	$oDiscoveryData = $g_API.CreateDiscoveryData(0,$SourceId,$ManagedEntityId)
+	#Instead of Snapshot discovery, submit Incremental discovery data
+	$oDiscoveryData.IsSnapshot = $false
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
+	$oDiscoveryData    
+	If($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
+		$g_API.Return($oDiscoveryData)
+	}
+}
+#endregion
+
+
+#id                   : /subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414
+#subscriptionId       : ec2b2ab8-ba74-41a0-bf54-39cc0716f414
+#displayName          : Laboratorio Reggio Emilia
+#state                : Enabled
+#subscriptionPolicies : @{locationPlacementId=Public_2014-09-01; quotaId=EnterpriseAgreement_2014-09-01}
+
+#id       : /subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OI-Default-East-US/providers/Microsoft.OperationalInsights/workspaces/99c95eb8-5ef1-4620-9684-74591f39b666
+#name     : 99c95eb8-5ef1-4620-9684-74591f39b666
+#type     : Microsoft.OperationalInsights/workspaces
+#location : eastus
+
+Function Discover-Subscription
+{
+	param($sub)
+		$subInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Azure.Subscription']$")		
+		$subInstance.AddProperty("$MPElement[Name='QND.OMS.Azure.Subscription']/Id$", $sub.subscriptionId)		
+		$subInstance.AddProperty("$MPElement[Name='QND.OMS.Azure.Subscription']/Name$", $sub.displayName)	
+		$subInstance.AddProperty("$MPElement[Name='QND.OMS.Azure.Subscription']/Tenant$", $TenantADName)	
+		$subInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $sub.displayName)	
+		$discoveryData.AddInstance($subInstance)	
+		#$currentTenant = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.AAD.Tenant']$")		
+		#$currentTenant.AddProperty("$MPElement[Name='QND.OMS.AAD.Tenant']/Domain$", $TenantADName)		
+		#$discoveryData.AddInstance($currentTenant)
+		#$rel = $discoveryData.CreateRelationshipInstance("$MPElement[Name='QND.OMS.TenantContainsSubscription']$")
+		#$rel.Source=$currentTenant
+		#$rel.Target=$subInstance
+		#$discoveryData.AddInstance($rel)
+
+}
+
+Function Discover-Workspace
+{
+	param($obj)
+		$obj.Id -match '(?<=(resourceGroups\/))(?<Group>.*)(?=(\/providers))'
+		$group = $matches.Group
+
+		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Workspace']$")	
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Azure.Subscription']/Id$", $subscription)		
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Workspace']/Id$", $obj.Name)		
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Workspace']/Name$", $obj.Name)	
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Workspace']/ResourceGroup$", $Group)	
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Workspace']/Subscription$", $Subscription)	
+		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.Name)	
+		$discoveryData.AddInstance($objInstance)	
+
+
+}
+
+Function Discover-System
+{
+	param($obj)
+
+	if ([String]::IsNullOrEmpty($obj.Computer)) {return;}
+		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.ManagedSystem']$")	
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Azure.Subscription']/Id$", $subscription)
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Workspace']/Id$", $workspace)		
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.ManagedSystem']/Computer$", $obj.Computer)	
+		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.Computer)	
+		$discoveryData.AddInstance($objInstance)	
+
+
+}
+
+#Start by setting up API object.
+	$P_TraceLevel = $TRACE_VERBOSE
+	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
+	#$g_RegistryStatePath = "HKLM\" + $g_API.GetScriptStateKeyPath($SCRIPT_NAME)
+
+	$dtStart = Get-Date
+	$P_TraceLevel = $traceLevel
+	Log-Params $MyInvocation
+
+
+try {
+	$ResPath = (get-itemproperty -path 'HKLM:\system\currentcontrolset\services\healthservice\Parameters' -Name 'State Directory').'State Directory' + '\Resources'
+	if(Test-Path $ResPath) {
+		$module = @(get-childitem -path $ResPath -Name OMSSearch.psm1 -Recurse)[0]
+	}
+	if($module) { $OMSSearchModule = "$ResPath\$module"}
+	else {$OMSSearchModule = '.\OMSSearch.psm1'}
+
+	If (Test-Path $OMSSearchModule) {Import-Module $OMSSearchModule}
+	else {Throw [System.DllNotFoundException] 'OMSSearch.psm1 not found'}
+
+#now load the AAD client resource. The module I'm using assumes the assembly is in the same directory of the module, but OpsMgr resource deployment uses 2 different folders
+
+	$AssemblyName = 'Microsoft.IdentityModel.Clients.ActiveDirectory'
+	$AssemblyVersion = "2.14.0.0"
+	$AssemblyPublicKey = "31bf3856ad364e35"
+
+	$DLLPath = "$ResPath\"+@(get-childitem -path $ResPath -Name "$($AssemblyName).dll" -Recurse)[0]
+	If (!([AppDomain]::CurrentDomain.GetAssemblies() |Where-Object { $_.FullName -eq "$AssemblyName, Version=$AssemblyVersion, Culture=neutral, PublicKeyToken=$AssemblyPublicKey"}))
+	{
+		Log-Event $INFO_EVENT_ID $EVENT_TYPE_INFO ("Loading Assembly $AssemblyName") $TRACE_VERBOSE
+		Try {
+			[Void][System.Reflection.Assembly]::LoadFrom($DLLPath)
+		} Catch {
+			Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Unable to load $DLLPath. $Error") $TRACE_ERROR
+			exit 1
+		}
+	}
+
+	if (!(get-command -Module OMSSearch -Name Get-AADToken -ErrorAction SilentlyContinue)) {
+		Log-Event $START_EVENT_ID $EVENT_TYPE_WARNING ("Get-AADToken Commandlet doesn't exist.") $TRACE_WARNING
+		Throw-KeepDiscoveryInfo
+		exit 1
+	}
+	$token = Get-AADToken -TenantADName $TenantADName -Username $Username -Password $Password
+	if (! $token) {Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Get-AADToken canno authenticate user $username " + $Error) $TRACE_ERROR; exit 1;}
+}
+catch {
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Main " + $Error) $TRACE_ERROR
+	exit 1
+}
+
+try
+{
+
+#ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer | where lastdata > NOW-240HOURS
+#ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | where TimeGenerated > NOW-240HOURS | measure count() by Computer
+	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
+	switch ($discoveryType) {
+		'Subscription' {
+			$uri="https://management.azure.com/subscriptions?api-version=2015-01-01"
+			$jres = Invoke-ARMGet -Token $token -Uri $uri
+			if(! $jres) {Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Invoke-ARMGet failed $uri " + $Error) $TRACE_ERROR; exit 1;}
+			foreach($sub in $jres.Value) {Discover-Subscription $sub}
+		}
+		'Workspace' {
+			if([String]::IsNullOrEmpty($subscription)) {Throw-EmptyDiscovery; Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("MIssing SubscriptionId") $TRACE_ERROR	}
+			$uri='https://management.azure.com/subscriptions/{0}/resources?$filter=resourceType eq ''Microsoft.OperationalInsights/workspaces''&api-version=2015-01-01' -f $subscription
+			$jres = Invoke-ARMGet -Token $token -Uri $uri
+			if(! $jres) {Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Invoke-ARMGet failed $uri " + $Error) $TRACE_ERROR; exit 1;}
+			foreach($ws in $jres.Value) {Discover-Workspace $ws}
+		}
+		'System' {
+				if(([String]::IsNullOrEmpty($subscription)) -or ([String]::IsNullOrEmpty($workspace)) -or ([String]::IsNullOrEmpty($ResourceGroup))) {Throw-EmptyDiscovery; Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("MIssing SubscriptionId, workspace or resourcegroup") $TRACE_ERROR	}
+				$query = 'ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer | where lastdata > NOW-{0}HOURS' -f $ValidHours
+				Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ("About to query OMS with $query") $TRACE_VERBOSE
+				$jsystems = Invoke-OMSSearchQuery -Token $token -SubscriptionId $subscription -ResourceGroupName $ResourceGroup -OMSWorkspaceName $workspace -Query $query
+				foreach($sys in $jsystems) {
+					Discover-System $sys
+				}
+
+		}
+	}
+	$discoveryData
+	If ($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
+		#it breaks in exception when run insde OpsMgr and POSH IDE	
+		$g_API.Return($discoveryData)
+	}
+	#get all the subscriptions
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+}
+Catch [Exception] {
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
+	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+}
+]]>
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SourceId</Name>
+                    <Value>$MPElement$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ManagedEntityId</Name>
+                    <Value>$Target/Id$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>TenantADName</Name>
+                    <Value>$Config/TenantADName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Subscription</Name>
+                    <Value>$Config/SubscriptionId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Workspace</Name>
+                    <Value>$Config/Workspace$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceGroup</Name>
+                    <Value>$Config/ResourceGroup$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Username</Name>
+                    <Value>$Config/AADUserName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Password</Name>
+                    <Value>$Config/AADPassword$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>DiscoveryType</Name>
+                    <Value>$Config/Type$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ProxyUrl</Name>
+                    <Value></Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ValidHours</Name>
+                    <Value>$Config/LookbackHours$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+                <!-- true only for Tasks -->
+              </DataSource>
+            </MemberModules>
+            <Composition>
+              <Node ID="DS" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
+      <DataSourceModuleType ID="QND.OMS.GenericQuery.DS" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SubscriptionId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Workspace" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceGroup" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Query" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+              </DataSource>
+              <ProbeAction ID="Probe" TypeID="QND.OMS.GenericQuery.PT">
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <TraceLevel>$Config/TraceLevel$</TraceLevel>
+                <TenantADName>$Config/TenantADName$</TenantADName>
+                <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+                <Workspace>$Config/Workspace$</Workspace>
+                <ResourceGroup>$Config/ResourceGroup$</ResourceGroup>
+                <AADUserName>$Config/AADUserName$</AADUserName>
+                <AADPassword>$Config/AADPassword$</AADPassword>
+                <Query>$Config/Query$</Query>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="Probe">
+                <Node ID="Scheduler"></Node>
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>
+      <DataSourceModuleType ID="QND.OMS.ManagedSystemLastData.DS" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SubscriptionId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Workspace" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceGroup" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+              </DataSource>
+              <ProbeAction ID="Probe" TypeID="QND.OMS.ManagedSystemLastData.PT">
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <TraceLevel>$Config/TraceLevel$</TraceLevel>
+                <TenantADName>$Config/TenantADName$</TenantADName>
+                <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+                <Workspace>$Config/Workspace$</Workspace>
+                <ResourceGroup>$Config/ResourceGroup$</ResourceGroup>
+                <AADUserName>$Config/AADUserName$</AADUserName>
+                <AADPassword>$Config/AADPassword$</AADPassword>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="Probe">
+                <Node ID="Scheduler"></Node>
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>
+      <DataSourceModuleType ID="QND.OMS.Monitoring.Pool.Discovery.DS" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+        </OverrideableParameters>
+        <ModuleImplementation Isolation="Any">
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.Discovery.Scheduler">
+                <Scheduler>
+                  <SimpleReccuringSchedule>
+                    <Interval>$Config/IntervalSeconds$</Interval>
+                    <SyncTime />
+                  </SimpleReccuringSchedule>
+                  <ExcludeDates />
+                </Scheduler>
+              </DataSource>
+              <ConditionDetection ID="Mapper" TypeID="System!System.Discovery.ClassSnapshotDataMapper">
+                <ClassId>$MPElement[Name="SC!Microsoft.SystemCenter.ManagementServicePoolWatcher"]$</ClassId>
+                <InstanceSettings>
+                  <Settings>
+                    <Setting>
+                      <Name>$MPElement[Name="SC!Microsoft.SystemCenter.ManagementServicePoolWatcher"]/PoolId$</Name>
+                      <Value>$Target/Id$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="SC!Microsoft.SystemCenter.ManagementServicePoolWatcher"]/PoolName$</Name>
+                      <Value>$Target/Property[Type="System!System.Entity"]/DisplayName$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="System!System.Entity"]/DisplayName$</Name>
+                      <Value>$Target/Property[Type="System!System.Entity"]/DisplayName$ Watcher</Value>
+                    </Setting>
+                  </Settings>
+                </InstanceSettings>
+              </ConditionDetection>
+            </MemberModules>
+            <Composition>
+              <Node ID="Mapper">
+                <Node ID="Scheduler" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
+      <ProbeActionModuleType ID="QND.OMS.GenericQuery.PT" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SubscriptionId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Workspace" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceGroup" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Query" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <ProbeAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+                <ScriptName>Get-OMSManagedSystemsData.ps1</ScriptName>
+                <ScriptBody>
+                  <![CDATA[
+
+## This discovery needs to be splitted 'cause potentially can discover a huge number of entities
+## Gorup memeberhsip must be changed and split in diffrent rules using the properties we're setting
+
+#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
+#SET ErrorLevel to 5 so show discovery info
+#https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
+
+#*************************************************************************
+# Script Name - Get-OMSManagedSystemsData
+# Author	  -  - Progel spa
+# Version  - 1.0 24.09.2007
+# Purpose     - 
+#               
+# Assumptions - 
+#				
+#               
+# Parameters  - TraceLevel
+#             - ComputerName
+#				- SourceId
+#				- ManagedEntityId
+# Command Line - .\test.ps1 4 "serverName" '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}' '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}'
+# If discovery must be added the followinf parameters
+#				SourceId ($ MPElement $ )
+#				ManagedEntityId ($ Target/Id $)
+#
+# Output properties
+#
+# Status
+#
+# 1.0 History
+#	  1.0 06.08.2010 DG First Release
+#     1.5 15.02.2014 DG minor cosmetics
+#
+# (c) Copyright 2015, Progel spa, All Rights Reserved
+# Proprietary and confidential to Progel srl              
+#
+#*************************************************************************
+
+
+# Get the named parameters
+param(
+[Parameter (Mandatory=$True)] [int]$traceLevel,
+[Parameter (Mandatory=$true)] [String]$TenantADName,
+[Parameter (Mandatory=$false)] [String]$Subscription,
+[Parameter (Mandatory=$false)] [String]$Workspace,
+[Parameter (Mandatory=$false)] [String]$ResourceGroup,
+[Parameter (Mandatory=$true)] [String]$Username,
+[Parameter (Mandatory=$true)] [String]$Password,
+[Parameter (Mandatory=$true)] [string]$query,
+[String]$Proxyurl #nyi
+
+)
+
+	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
+	[Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
+	
+#Constants used for event logging
+$SCRIPT_NAME			= "Get-OMSManagedSystemsData"
+$SCRIPT_ARGS = 11
+$SCRIPT_STARTED			= 831
+$PROPERTYBAG_CREATED	= 832
+$SCRIPT_ENDED			= 835
+$SCRIPT_VERSION = "1.0"
+
+#region Constants
+#Trace Level Costants
+$TRACE_NONE 	= 0
+$TRACE_ERROR 	= 1
+$TRACE_WARNING = 2
+$TRACE_INFO 	= 3
+$TRACE_VERBOSE = 4
+$TRACE_DEBUG = 5
+
+#Event Type Constants
+$EVENT_TYPE_SUCCESS      = 0
+$EVENT_TYPE_ERROR        = 1
+$EVENT_TYPE_WARNING      = 2
+$EVENT_TYPE_INFORMATION  = 4
+$EVENT_TYPE_AUDITSUCCESS = 8
+$EVENT_TYPE_AUDITFAILURE = 16
+
+#Standard Event IDs
+$FAILURE_EVENT_ID = 4000		#errore generico nello script
+$SUCCESS_EVENT_ID = 1101
+$START_EVENT_ID = 1102
+$STOP_EVENT_ID = 1103
+$INFO_EVENT_ID = 1104
+
+#TypedPropertyBag
+$AlertDataType = 0
+$EventDataType	= 2
+$PerformanceDataType = 2
+$StateDataType       = 3
+#endregion
+
+#region Helper Functions
+function Log-Params
+{
+	param($Invocation)
+	$line=''
+	foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
+	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. Invocation Name:$($Invocation.InvocationName)`n Parameters`n $line") $TRACE_INFO
+}
+
+
+function Log-Event
+{
+	param($eventID, $eventType, $msg, $level)
+	
+	Write-Verbose ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+	if($level -le $P_TraceLevel)
+	{
+		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+		$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
+	}
+}
+
+Function Throw-EmptyDiscovery
+{
+	param($SourceId, $ManagedEntityId)
+
+	$oDiscoveryData = $g_API.CreateDiscoveryData(0, $SourceId, $ManagedEntityId)
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
+	$oDiscoveryData
+	If($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent
+		$g_API.Return($oDiscoveryData)
+	}
+}
+
+Function Throw-KeepDiscoveryInfo
+{
+param($SourceId, $ManagedEntityId)
+	$oDiscoveryData = $g_API.CreateDiscoveryData(0,$SourceId,$ManagedEntityId)
+	#Instead of Snapshot discovery, submit Incremental discovery data
+	$oDiscoveryData.IsSnapshot = $false
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
+	$oDiscoveryData    
+	If($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
+		$g_API.Return($oDiscoveryData)
+	}
+}
+#endregion
+
+
+#id                   : /subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414
+#subscriptionId       : ec2b2ab8-ba74-41a0-bf54-39cc0716f414
+#displayName          : Laboratorio Reggio Emilia
+#state                : Enabled
+#subscriptionPolicies : @{locationPlacementId=Public_2014-09-01; quotaId=EnterpriseAgreement_2014-09-01}
+
+#id       : /subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OI-Default-East-US/providers/Microsoft.OperationalInsights/workspaces/99c95eb8-5ef1-4620-9684-74591f39b666
+#name     : 99c95eb8-5ef1-4620-9684-74591f39b666
+#type     : Microsoft.OperationalInsights/workspaces
+#location : eastus
+
+Function Throw-StatusBagError
+{
+	$bag = $g_api.CreatePropertyBag()
+	$bag.AddValue("QNDType","Status")
+	$bag.AddValue("Status","Error")
+	$bag.AddValue("Description","$Error")
+	$bag	
+}
+
+#Start by setting up API object.
+	$P_TraceLevel = $TRACE_VERBOSE
+	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
+	#$g_RegistryStatePath = "HKLM\" + $g_API.GetScriptStateKeyPath($SCRIPT_NAME)
+
+	$dtStart = Get-Date
+	$P_TraceLevel = $traceLevel
+	Log-Params $MyInvocation
+
+
+try {
+	$ResPath = (get-itemproperty -path 'HKLM:\system\currentcontrolset\services\healthservice\Parameters' -Name 'State Directory').'State Directory' + '\Resources'
+	if(Test-Path $ResPath) {
+		$module = @(get-childitem -path $ResPath -Name OMSSearch.psm1 -Recurse)[0]
+	}
+	if($module) { $OMSSearchModule = "$ResPath\$module"}
+	else {$OMSSearchModule = '.\OMSSearch.psm1'}
+
+	If (Test-Path $OMSSearchModule) {Import-Module $OMSSearchModule}
+	else {Throw [System.DllNotFoundException] 'OMSSearch.psm1 not found'}
+
+#now load the AAD client resource. The module I'm using assumes the assembly is in the same directory of the module, but OpsMgr resource deployment uses 2 different folders
+
+	$AssemblyName = 'Microsoft.IdentityModel.Clients.ActiveDirectory'
+	$AssemblyVersion = "2.14.0.0"
+	$AssemblyPublicKey = "31bf3856ad364e35"
+
+	$DLLPath = "$ResPath\"+@(get-childitem -path $ResPath -Name "$($AssemblyName).dll" -Recurse)[0]
+	If (!([AppDomain]::CurrentDomain.GetAssemblies() |Where-Object { $_.FullName -eq "$AssemblyName, Version=$AssemblyVersion, Culture=neutral, PublicKeyToken=$AssemblyPublicKey"}))
+	{
+		Log-Event $INFO_EVENT_ID $EVENT_TYPE_INFO ("Loading Assembly $AssemblyName") $TRACE_VERBOSE
+		Try {
+			[Void][System.Reflection.Assembly]::LoadFrom($DLLPath)
+		} Catch {
+			Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Unable to load $DLLPath. $Error") $TRACE_ERROR
+			exit 1
+		}
+	}
+
+	if (!(get-command -Module OMSSearch -Name Get-AADToken -ErrorAction SilentlyContinue)) {
+		Log-Event $START_EVENT_ID $EVENT_TYPE_WARNING ("Get-AADToken Commandlet doesn't exist.") $TRACE_WARNING
+		Throw-StatusBagError
+		exit 1
+	}
+	$token = Get-AADToken -TenantADName $TenantADName -Username $Username -Password $Password
+	if (! $token) {Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Get-AADToken canno authenticate user $username " + $Error) $TRACE_ERROR; exit 1;}
+}
+catch {
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Main " + $Error) $TRACE_ERROR
+	exit 1
+}
+
+try
+{
+
+#ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer | where lastdata > NOW-240HOURS
+#ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | where TimeGenerated > NOW-240HOURS | measure count() by Computer
+
+if(([String]::IsNullOrEmpty($subscription)) -or ([String]::IsNullOrEmpty($workspace)) -or ([String]::IsNullOrEmpty($ResourceGroup))) {Throw-StatusBagError; Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("MIssing SubscriptionId, workspace or resourcegroup") $TRACE_ERROR	}
+$jsystems = Invoke-OMSSearchQuery -Token $token -SubscriptionId $subscription -ResourceGroupName $ResourceGroup -OMSWorkspaceName $workspace -Query $query
+
+foreach($sys in $jsystems) {
+$sys
+	$bag = $g_api.CreatePropertyBag()
+	$bag.AddValue("QNDType","Data")
+	foreach($key in $sys.Keys) {
+		Write-Verbose "$key=$($sys.Item($key))"
+		try {
+			if($key -ieq 'Type') {$bag.AddValue($key,$sys.Type)}
+			elseif ($key -inotlike '_*') {$bag.AddValue($key,$sys.Item($key))}
+			else {write-verbose "Skipping $key"}
+		}
+		catch {Write-verbose "Exception processing $key";$Error.Clear(); continue;}
+
+	}
+	if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
+	$bag
+}
+	$bag = $g_api.CreatePropertyBag()
+	$bag.AddValue("QNDType","Status")
+	$bag.AddValue("Status","OK")
+	$bag.AddValue("Description","Connection OK")
+	$bag
+	if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
+	If ($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
+		#it breaks in exception when run insde OpsMgr and POSH IDE	
+		$g_API.ReturnItems() 
+	}
+	#get all the subscriptions
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+}
+Catch [Exception] {
+	Throw-StatusBagError
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
+	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+}
+]]>
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>TenantADName</Name>
+                    <Value>$Config/TenantADName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Subscription</Name>
+                    <Value>$Config/SubscriptionId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Workspace</Name>
+                    <Value>$Config/Workspace$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceGroup</Name>
+                    <Value>$Config/ResourceGroup$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Username</Name>
+                    <Value>$Config/AADUserName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Password</Name>
+                    <Value>$Config/AADPassword$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Query</Name>
+                    <Value>$Config/Query$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ProxyUrl</Name>
+                    <Value></Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+                <!-- true only for Tasks -->
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="POSH" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </ProbeActionModuleType>
+      <ProbeActionModuleType ID="QND.OMS.ManagedSystemLastData.PT" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SubscriptionId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Workspace" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceGroup" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <ProbeAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+                <ScriptName>Get-OMSManagedSystemLastData.ps1</ScriptName>
+                <ScriptBody>
+                  <![CDATA[
+
+## This discovery needs to be splitted 'cause potentially can discover a huge number of entities
+## Gorup memeberhsip must be changed and split in diffrent rules using the properties we're setting
+
+#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
+#SET ErrorLevel to 5 so show discovery info
+#https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
+
+#*************************************************************************
+# Script Name - Get-OMSManagedSystemsData
+# Author	  -  - Progel spa
+# Version  - 1.0 24.09.2007
+# Purpose     - 
+#               
+# Assumptions - 
+#				
+#               
+# Parameters  - TraceLevel
+#             - ComputerName
+#				- SourceId
+#				- ManagedEntityId
+# Command Line - .\test.ps1 4 "serverName" '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}' '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}'
+# If discovery must be added the followinf parameters
+#				SourceId ($ MPElement $ )
+#				ManagedEntityId ($ Target/Id $)
+#
+# Output properties
+#
+# Status
+#
+# 1.0 History
+#	  1.0 06.08.2010 DG First Release
+#     1.5 15.02.2014 DG minor cosmetics
+#
+# (c) Copyright 2015, Progel spa, All Rights Reserved
+# Proprietary and confidential to Progel srl              
+#
+#*************************************************************************
+
+
+# Get the named parameters
+param(
+[Parameter (Mandatory=$True)] [int]$traceLevel,
+[Parameter (Mandatory=$true)] [String]$TenantADName,
+[Parameter (Mandatory=$false)] [String]$Subscription,
+[Parameter (Mandatory=$false)] [String]$Workspace,
+[Parameter (Mandatory=$false)] [String]$ResourceGroup,
+[Parameter (Mandatory=$true)] [String]$Username,
+[Parameter (Mandatory=$true)] [String]$Password,
+[String]$Proxyurl #nyi
+
+)
+
+	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
+	[Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
+	
+#Constants used for event logging
+$SCRIPT_NAME			= "Get-OMSManagedSystemLastData"
+$SCRIPT_ARGS = 11
+$SCRIPT_STARTED			= 831
+$PROPERTYBAG_CREATED	= 832
+$SCRIPT_ENDED			= 835
+$SCRIPT_VERSION = "1.0"
+
+#region Constants
+#Trace Level Costants
+$TRACE_NONE 	= 0
+$TRACE_ERROR 	= 1
+$TRACE_WARNING = 2
+$TRACE_INFO 	= 3
+$TRACE_VERBOSE = 4
+$TRACE_DEBUG = 5
+
+#Event Type Constants
+$EVENT_TYPE_SUCCESS      = 0
+$EVENT_TYPE_ERROR        = 1
+$EVENT_TYPE_WARNING      = 2
+$EVENT_TYPE_INFORMATION  = 4
+$EVENT_TYPE_AUDITSUCCESS = 8
+$EVENT_TYPE_AUDITFAILURE = 16
+
+#Standard Event IDs
+$FAILURE_EVENT_ID = 4000		#errore generico nello script
+$SUCCESS_EVENT_ID = 1101
+$START_EVENT_ID = 1102
+$STOP_EVENT_ID = 1103
+$INFO_EVENT_ID = 1104
+
+#TypedPropertyBag
+$AlertDataType = 0
+$EventDataType	= 2
+$PerformanceDataType = 2
+$StateDataType       = 3
+#endregion
+
+#region Helper Functions
+function Log-Params
+{
+	param($Invocation)
+	$line=''
+	foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
+	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. Invocation Name:$($Invocation.InvocationName)`n Parameters`n $line") $TRACE_INFO
+}
+
+
+function Log-Event
+{
+	param($eventID, $eventType, $msg, $level)
+	
+	Write-Verbose ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+	if($level -le $P_TraceLevel)
+	{
+		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+		$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
+	}
+}
+
+Function Throw-EmptyDiscovery
+{
+	param($SourceId, $ManagedEntityId)
+
+	$oDiscoveryData = $g_API.CreateDiscoveryData(0, $SourceId, $ManagedEntityId)
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
+	$oDiscoveryData
+	If($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent
+		$g_API.Return($oDiscoveryData)
+	}
+}
+
+Function Throw-KeepDiscoveryInfo
+{
+param($SourceId, $ManagedEntityId)
+	$oDiscoveryData = $g_API.CreateDiscoveryData(0,$SourceId,$ManagedEntityId)
+	#Instead of Snapshot discovery, submit Incremental discovery data
+	$oDiscoveryData.IsSnapshot = $false
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
+	$oDiscoveryData    
+	If($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
+		$g_API.Return($oDiscoveryData)
+	}
+}
+#endregion
+
+Function Throw-StatusBagError
+{
+	$bag = $g_api.CreatePropertyBag()
+	$bag.AddValue("QNDType","Status")
+	$bag.AddValue("Status","Error")
+	$bag.AddValue("Description","$Error")
+	$bag	
+}
+
+
+#Start by setting up API object.
+	$P_TraceLevel = $TRACE_VERBOSE
+	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
+	#$g_RegistryStatePath = "HKLM\" + $g_API.GetScriptStateKeyPath($SCRIPT_NAME)
+
+	$dtStart = Get-Date
+	$P_TraceLevel = $traceLevel
+	Log-Params $MyInvocation
+
+
+try {
+	$ResPath = (get-itemproperty -path 'HKLM:\system\currentcontrolset\services\healthservice\Parameters' -Name 'State Directory').'State Directory' + '\Resources'
+	if(Test-Path $ResPath) {
+		$module = @(get-childitem -path $ResPath -Name OMSSearch.psm1 -Recurse)[0]
+	}
+	if($module) { $OMSSearchModule = "$ResPath\$module"}
+	else {$OMSSearchModule = '.\OMSSearch.psm1'}
+
+	If (Test-Path $OMSSearchModule) {Import-Module $OMSSearchModule}
+	else {Throw [System.DllNotFoundException] 'OMSSearch.psm1 not found'}
+
+#now load the AAD client resource. The module I'm using assumes the assembly is in the same directory of the module, but OpsMgr resource deployment uses 2 different folders
+
+	$AssemblyName = 'Microsoft.IdentityModel.Clients.ActiveDirectory'
+	$AssemblyVersion = "2.14.0.0"
+	$AssemblyPublicKey = "31bf3856ad364e35"
+
+	$DLLPath = "$ResPath\"+@(get-childitem -path $ResPath -Name "$($AssemblyName).dll" -Recurse)[0]
+	If (!([AppDomain]::CurrentDomain.GetAssemblies() |Where-Object { $_.FullName -eq "$AssemblyName, Version=$AssemblyVersion, Culture=neutral, PublicKeyToken=$AssemblyPublicKey"}))
+	{
+		Log-Event $INFO_EVENT_ID $EVENT_TYPE_INFO ("Loading Assembly $AssemblyName") $TRACE_VERBOSE
+		Try {
+			[Void][System.Reflection.Assembly]::LoadFrom($DLLPath)
+		} Catch {
+			Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Unable to load $DLLPath. $Error") $TRACE_ERROR
+			exit 1
+		}
+	}
+
+	if (!(get-command -Module OMSSearch -Name Get-AADToken -ErrorAction SilentlyContinue)) {
+		Log-Event $START_EVENT_ID $EVENT_TYPE_WARNING ("Get-AADToken Commandlet doesn't exist.") $TRACE_WARNING
+		Throw-KeepDiscoveryInfo
+		exit 1
+	}
+	$token = Get-AADToken -TenantADName $TenantADName -Username $Username -Password $Password
+	if (! $token) {Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Get-AADToken canno authenticate user $username " + $Error) $TRACE_ERROR; exit 1;}
+}
+catch {
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Main " + $Error) $TRACE_ERROR
+	exit 1
+}
+
+try
+{
+
+#ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer | where lastdata > NOW-240HOURS
+#ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | where TimeGenerated > NOW-240HOURS | measure count() by Computer
+
+if(([String]::IsNullOrEmpty($subscription)) -or ([String]::IsNullOrEmpty($workspace)) -or ([String]::IsNullOrEmpty($ResourceGroup))) {Throw-StatusBagError; Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("MIssing SubscriptionId, workspace or resourcegroup") $TRACE_ERROR	}
+$jsystems = Invoke-OMSSearchQuery -Token $token -SubscriptionId $subscription -ResourceGroupName $ResourceGroup -OMSWorkspaceName $workspace -Query 'ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer'
+
+foreach($sys in $jsystems) {
+	if(! [String]::IsNullOrEmpty($sys.Computer) ) {
+
+		$bag = $g_api.CreatePropertyBag()
+		$bag.AddValue("QNDType","Data")
+		$bag.AddValue('Computer', $sys.Computer)
+		$bag.AddValue('LastData', $sys.lastdata)
+		$diff = [DateTime]::Now - [DateTime]($sys.lastdata)
+		$bag.AddValue('AgeHours', $diff.TotalHours)
+		if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
+		$bag
+	}
+}
+	$bag = $g_api.CreatePropertyBag()
+	$bag.AddValue("QNDType","Status")
+	$bag.AddValue("Status","OK")
+	$bag.AddValue("Description","Connection OK")
+	$bag
+	If ($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
+		#it breaks in exception when run insde OpsMgr and POSH IDE	
+		$g_API.ReturnItems() 
+	}
+	#get all the subscriptions
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+}
+Catch [Exception] {
+	Throw-StatusBagError
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
+	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+}
+]]>
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>TenantADName</Name>
+                    <Value>$Config/TenantADName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Subscription</Name>
+                    <Value>$Config/SubscriptionId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Workspace</Name>
+                    <Value>$Config/Workspace$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceGroup</Name>
+                    <Value>$Config/ResourceGroup$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Username</Name>
+                    <Value>$Config/AADUserName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Password</Name>
+                    <Value>$Config/AADPassword$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ProxyUrl</Name>
+                    <Value></Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+                <!-- true only for Tasks -->
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="POSH" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </ProbeActionModuleType>
+    </ModuleTypes>
+    <MonitorTypes>
+      <UnitMonitorType ID="QND.OMS.ManagedSystem.Communication.MT" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="Healthy" />
+          <MonitorTypeState ID="Late" />
+          <MonitorTypeState ID="Obsolete" />
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="DelayLateHours" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="DelayObsoleteHours" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SubscriptionId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Workspace" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceGroup" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Computer" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$" />
+          <OverrideableParameter ID="DelayLateHours" Selector="$Config/DelayLateHours$" ParameterType="int" />
+          <OverrideableParameter ID="DelayObsoleteHours" Selector="$Config/DelayObsoleteHours$" ParameterType="int" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="QND.OMS.ManagedSystemLastData.DS">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <TenantADName>$Config/TenantADName$</TenantADName>
+              <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+              <Workspace>$Config/Workspace$</Workspace>
+              <ResourceGroup>$Config/ResourceGroup$</ResourceGroup>
+              <AADUserName>$Config/AADUserName$</AADUserName>
+              <AADPassword>$Config/AADPassword$</AADPassword>
+            </DataSource>
+            <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Data</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='Computer']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">$Config/Computer$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="LateDataCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <And>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Double">Property[@Name='AgeHours']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>LessEqual</Operator>
+                      <ValueExpression>
+                        <Value Type="Double">$Config/DelayObsoleteHours$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Double">Property[@Name='AgeHours']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Greater</Operator>
+                      <ValueExpression>
+                        <Value Type="Double">$Config/DelayLateHours$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                </And>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="ObsoleteDataCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">Property[@Name='AgeHours']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Greater</Operator>
+                  <ValueExpression>
+                    <Value Type="Double">$Config/DelayObsoleteHours$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="OntimeCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">Property[@Name='AgeHours']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>LessEqual</Operator>
+                  <ValueExpression>
+                    <Value Type="Double">$Config/DelayLateHours$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="Healthy">
+              <Node ID="OntimeCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                    <Node ID="DS" />
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="Late">
+              <Node ID="LateDataCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                    <Node ID="DS"></Node>
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="Obsolete">
+              <Node ID="ObsoleteDataCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                    <Node ID="DS" />
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+      <UnitMonitorType ID="QND.OMS.Workspace.Connectivity.MT" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="Healthy" />
+          <MonitorTypeState ID="UnReachable" />
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SubscriptionId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Workspace" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceGroup" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="QND.OMS.GenericQuery.DS">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <TenantADName>$Config/TenantADName$</TenantADName>
+              <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+              <Workspace>$Config/Workspace$</Workspace>
+              <ResourceGroup>$Config/ResourceGroup$</ResourceGroup>
+              <AADUserName>$Config/AADUserName$</AADUserName>
+              <AADPassword>$Config/AADPassword$</AADPassword>
+              <Query>Event | top 1</Query>
+            </DataSource>
+            <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Status</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="ConnectOKCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='Status']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">OK</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="ConnectKOCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">Property[@Name='Status']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Error</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="Healthy">
+              <Node ID="ConnectOKCD">
+                <Node ID="Filter">
+                  <Node ID="DS" />
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="UnReachable">
+              <Node ID="ConnectKOCD">
+                <Node ID="Filter">
+                  <Node ID="DS"></Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+    </MonitorTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="QND.OMS.Monitoring.Pool.Discovery" Enabled="true" Target="QND.OMS.Monitoring.Pool" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="SC!Microsoft.SystemCenter.ManagementServicePoolWatcher">
+            <Property TypeID="System!System.Entity" PropertyID="DisplayName" />
+            <Property PropertyID="PoolId" />
+            <Property PropertyID="PoolName" />
+          </DiscoveryClass>
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.OMS.Monitoring.Pool.Discovery.DS">
+          <IntervalSeconds>86400</IntervalSeconds>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.MAPSME.AADTenant.Discovery" Enabled="true" Target="QND.OMS.Monitoring.Pool" ConfirmDelivery="true" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="SC!Microsoft.SystemCenter.ManagementActionPointShouldManageEntity" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="SC!Microsoft.SystemCenter.GroupPopulator">
+          <RuleId>$MPElement$</RuleId>
+          <GroupInstanceId>$Target/Id$</GroupInstanceId>
+          <MembershipRules>
+            <MembershipRule>
+              <MonitoringClass>$MPElement[Name="QND.OMS.AAD.Tenant"]$</MonitoringClass>
+              <RelationshipClass>$MPElement[Name="SC!Microsoft.SystemCenter.ManagementActionPointShouldManageEntity"]$</RelationshipClass>
+            </MembershipRule>
+          </MembershipRules>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.TenantContainsEntity.Discovery" Enabled="true" Target="QND.OMS.AAD.Tenant.Group" ConfirmDelivery="true" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="QND.OMS.AAD.TenantGroupContainsEntity" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="SC!Microsoft.SystemCenter.GroupPopulator">
+          <RuleId>$MPElement$</RuleId>
+          <GroupInstanceId>$Target/Id$</GroupInstanceId>
+          <GroupMonitoringClass>$MPElement[Name="QND.OMS.AAD.Tenant.Group"]$</GroupMonitoringClass>
+          <MembershipRules>
+            <MembershipRule>
+              <MonitoringClass>$MPElement[Name="System!System.Entity"]$</MonitoringClass>
+              <RelationshipClass>$MPElement[Name="QND.OMS.AAD.TenantGroupContainsEntity"]$</RelationshipClass>
+              <Expression>
+                <Contained>
+                  <MonitoringClass>$MPElement[Name="QND.OMS.AAD.Tenant"]$</MonitoringClass>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <Property>$MPElement[Name="QND.OMS.AAD.Tenant"]/Domain$</Property>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value>$Target/Property[Type="QND.OMS.AAD.Tenant.Group"]/Domain$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                </Contained>
+              </Expression>
+            </MembershipRule>
+          </MembershipRules>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.AAD.Tenant.Discovery" Enabled="true" ConfirmDelivery="true" Priority="Normal" Remotable="true" Target="QND.OMS.Monitoring.Pool">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.AAD.Tenant" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.OMS.AAD.Tenant.Discovery.DS">
+          <TraceLevel>2</TraceLevel>
+          <IntervalSeconds>3601</IntervalSeconds>
+          <SyncTime />
+          <TimeoutSeconds>30</TimeoutSeconds>
+          <TenantsFilePath>c:\QND\AADTenants.xml</TenantsFilePath>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.ManagedSystem.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="QND.OMS.Workspace">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.Workspace" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.OMS.Entity.Discovery.DS">
+          <TraceLevel>2</TraceLevel>
+          <IntervalSeconds>14417</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TenantADName>$Target/Host/Property[Type="QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <SubscriptionId>$Target/Host/Property[Type="QND.OMS.Azure.Subscription"]/Id$</SubscriptionId>
+          <Workspace>$Target/Property[Type="QND.OMS.Workspace"]/Id$</Workspace>
+          <ResourceGroup>$Target/Property[Type="QND.OMS.Workspace"]/ResourceGroup$</ResourceGroup>
+          <AADUserName>$RunAs[Name="QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <Type>System</Type>
+          <LookbackHours>240</LookbackHours>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.MAPSME.Subscription.Discovery" Enabled="true" Target="QND.OMS.Monitoring.Pool" ConfirmDelivery="true" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="SC!Microsoft.SystemCenter.ManagementActionPointShouldManageEntity" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="SC!Microsoft.SystemCenter.GroupPopulator">
+          <RuleId>$MPElement$</RuleId>
+          <GroupInstanceId>$Target/Id$</GroupInstanceId>
+          <MembershipRules>
+            <MembershipRule>
+              <MonitoringClass>$MPElement[Name="QND.OMS.Azure.Subscription"]$</MonitoringClass>
+              <RelationshipClass>$MPElement[Name="SC!Microsoft.SystemCenter.ManagementActionPointShouldManageEntity"]$</RelationshipClass>
+            </MembershipRule>
+          </MembershipRules>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.TenantContainsSubscription.Discovery" Enabled="true" Target="QND.OMS.AAD.Tenant" ConfirmDelivery="true" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="QND.OMS.TenantContainsSubscription" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="SC!Microsoft.SystemCenter.GroupPopulator">
+          <RuleId>$MPElement$</RuleId>
+          <GroupInstanceId>$Target/Id$</GroupInstanceId>
+          <GroupMonitoringClass>$MPElement[Name="QND.OMS.AAD.Tenant"]$</GroupMonitoringClass>
+          <MembershipRules>
+            <MembershipRule>
+              <MonitoringClass>$MPElement[Name="QND.OMS.Azure.Subscription"]$</MonitoringClass>
+              <RelationshipClass>$MPElement[Name="QND.OMS.TenantContainsSubscription"]$</RelationshipClass>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <Property>$MPElement[Name="QND.OMS.Azure.Subscription"]/Tenant$</Property>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value>$Target/Property[Type="QND.OMS.AAD.Tenant"]/Domain$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </MembershipRule>
+          </MembershipRules>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.Azure.Subscription.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="QND.OMS.AAD.Tenant">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.Azure.Subscription" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.OMS.Entity.Discovery.DS">
+          <TraceLevel>2</TraceLevel>
+          <IntervalSeconds>86400</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TenantADName>$Target/Property[Type="QND.OMS.AAD.Tenant"]/Domain$</TenantADName>
+          <SubscriptionId></SubscriptionId>
+          <Workspace></Workspace>
+          <ResourceGroup></ResourceGroup>
+          <AADUserName>$RunAs[Name="QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <Type>Subscription</Type>
+          <LookbackHours>240</LookbackHours>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.Workspace.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="QND.OMS.Azure.Subscription">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.Workspace" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.OMS.Entity.Discovery.DS">
+          <TraceLevel>2</TraceLevel>
+          <IntervalSeconds>86400</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TenantADName>$Target/Property[Type="QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <SubscriptionId>$Target/Property[Type="QND.OMS.Azure.Subscription"]/Id$</SubscriptionId>
+          <Workspace></Workspace>
+          <ResourceGroup></ResourceGroup>
+          <AADUserName>$RunAs[Name="QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <Type>Workspace</Type>
+          <LookbackHours>240</LookbackHours>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+    <Monitors>
+      <UnitMonitor ID="QND.OMS.ManagedSystemLastData.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.ManagedSystem" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.ManagedSystem.Communication.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Target/Property[Type="QND.OMS.ManagedSystem"]/Computer$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="AgeHours"]$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="Late" MonitorTypeStateID="Late" HealthState="Warning" />
+          <OperationalState ID="Obsolete" MonitorTypeStateID="Obsolete" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>3611</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <DelayLateHours>1</DelayLateHours>
+          <DelayObsoleteHours>24</DelayObsoleteHours>
+          <TenantADName>$Target/Host/Host/Property[Type="QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <SubscriptionId>$Target/Host/Host/Property[Type="QND.OMS.Azure.Subscription"]/Id$</SubscriptionId>
+          <Workspace>$Target/Host/Property[Type="QND.OMS.Workspace"]/Id$</Workspace>
+          <ResourceGroup>$Target/Host/Property[Type="QND.OMS.Workspace"]/ResourceGroup$</ResourceGroup>
+          <AADUserName>$RunAs[Name="QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <Computer>$Target/Property[Type="QND.OMS.ManagedSystem"]/Computer$</Computer>
+        </Configuration>
+      </UnitMonitor>
+      <UnitMonitor ID="QND.OMS.Workspace.Connectivity.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Workspace" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Workspace.Connectivity.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Workspace.Connectivity.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter2>$Data/Context/Property[@Name="Description"]$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="OverThreshold2" MonitorTypeStateID="UnReachable" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>3611</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <TenantADName>$Target/Host/Property[Type="QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
+          <SubscriptionId>$Target/Host/Property[Type="QND.OMS.Azure.Subscription"]/Id$</SubscriptionId>
+          <Workspace>$Target/Property[Type="QND.OMS.Workspace"]/Id$</Workspace>
+          <ResourceGroup>$Target/Property[Type="QND.OMS.Workspace"]/ResourceGroup$</ResourceGroup>
+          <AADUserName>$RunAs[Name="QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+        </Configuration>
+      </UnitMonitor>
+      <DependencyMonitor ID="QND.OMS.WorkspaceToSystem.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.ManagedSystemLastData.Monitor" ParentMonitorID="Health!System.Health.AvailabilityState" Priority="Normal" RelationshipType="QND.OMS.WorkspaceContainsSystem" Remotable="true" Target="QND.OMS.Workspace">
+        <Category>AvailabilityHealth</Category>
+        <Algorithm>Percentage</Algorithm>
+        <AlgorithmParameter>30</AlgorithmParameter>
+        <MemberInMaintenance>Success</MemberInMaintenance>
+        <MemberUnAvailable>Warning</MemberUnAvailable>
+      </DependencyMonitor>
+    </Monitors>
+  </Monitoring>
+  <Presentation>
+    <Views>
+      <View ID="QND.OMS.ManagedSystem.State.View" Accessibility="Internal" Target="QND.OMS.ManagedSystem" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Operations</Category>
+        <Presentation>
+          <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
+            <Name>State</Name>
+            <Id>QND.OMS.ManagedSystem-*-9284fde8-1fae-b0b7-855a-b6908c8664c1-*-Health</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Maintenance Mode</Name>
+            <Id>InMaintenanceMode</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Path</Name>
+            <Id>Path</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="4" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Display Name</Name>
+            <Id>System.Entity/DisplayName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="5" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Computer Name</Name>
+            <Id>QND.OMS.ManagedSystem/Computer</Id>
+          </ColumnInfo>
+        </Presentation>
+      </View>
+      <View ID="QND.OMS.AAD.Tenant.State.View" Accessibility="Internal" Target="QND.OMS.AAD.Tenant" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Operations</Category>
+        <Presentation>
+          <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
+            <Name>State</Name>
+            <Id>QND.OMS.AAD.Tenant-*-e2ee35a1-8e6d-b1e6-bcdf-795c52715f43-*-Health</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>In Maintenance Mode</Name>
+            <Id>InMaintenanceMode</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Path</Name>
+            <Id>Path</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="4" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Display Name</Name>
+            <Id>System.Entity/DisplayName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="5" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Service Description</Name>
+            <Id>System.Service/ServiceDescription</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="6" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Business Detailed Description</Name>
+            <Id>System.Service/BusinessDetailedDescription</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="7" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="false" Visible="false" SortOrder="Ascending">
+            <Name>Is Business Service</Name>
+            <Id>System.Service/IsBusinessService</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="8" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Owned By Organization</Name>
+            <Id>System.Service/OwnedByOrganization</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="9" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="false" Visible="false" SortOrder="Ascending">
+            <Name>Priority</Name>
+            <Id>System.Service/Priority</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="10" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="false" Visible="false" SortOrder="Ascending">
+            <Name>Status</Name>
+            <Id>System.Service/Status</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="11" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="false" Visible="false" SortOrder="Ascending">
+            <Name>Classification</Name>
+            <Id>System.Service/Classification</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="12" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Availability Schedule</Name>
+            <Id>System.Service/AvailabilitySchedule</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="13" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Tenant Domain Name</Name>
+            <Id>QND.OMS.AAD.Tenant/Domain</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="14" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>QND - Azure Subscription</Name>
+            <Id>QND.OMS.Azure.Subscription</Id>
+          </ColumnInfo>
+        </Presentation>
+      </View>
+      <View ID="QND.OMS.Azure.Subscription.State.View" Accessibility="Internal" Target="QND.OMS.Azure.Subscription" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Operations</Category>
+        <Presentation>
+          <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
+            <Name>State</Name>
+            <Id>QND.OMS.Azure.Subscription-*-eea58230-679e-6583-5d98-cd756cac8b61-*-Health</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>In Maintenance Mode</Name>
+            <Id>InMaintenanceMode</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Path</Name>
+            <Id>Path</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="4" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Display Name</Name>
+            <Id>System.Entity/DisplayName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="5" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Subscription Id</Name>
+            <Id>QND.OMS.Azure.Subscription/Id</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="6" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>QND.OMS.Azure.Subscription/Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="7" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Tenant</Name>
+            <Id>QND.OMS.Azure.Subscription/Tenant</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="8" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>QND - OMS Workspace</Name>
+            <Id>QND.OMS.Workspace</Id>
+          </ColumnInfo>
+        </Presentation>
+      </View>
+      <View ID="QND.OMS.Workspace.State.View" Accessibility="Internal" Target="QND.OMS.Workspace" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Operations</Category>
+        <Presentation>
+          <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
+            <Name>State</Name>
+            <Id>QND.OMS.Workspace-*-cd9ce88b-5f43-3276-6e66-166f6e606bf5-*-Health</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Maintenance Mode</Name>
+            <Id>InMaintenanceMode</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Path</Name>
+            <Id>Path</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="4" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Display Name</Name>
+            <Id>System.Entity/DisplayName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="5" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Workspace Id</Name>
+            <Id>QND.OMS.Workspace/Id</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="6" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>QND.OMS.Workspace/Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="7" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Subscription Id</Name>
+            <Id>QND.OMS.Workspace/Subscription</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="8" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Resource Group</Name>
+            <Id>QND.OMS.Workspace/ResourceGroup</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="9" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>QND - OMS Managed System</Name>
+            <Id>QND.OMS.ManagedSystem</Id>
+          </ColumnInfo>
+        </Presentation>
+      </View>
+      <View ID="QND.OMS.Alert.View" Accessibility="Internal" Target="System!System.Entity" TypeID="SC!Microsoft.SystemCenter.AlertViewType" Visible="true">
+        <Category>Operations</Category>
+        <Criteria>
+          <ResolutionState>
+            <StateRange Operator="LessThan">255</StateRange>
+          </ResolutionState>
+          <Name>QND - OMS%</Name>
+        </Criteria>
+        <Presentation>
+          <ColumnInfo Index="0" SortIndex="0" Width="22" Grouped="true" Sorted="false" IsSortable="true" Visible="true" SortOrder="Descending">
+            <Name>Severity</Name>
+            <Id>Severity</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" SortIndex="-1" Width="54" Grouped="false" Sorted="false" IsSortable="false" Visible="true" SortOrder="Ascending">
+            <Name>Icon</Name>
+            <Id>Icon</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Path</Name>
+            <Id>MonitoringObjectPath</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Source</Name>
+            <Id>MonitoringObjectDisplayName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="4" SortIndex="-1" Width="22" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Maintenance Mode</Name>
+            <Id>MonitoringObjectInMaintenanceMode</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="5" SortIndex="-1" Width="250" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="6" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Resolution State</Name>
+            <Id>ResolutionState</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="7" SortIndex="-1" Width="150" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Created</Name>
+            <Id>TimeRaised</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="8" SortIndex="1" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
+            <Name>Age</Name>
+            <Id>Age</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="9" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Type</Name>
+            <Id>Category</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="10" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Owner</Name>
+            <Id>Owner</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="11" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Priority</Name>
+            <Id>Priority</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="12" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Latency</Name>
+            <Id>Latency</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="13" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Description</Name>
+            <Id>Description</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="14" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Connector</Name>
+            <Id>ConnectorId</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="15" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Forwarding Status</Name>
+            <Id>ConnectorStatus</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="16" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Class</Name>
+            <Id>Class</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="17" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Time in State</Name>
+            <Id>TimeInState</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="18" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 1</Name>
+            <Id>CustomField1</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="19" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 2</Name>
+            <Id>CustomField2</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="20" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 3</Name>
+            <Id>CustomField3</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="21" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 4</Name>
+            <Id>CustomField4</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="22" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 5</Name>
+            <Id>CustomField5</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="23" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 6</Name>
+            <Id>CustomField6</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="24" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 7</Name>
+            <Id>CustomField7</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="25" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 8</Name>
+            <Id>CustomField8</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="26" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 9</Name>
+            <Id>CustomField9</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="27" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Custom Field 10</Name>
+            <Id>CustomField10</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="28" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Resolved By</Name>
+            <Id>ResolvedBy</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="29" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Time Resolved</Name>
+            <Id>TimeResolved</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="30" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Last State Change</Name>
+            <Id>TimeResolutionStateLastModified</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="31" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Last Modified</Name>
+            <Id>LastModified</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="32" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Last Modified By</Name>
+            <Id>LastModifiedBy</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="33" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Management Group</Name>
+            <Id>ManagementGroup</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="34" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Site</Name>
+            <Id>SiteName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="35" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Repeat Count</Name>
+            <Id>RepeatCount</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="36" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Ticket ID</Name>
+            <Id>TicketId</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="37" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>TFS Work Item ID</Name>
+            <Id>TfsWorkItemId</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="38" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>TFS Work Item Owner</Name>
+            <Id>TfsWorkItemOwner</Id>
+          </ColumnInfo>
+        </Presentation>
+        <Target />
+      </View>
+    </Views>
+    <Folders>
+      <Folder ID="QND.OMS.Folders" Accessibility="Public" ParentFolder="SC!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
+    </Folders>
+    <FolderItems>
+      <FolderItem ElementID="QND.OMS.ManagedSystem.State.View" Folder="QND.OMS.Folders" ID="QND.OMS.ManagedSystem.State.View.FolderItem" />
+      <FolderItem ElementID="QND.OMS.AAD.Tenant.State.View" Folder="QND.OMS.Folders" ID="QND.OMS.AAD.Tenant.State.View.FolderItem" />
+      <FolderItem ElementID="QND.OMS.Azure.Subscription.State.View" Folder="QND.OMS.Folders" ID="QND.OMS.Azure.Subscription.State.View.FolderItem" />
+      <FolderItem ElementID="QND.OMS.Workspace.State.View" Folder="QND.OMS.Folders" ID="QND.OMS.Workspace.State.View.FolderItem" />
+      <FolderItem ElementID="QND.OMS.Alert.View" Folder="QND.OMS.Folders" ID="QND.OMS.Alert.View.FolderItem" />
+    </FolderItems>
+    <StringResources>
+      <StringResource ID="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage" />
+      <StringResource ID="QND.OMS.Workspace.Connectivity.Monitor.AlertMessage" />
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="QND.OMS.Folders">
+          <Name>QND - OMS</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS">
+          <Name>QND - Microsoft OMS monitoring</Name>
+          <Description>QND Community Management Pack for monitoring Microsoft Operations Management Suite #MSOMS</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AAD.Account.SR">
+          <Name>QND - OMS Azure AD connection</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Monitoring.Pool">
+          <Name>QND OMS Monitoring Pool</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Monitoring.Pool.Discovery">
+          <Name>QND - OMS Monitoring Pool Discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AAD.Tenant">
+          <Name>QND - Azure Active Directory Tenant</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AAD.Tenant" SubElementID="Domain">
+          <Name>Tenant Domain Name</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.MAPSME.AADTenant.Discovery">
+          <Name>QND - Pool should manage AAD Tenant Discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AAD.Tenant.Discovery">
+          <Name>QND - Discovers AAD Tenants</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AAD.Tenant.Group">
+          <Name>QND - AAD Tenant Group</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.ManagedSystem">
+          <Name>QND - OMS Managed System</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.ManagedSystem" SubElementID="Computer">
+          <Name>Computer Name</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.WorkspaceContainsSystem">
+          <Name>QND -OMS Workspace contains managed systems</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.ManagedSystem.Discovery">
+          <Name>QND - OMS Managed System Discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.ManagedSystemLastData.Monitor">
+          <Name>Last Data Point</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage">
+          <Name> QND - OMS System Data obsolete</Name>
+          <Description>{0} data is obsolete. Last data point received {1} hours ago</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Azure.Subscription">
+          <Name>QND - Azure Subscription</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Azure.Subscription" SubElementID="Id">
+          <Name>Subscription Id</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Azure.Subscription" SubElementID="Name">
+          <Name>Name</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Azure.Subscription" SubElementID="Tenant">
+          <Name>Tenant</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.TenantContainsSubscription">
+          <Name>QND - Tenant contains Azure subscription</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.MAPSME.Subscription.Discovery">
+          <Name>QND - Pool should manage Azure Subscription Discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.TenantContainsSubscription.Discovery">
+          <Name>QND - Tenant comntains Azure Subscription discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Azure.Subscription.Discovery">
+          <Name>QND - Azure Subscription Discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace">
+          <Name>QND - OMS Workspace</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace" SubElementID="Id">
+          <Name>Workspace Id</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace" SubElementID="Name">
+          <Name>Name</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace" SubElementID="Subscription">
+          <Name>Subscription Id</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace" SubElementID="ResourceGroup">
+          <Name>Resource Group</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.SubscriptionContainsWorkspace">
+          <Name>QND - Azure Subscription contains OMS workspace</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace.Discovery">
+          <Name>QND - OMS Workspace discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.WorkspaceToSystem.DepMonitor">
+          <Name>Managed Systems</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace.Connectivity.Monitor.AlertMessage">
+          <Name>QND - OMS Workspace Unreachable</Name>
+          <Description>The workspace is unreachable. Error:{0}</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace.Connectivity.Monitor">
+          <Name>Connectivity</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.ManagedSystem.State.View">
+          <Name>OMS Managed Systems State</Name>
+          <Description>OMS Managed Systerms State</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AAD.Tenant.State.View">
+          <Name>AAD Tenants State</Name>
+          <Description>AD Tenants State</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Azure.Subscription.State.View">
+          <Name>Azure Subscription State</Name>
+          <Description>Azure Subscription Stat6e</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace.State.View">
+          <Name>OMS Workspace State</Name>
+          <Description>OMS Workspace State</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Alert.View">
+          <Name>Active Alerts</Name>
+          <Description>Active Alerts View</Description>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles>
+        <KnowledgeArticle ElementID="QND.OMS.Workspace.Connectivity.Monitor">
+          <MamlContent>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Summary</maml:title>
+              <maml:para>The monitor check for SearchAPI reachability. It executes a simple query using the defined credentials for the tenant the workspace is in. Possibile states</maml:para>
+              <maml:list>
+                <maml:listItem>
+                  <maml:para>Healthy: the connection is available.</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Error: resource pool servers cannot erach the search api for the workspace.</maml:para>
+                </maml:listItem>
+              </maml:list>
+              <maml:para>
+                For more info see <maml:navigationLink><maml:linkText>GitHub Wiki</maml:linkText><maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/OI-Connectivity-Monitor" /></maml:navigationLink></maml:para>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Configuration</maml:title>
+              <maml:para>The following options can be configured on this monitor:</maml:para>
+              <maml:table>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>Option</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Definition</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Default</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>IntervalSeconds</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Amount of time in seconds between checks of the connectivity status</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>3611 seconds</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>Sync Time</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Optional time wihtin the hour to sync the check exectuion to</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para></maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>TimeoutSeconds</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Amount of time in seconds to wait for script execution and hance for API Search response</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>30 seconds</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>TraceLevel</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Debugging level (0-5) anything above 2 will log clear text password in eventlog</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>2</maml:para>
+                  </maml:entry>
+                </maml:row>
+              </maml:table>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Causes</maml:title>
+              <maml:para>There three known causes of errors</maml:para>
+              <maml:list>
+                <maml:listItem>
+                  <maml:para>OMS service has issues</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Your proxy /connectivity infrastructure to the cloud has issue</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>The runas account used to connect to the workspace is no longer valid / has an expired password</maml:para>
+                </maml:listItem>
+              </maml:list>
+              <maml:para>The alert context tries to give a specific cause for any issue</maml:para>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Resolutions</maml:title>
+              <maml:para>Check the three known causes and fix any issue</maml:para>
+            </maml:section>
+          </MamlContent>
+        </KnowledgeArticle>
+        <KnowledgeArticle ElementID="QND.OMS.ManagedSystemLastData.Monitor">
+          <MamlContent>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Summary</maml:title>
+              <maml:para>The monitor checks the last data point submitted to OMS for every manged system and alerts if any of them is not sending data accordingly to two different thresholds. 
+              By default the monitor alerts only on obsolete data (older than 24 hours by defualt). If an alert is raised is highly probable your loosing data in an unrecoverrable way.
+              Possibile states</maml:para>
+              <maml:list>
+                <maml:listItem>
+                  <maml:para>Up to date / Healthy: the data is within the hour.</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Delayed / warning: the last data point is older than 1 hours (defualt)</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Obsolete / error: the last data point is oldern than 24 hours (default)</maml:para>
+                </maml:listItem>
+              </maml:list>
+              <maml:para>
+                For more info see <maml:navigationLink><maml:linkText>GitHub Wiki</maml:linkText><maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/OI-Last-Data-Monitor" /></maml:navigationLink></maml:para>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Configuration</maml:title>
+              <maml:para>The following options can be configured on this monitor:</maml:para>
+              <maml:table>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>Option</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Definition</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Default</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>IntervalSeconds</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Amount of time in seconds between checks of the connectivity status</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>3611 seconds</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>Sync Time</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Optional time wihtin the hour to sync the check exectuion to</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para></maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>TimeoutSeconds</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Amount of time in seconds to wait for script execution and hance for API Search response</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>30 seconds</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>TraceLevel</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Debugging level (0-5) anything above 2 will log clear text password in eventlog</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>2</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>DelayLateHours</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Number of hours after which consider an agent in a late/delayed state</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>1</maml:para>
+                  </maml:entry>
+                </maml:row>
+                <maml:row>
+                  <maml:entry>
+                    <maml:para>DelayObsoleteHours</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>Number of hours after which consider an agent in a obsolete critical state</maml:para>
+                  </maml:entry>
+                  <maml:entry>
+                    <maml:para>24</maml:para>
+                  </maml:entry>
+                </maml:row>
+              </maml:table>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Causes</maml:title>
+              <maml:para>There two known causes of errors if the issue affects a small part of your managed system</maml:para>
+              <maml:list>
+                <maml:listItem>
+                  <maml:para>MMA agent has issues on those specific systems</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Your proxy /connectivity infrastructure to the cloud has issue for those specific agents. Proxy / NAT authorization missing?</maml:para>
+                </maml:listItem>
+              </maml:list>
+              <maml:para>The alert context tries to give a specific cause for any issue</maml:para>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Resolutions</maml:title>
+              <maml:para>Check the two known causes and fix any issue</maml:para>
+            </maml:section>
+          </MamlContent>
+        </KnowledgeArticle>
+        <KnowledgeArticle ElementID="QND.OMS">
+          <MamlContent>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Summary</maml:title>
+              <maml:para>This community based management pack check for OMS health. It currently implements:</maml:para>
+              <maml:list>
+                <maml:listItem>
+                  <maml:para>Check for Search API availability.</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Check for managed systems connectivity and data flow.</maml:para>
+                </maml:listItem>
+              </maml:list>
+              <maml:para>The management pack discovers the following artifacts:</maml:para>
+              <maml:list>
+                <maml:listItem>
+                  <maml:para>Azure Active Directory tenants involved (see configuration)</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>Azure Subscriptions, contained in AAD tenants</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>OMS Workspaces, hosted by Azure Subscriptions</maml:para>
+                </maml:listItem>
+                <maml:listItem>
+                  <maml:para>OMS Managed Systems (computer), hosted by OMS workspaces</maml:para>
+                </maml:listItem>
+              </maml:list>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Configuration</maml:title>
+              <maml:para>
+                For more info on MP configuration see<maml:navigationLink><maml:linkText>GitHub Wiki Home page for the project</maml:linkText><maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki" /></maml:navigationLink></maml:para>
+            </maml:section>
+          </MamlContent>
+        </KnowledgeArticle>
+      </KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks>
+  <Resources>
+    <DeployableResource ID="OMSSearchModule.Res" Accessibility="Internal" FileName="OMSSearch.psm1" HasNullStream="false" />
+    <DeployableAssembly ID="Res.AADClient" Accessibility="Public" FileName="Microsoft.IdentityModel.Clients.ActiveDirectory.dll" QualifiedName="Microsoft.IdentityModel.Clients.ActiveDirectory, Version=2.14.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" HasNullStream="false" />
+  </Resources>
+</ManagementPack>
