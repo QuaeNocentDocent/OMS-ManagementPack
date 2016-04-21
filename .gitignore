@@ -243,8 +243,10 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+
+# Solution specific
 /QND.Azure.Automation/Samples/ARMStatements.ps1
 /QND.Azure.Automation/Samples/Get-AutomationRunbookStatusBAD.ps1
 /QND.Azure.Automation/Samples/QND.Azure.Test.xml
-MPResources.Resources
-*.mpproj.user
+*MPResources.Resources
+
