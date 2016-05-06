@@ -1,74 +1,24 @@
 ﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <TypeDefinitions>
     <ModuleTypes>
-      <DataSourceModuleType ID="QND.OMS.AAD.Tenant.Discovery.DS" Accessibility="Internal" Batching="false">
-        <Configuration>
-          <xsd:element name="TraceLevel" type="xsd:integer" />
-          <xsd:element name="IntervalSeconds" type="xsd:integer" />
-          <xsd:element name="SyncTime" type="xsd:string" />
-          <xsd:element name="TimeoutSeconds" type="xsd:integer" />
-          <xsd:element name="TenantsFilePath" type="xsd:string" />
-        </Configuration>
-        <OverrideableParameters>
-          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
-          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
-          <OverrideableParameter ID="TenantsFilePath" Selector="$Config/TenantsFilePath$" ParameterType="string" />          
-        </OverrideableParameters>
-        <ModuleImplementation>
-          <Composite>
-            <MemberModules>
-              <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.TimedPowerShell.DiscoveryProvider">
-                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
-                <SyncTime>$Config/SyncTime$</SyncTime>
-                <ScriptName>Get-AADMonitoredTenants.ps1</ScriptName>
-                <ScriptBody>
-                  $IncludeFileContent/Scripts/Get-AADMonitoredTenants.ps1$
-                </ScriptBody>
-                <Parameters>
-                  <Parameter>
-                    <Name>TraceLevel</Name>
-                    <Value>$Config/TraceLevel$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>TenantsFilePath</Name>
-                    <Value>$Config/TenantsFilePath$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>SourceId</Name>
-                    <Value>$MPElement$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>ManagedEntityId</Name>
-                    <Value>$Target/Id$</Value>
-                  </Parameter>
-                </Parameters>
-                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
-                <StrictErrorHandling>false</StrictErrorHandling>
-                <!-- true only for Tasks -->
-              </DataSource>
-            </MemberModules>
-            <Composition>
-              <Node ID="DS" />
-            </Composition>
-          </Composite>
-        </ModuleImplementation>
-        <OutputType>System!System.Discovery.Data</OutputType>
-      </DataSourceModuleType>
       <DataSourceModuleType ID="QND.OMS.Entity.Discovery.DS" Accessibility="Internal" Batching="false">
         <Configuration>
-          <xsd:element name="TraceLevel" type="xsd:integer" />
           <xsd:element name="IntervalSeconds" type="xsd:integer" />
           <xsd:element name="SyncTime" type="xsd:string" />
-          <xsd:element name="TimeoutSeconds" type="xsd:integer" />
-          <xsd:element name="TenantADName" type="xsd:string" />
+
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="600" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" default="2"/>
+          <xsd:element name="ClientId" type="xsd:string" />
           <xsd:element name="SubscriptionId" type="xsd:string" />
-          <xsd:element name="Workspace" type="xsd:string" />
-          <xsd:element name="ResourceGroup" type="xsd:string" />
+          <xsd:element name="ResourceGroupId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
           <xsd:element name="AADUserName" type="xsd:string" />
           <xsd:element name="AADPassword" type="xsd:string" />
-          <xsd:element name="Type" type="xsd:string" />
+
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="OMSAPIVersion" type="xsd:string" />
           <xsd:element name="LookbackHours" type="xsd:integer" />
         </Configuration>
         <OverrideableParameters>
@@ -76,6 +26,7 @@
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="OMSAPIVersion" Selector="$Config/OMSAPIVersion$" ParameterType="string" />
           <OverrideableParameter ID="LookbackHours" Selector="$Config/LookbackHours$" ParameterType="int" />
         </OverrideableParameters>
         <ModuleImplementation>
@@ -100,41 +51,49 @@
                   <Parameter>
                     <Name>ManagedEntityId</Name>
                     <Value>$Target/Id$</Value>
+                  </Parameter>                  
+                  <Parameter>
+                    <Name>ClientId</Name>
+                    <Value>$Config/ClientId$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>TenantADName</Name>
-                    <Value>$Config/TenantADName$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>Subscription</Name>
+                    <Name>SubscriptionId</Name>
                     <Value>$Config/SubscriptionId$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>Workspace</Name>
-                    <Value>$Config/Workspace$</Value>
+                    <Name>ResourceGroupId</Name>
+                    <Value>$Config/ResourceGroupId$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>ResourceGroup</Name>
-                    <Value>$Config/ResourceGroup$</Value>
+                    <Name>Proxy</Name>
+                    <Value>$Config/Proxy$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>Username</Name>
+                    <Name>AuthBaseAddress</Name>
+                    <Value>$Config/AuthBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceBaseAddress</Name>
+                    <Value>$Config/ResourceBaseAddress$</Value>
+                  </Parameter>                  
+                  <Parameter>
+                    <Name>ADUsername</Name>
                     <Value>$Config/AADUserName$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>Password</Name>
+                    <Name>ADPassword</Name>
                     <Value>$Config/AADPassword$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>DiscoveryType</Name>
-                    <Value>$Config/Type$</Value>
+                    <Name>ResourceURI</Name>
+                    <Value>$Config/ResourceURI$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>ProxyUrl</Name>
-                    <Value></Value>
+                    <Name>OMSAPIVersion</Name>
+                    <Value>$Config/OMSAPIVersion$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>ValidHours</Name>
+                    <Name>LookbackHours</Name>
                     <Value>$Config/LookbackHours$</Value>
                   </Parameter>
                 </Parameters>
@@ -202,20 +161,29 @@
         <Configuration>
           <xsd:element name="IntervalSeconds" type="xsd:int" />
           <xsd:element name="SyncTime" type="xsd:string" />
-          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
-          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
-          <xsd:element name="TenantADName" type="xsd:string" />
+
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="600" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" default="2"/>
+          <xsd:element name="ClientId" type="xsd:string" />
           <xsd:element name="SubscriptionId" type="xsd:string" />
-          <xsd:element name="Workspace" type="xsd:string" />
-          <xsd:element name="ResourceGroup" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
           <xsd:element name="AADUserName" type="xsd:string" />
           <xsd:element name="AADPassword" type="xsd:string" />
+
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="OMSAPIVersion" type="xsd:string" />
+          <xsd:element name="MaxAgeHours" type="xsd:int" />
+          <xsd:element name="LookbackHours" type="xsd:int" />
+          <xsd:element name="AllInstances" type="xsd:boolean" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="LookbackHours" ParameterType="int" Selector="$Config/LookbackHours$"/>
         </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
@@ -227,12 +195,18 @@
               <ProbeAction ID="Probe" TypeID="QND.OMS.ManagedSystemLastData.PT">
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
                 <TraceLevel>$Config/TraceLevel$</TraceLevel>
-                <TenantADName>$Config/TenantADName$</TenantADName>
+                <ClientId>$Config/ClientId$</ClientId>
                 <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
-                <Workspace>$Config/Workspace$</Workspace>
-                <ResourceGroup>$Config/ResourceGroup$</ResourceGroup>
+                <Proxy>$Config/Proxy$</Proxy>
+                <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+                <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>                
                 <AADUserName>$Config/AADUserName$</AADUserName>
                 <AADPassword>$Config/AADPassword$</AADPassword>
+                <ResourceURI>$Config/ResourceURI$</ResourceURI>
+                <OMSAPIVersion>$Config/OMSAPIVersion$</OMSAPIVersion>
+                <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
+                <LookbackHours>$Config/LookbackHours$</LookbackHours>                
+                <AllInstances>$Config/AllInstances$</AllInstances>
               </ProbeAction>
             </MemberModules>
             <Composition>
@@ -243,7 +217,69 @@
           </Composite>
         </ModuleImplementation>
         <OutputType>System!System.PropertyBagData</OutputType>
-      </DataSourceModuleType>      
+      </DataSourceModuleType>
+
+      <DataSourceModuleType ID="QND.OMS.Workspace.Discovery.DS" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />          
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+              </DataSource>
+              <ConditionDetection ID="Mapper" TypeID="System!System.Discovery.FilteredClassSnapshotDataMapper">
+                <Expression>
+                  <SimpleExpression>
+                    <ValueExpression>
+                      <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/Type$</Value>
+                    </ValueExpression>
+                    <Operator>Equal</Operator>
+                    <ValueExpression>
+                      <Value Type="String">Microsoft.OperationalInsights/workspaces</Value>
+                    </ValueExpression>
+                  </SimpleExpression>
+                </Expression>
+                <ClassId>$MPElement[Name="QND.OMS.Workspace"]$</ClassId>
+                <InstanceSettings>
+                  <Settings>
+                    <Setting>
+                      <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Name>
+                      <Value>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</Name>
+                      <Value>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Name>
+                      <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+                    </Setting>
+                    <Setting>
+                    <Name>$MPElement[Name="QND.OMS.Workspace"]/OMSAPIVersion$</Name>
+                    <Value>2015-03-20</Value>
+                    </Setting>
+                  </Settings>
+                </InstanceSettings>
+              </ConditionDetection>
+            </MemberModules>
+            <Composition>
+              <Node ID="Mapper">
+                <Node ID="Scheduler" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
+      
       <ProbeActionModuleType ID="QND.OMS.GenericQuery.PT" Accessibility="Public" Batching="false">
         <Configuration>
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
@@ -318,22 +354,30 @@
         </ModuleImplementation>
         <OutputType>System!System.PropertyBagData</OutputType>
         <InputType>System!System.BaseData</InputType>
-      </ProbeActionModuleType>
-      
+      </ProbeActionModuleType>      
+           
       <ProbeActionModuleType ID="QND.OMS.ManagedSystemLastData.PT" Accessibility="Public" Batching="false">
         <Configuration>
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
-          <xsd:element name="TenantADName" type="xsd:string" />
+          <xsd:element name="ClientId" type="xsd:string" />
           <xsd:element name="SubscriptionId" type="xsd:string" />
-          <xsd:element name="Workspace" type="xsd:string" />
-          <xsd:element name="ResourceGroup" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />          
           <xsd:element name="AADUserName" type="xsd:string" />
           <xsd:element name="AADPassword" type="xsd:string" />
+
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="OMSAPIVersion" type="xsd:string" />
+          <xsd:element name="MaxAgeHours" type="xsd:int" />
+          <xsd:element name="LookbackHours" type="xsd:int" />
+          <xsd:element name="AllInstances" type="xsd:boolean" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
         </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
@@ -347,36 +391,55 @@
                   <Parameter>
                     <Name>TraceLevel</Name>
                     <Value>$Config/TraceLevel$</Value>
-                                      </Parameter>
+                  </Parameter>
                     <Parameter>
-                      <Name>TenantADName</Name>
-                      <Value>$Config/TenantADName$</Value>
+                      <Name>clientId</Name>
+                      <Value>$Config/ClientId$</Value>
                     </Parameter>
                     <Parameter>
                       <Name>Subscription</Name>
                       <Value>$Config/SubscriptionId$</Value>
                     </Parameter>
-                    <Parameter>
-                      <Name>Workspace</Name>
-                      <Value>$Config/Workspace$</Value>
+                  <Parameter>
+                    <Name>Proxy</Name>
+                    <Value>$Config/Proxy$</Value>
+                  </Parameter>
+                  <Parameter>
+                      <Name>AuthBaseAddress</Name>
+                      <Value>$Config/AuthBaseAddress$</Value>
                     </Parameter>
                     <Parameter>
-                      <Name>ResourceGroup</Name>
-                      <Value>$Config/ResourceGroup$</Value>
+                      <Name>ResourceBaseAddress</Name>
+                      <Value>$Config/ResourceBaseAddress$</Value>
                     </Parameter>
                     <Parameter>
-                      <Name>Username</Name>
+                      <Name>ADUsername</Name>
                       <Value>$Config/AADUserName$</Value>
                     </Parameter>
                     <Parameter>
-                      <Name>Password</Name>
+                      <Name>ADPassword</Name>
                       <Value>$Config/AADPassword$</Value>
                     </Parameter>
                     <Parameter>
-                      <Name>ProxyUrl</Name>
-                      <Value></Value>
+                      <Name>resourceURI</Name>
+                      <Value>$Config/ResourceURI$</Value>
                     </Parameter>
-
+                  <Parameter>
+                    <Name>OMSAPIVersion</Name>
+                    <Value>$Config/OMSAPIVersion$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>MaxAgeHours</Name>
+                    <Value>$Config/MaxAgeHours$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>LookbackHours</Name>
+                    <Value>$Config/LookbackHours$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>allInstances</Name>
+                    <Value>$Config/AllInstances$</Value>
+                  </Parameter>                  
                 </Parameters>
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
                 <StrictErrorHandling>false</StrictErrorHandling>
@@ -393,7 +456,7 @@
       </ProbeActionModuleType>
     </ModuleTypes>
     <MonitorTypes>
-      <UnitMonitorType ID="QND.OMS.ManagedSystem.Communication.MT" Accessibility="Public">
+      <UnitMonitorType ID="QND.OMS.ManagedSystem.LastData.MT" Accessibility="Public">
         <MonitorTypeStates>
           <MonitorTypeState ID="Healthy"/>
           <MonitorTypeState ID="Late"/>
@@ -403,38 +466,52 @@
           <xsd:element name="IntervalSeconds" type="xsd:int" />
           <xsd:element name="SyncTime" type="xsd:string" />
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
-          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />          
+          <xsd:element name="Computer" type="xsd:string" />
           <xsd:element name="DelayLateHours" type="xsd:int" />
-          <xsd:element name="DelayObsoleteHours" type="xsd:int" />
-          <xsd:element name="TenantADName" type="xsd:string" />
+
+          <xsd:element name="ClientId" type="xsd:string" />
           <xsd:element name="SubscriptionId" type="xsd:string" />
-          <xsd:element name="Workspace" type="xsd:string" />
-          <xsd:element name="ResourceGroup" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
           <xsd:element name="AADUserName" type="xsd:string" />
           <xsd:element name="AADPassword" type="xsd:string" />
-          <xsd:element name="Computer" type="xsd:string" />
+
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="OMSAPIVersion" type="xsd:string" />
+          <xsd:element name="MaxAgeHours" type="xsd:int" />
+          <xsd:element name="LookbackHours" type="xsd:int" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="MaxAgeHours" Selector="$Config/MaxAgeHours$" ParameterType="int" />
           <OverrideableParameter ID="DelayLateHours" Selector="$Config/DelayLateHours$" ParameterType="int" />
-          <OverrideableParameter ID="DelayObsoleteHours" Selector="$Config/DelayObsoleteHours$" ParameterType="int" />
+          <OverrideableParameter ID="LookbackHours" Selector="$Config/LookbackHours$" ParameterType="int" />
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
             <DataSource ID="DS" TypeID="QND.OMS.ManagedSystemLastData.DS">
               <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
               <SyncTime>$Config/SyncTime$</SyncTime>
+
               <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
               <TraceLevel>$Config/TraceLevel$</TraceLevel>
-              <TenantADName>$Config/TenantADName$</TenantADName>
+              <ClientId>$Config/ClientId$</ClientId>
               <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
-              <Workspace>$Config/Workspace$</Workspace>
-              <ResourceGroup>$Config/ResourceGroup$</ResourceGroup>
+              <Proxy>$Config/Proxy$</Proxy>
+              <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+              <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
               <AADUserName>$Config/AADUserName$</AADUserName>
-              <AADPassword>$Config/AADPassword$</AADPassword>              
+              <AADPassword>$Config/AADPassword$</AADPassword>
+              <ResourceURI>$Config/ResourceURI$</ResourceURI>
+              <OMSAPIVersion>$Config/OMSAPIVersion$</OMSAPIVersion>
+              <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
+              <LookbackHours>$Config/LookbackHours$</LookbackHours>
+              <AllInstances>1</AllInstances>            
             </DataSource>
             <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
               <Expression>
@@ -472,7 +549,7 @@
                       </ValueExpression>
                       <Operator>LessEqual</Operator>
                       <ValueExpression>
-                        <Value Type="Double">$Config/DelayObsoleteHours$</Value>
+                        <Value Type="Double">$Config/MaxAgeHours$</Value>
                       </ValueExpression>
                     </SimpleExpression>
                   </Expression>
@@ -498,7 +575,7 @@
                   </ValueExpression>
                   <Operator>Greater</Operator>
                   <ValueExpression>
-                    <Value Type="Double">$Config/DelayObsoleteHours$</Value>
+                    <Value Type="Double">$Config/MaxAgeHours$</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -548,44 +625,60 @@
           </RegularDetections>
         </MonitorImplementation>
       </UnitMonitorType>
-      <UnitMonitorType ID="QND.OMS.Workspace.Connectivity.MT" Accessibility="Public">
+      <UnitMonitorType ID="QND.OMS.Workspace.LastData.MT" Accessibility="Public">
         <MonitorTypeStates>
           <MonitorTypeState ID="Healthy"/>
-          <MonitorTypeState ID="UnReachable"/>
+          <MonitorTypeState ID="Obsolete"/>
         </MonitorTypeStates>
         <Configuration>
           <xsd:element name="IntervalSeconds" type="xsd:int" />
           <xsd:element name="SyncTime" type="xsd:string" />
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
-          <xsd:element name="TenantADName" type="xsd:string" />
+
+          <xsd:element name="ClientId" type="xsd:string" />
           <xsd:element name="SubscriptionId" type="xsd:string" />
-          <xsd:element name="Workspace" type="xsd:string" />
-          <xsd:element name="ResourceGroup" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
           <xsd:element name="AADUserName" type="xsd:string" />
           <xsd:element name="AADPassword" type="xsd:string" />
+
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="OMSAPIVersion" type="xsd:string" />
+          <xsd:element name="MaxAgeHours" type="xsd:int" />
+          <xsd:element name="LookbackHours" type="xsd:int" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="MaxAgeHours" Selector="$Config/MaxAgeHours$" ParameterType="int" />
+          <OverrideableParameter ID="LookbackHours" Selector="$Config/LookbackHours$" ParameterType="int" />
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
-            <DataSource ID="DS" TypeID="QND.OMS.GenericQuery.DS">
+            <DataSource ID="DS" TypeID="QND.OMS.ManagedSystemLastData.DS">
               <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
               <SyncTime>$Config/SyncTime$</SyncTime>
+
               <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
               <TraceLevel>$Config/TraceLevel$</TraceLevel>
-              <TenantADName>$Config/TenantADName$</TenantADName>
+              <ClientId>$Config/ClientId$</ClientId>
               <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
-              <Workspace>$Config/Workspace$</Workspace>
-              <ResourceGroup>$Config/ResourceGroup$</ResourceGroup>
+              <Proxy>$Config/Proxy$</Proxy>
+              <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+              <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
               <AADUserName>$Config/AADUserName$</AADUserName>
               <AADPassword>$Config/AADPassword$</AADPassword>
-              <Query>Event | top 1</Query>            </DataSource>
-            <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+              <ResourceURI>$Config/ResourceURI$</ResourceURI>
+              <OMSAPIVersion>$Config/OMSAPIVersion$</OMSAPIVersion>
+              <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
+              <LookbackHours>$Config/LookbackHours$</LookbackHours>
+              <AllInstances>0</AllInstances>
+            </DataSource>
+            <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
@@ -593,33 +686,33 @@
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="String">Status</Value>
+                    <Value Type="String">Summary</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
             </ConditionDetection>
-            <ConditionDetection ID="ConnectOKCD" TypeID="System!System.ExpressionFilter">
+            <ConditionDetection ID="ObsoleteDataCD" TypeID="System!System.ExpressionFilter">
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='Status']</XPathQuery>
+                    <XPathQuery Type="Integer">Property[@Name='ObsoleteDataSystems']</XPathQuery>
                   </ValueExpression>
-                  <Operator>Equal</Operator>
+                  <Operator>Greater</Operator>
                   <ValueExpression>
-                    <Value Type="String">OK</Value>
+                    <Value Type="Integer">0</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
             </ConditionDetection>
-            <ConditionDetection ID="ConnectKOCD" TypeID="System!System.ExpressionFilter">
+            <ConditionDetection ID="OntimeCD" TypeID="System!System.ExpressionFilter">
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="Double">Property[@Name='Status']</XPathQuery>
+                    <XPathQuery Type="Integer">Property[@Name='ObsoleteDataSystems']</XPathQuery>
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="String">Error</Value>
+                    <Value Type="Integer">0</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -627,22 +720,22 @@
           </MemberModules>
           <RegularDetections>
             <RegularDetection MonitorTypeStateID="Healthy">
-              <Node ID="ConnectOKCD">
-                <Node ID="Filter">
-                  <Node ID="DS" />
+              <Node ID="OntimeCD">
+                  <Node ID="DataFilter">
+                    <Node ID="DS" />
                 </Node>
               </Node>
             </RegularDetection>
-            <RegularDetection MonitorTypeStateID="UnReachable">
-              <Node ID="ConnectKOCD">
-                <Node ID="Filter">
-                  <Node ID="DS"></Node>
+            <RegularDetection MonitorTypeStateID="Obsolete">
+              <Node ID="ObsoleteDataCD">
+                  <Node ID="DataFilter">
+                    <Node ID="DS" />
                 </Node>
               </Node>
             </RegularDetection>
           </RegularDetections>
         </MonitorImplementation>
-      </UnitMonitorType>
+      </UnitMonitorType>      
     </MonitorTypes>
   </TypeDefinitions>
 </ManagementPackFragment>

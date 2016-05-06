@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ProjectGuid>{a80179ac-7b16-4800-a43c-8d25f871a435}</ProjectGuid>
+    <RootNamespace>QND.OMS.Backup.Server</RootNamespace>
+    <Name>QND.OMS.Backup.Server</Name>
+    <ManagementPackName>QND.OMS.Backup.Server</ManagementPackName>
+    <Version>1.0.0.0</Version>
+    <MpFrameworkVersion>v7.0.2</MpFrameworkVersion>
+    <MpFrameworkProfile>OM</MpFrameworkProfile>
+    <ProductVersion>1.1.0.0</ProductVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <GenerateSealed>True</GenerateSealed>
+    <Company>QND</Company>
+    <Copyright>Copyright (c) QND. All rights reserved.</Copyright>
+    <DelaySigning>False</DelaySigning>
+    <AssemblyOriginatorKeyFile>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\Firma\QND1.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <DelaySigning>false</DelaySigning>
+    <Company>MyCompany</Company>
+    <Copyright>Copyright (c) MyCompany. All rights reserved.</Copyright>
+    <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile />
+  </PropertyGroup>
+  <ItemGroup>
+    <ManagementPackReference Include="Microsoft.SystemCenter.DataProtectionManager.2012.Library">
+      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\Microsoft.SystemCenter.DataProtectionManager.2012.Library.mp</HintPath>
+      <Alias>DPM</Alias>
+      <MinVersion>4.2.1276.0</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.Library">
+      <Alias>SC</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.Windows.Library">
+      <Alias>Windows</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="System.Health.Library">
+      <Alias>Health</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="System.Library">
+      <Alias>System</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.Visualization.Library">
+      <Alias>Visualization</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DPMCheat.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ManagementPack.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
+</Project>

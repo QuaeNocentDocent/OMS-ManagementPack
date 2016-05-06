@@ -1,0 +1,242 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <ModuleTypes>
+      <DataSourceModuleType ID="QND.TestingRunAs" Accessibility="Internal" RunAs="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.Proxy" Batching="false">
+        <Configuration>
+          <element minOccurs="1" name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.w3.org/2001/XMLSchema" />
+          <element minOccurs="1" name="TimeoutSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+        </OverrideableParameters>
+        <ModuleImplementation Isolation="Any">
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime></SyncTime>
+              </DataSource>
+              <ProbeAction ID="Probe" TypeID="QND.TestRunAs.PT">
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <TraceLevel>5</TraceLevel>
+                <ClientId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+                <SubscriptionId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+                <Proxy>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+                <AuthBaseAddress>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+                <ResourceBaseAddress>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+                <ADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</ADUserName>
+                <ADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</ADPassword>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID ="Probe">
+                <Node ID="Scheduler"></Node>
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>
+      <ProbeActionModuleType ID="QND.TestRunAs.PT" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" default="2"/>
+          <xsd:element name="ClientId" type="xsd:string" minOccurs="1" maxOccurs="1" />
+          <xsd:element name="SubscriptionId" type="xsd:string" minOccurs="1" maxOccurs="1" />
+          <xsd:element name="Proxy" type="xsd:string" minOccurs="1" maxOccurs="1" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" minOccurs="1" maxOccurs="1" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" minOccurs="1" maxOccurs="1" />
+          <xsd:element name="ADUserName" type="xsd:string" minOccurs="1" maxOccurs="1" />
+          <xsd:element name="ADPassword" type="xsd:string" minOccurs="1" maxOccurs="1" />          
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <ProbeAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+                <ScriptName>DumpParameters.ps1</ScriptName>
+                <ScriptBody>
+                  $IncludeFileContent/Scripts/DumpParameters.ps1$
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ClientId</Name>
+                    <Value>$Config/ClientId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SubscriptionId</Name>
+                    <Value>$Config/SubscriptionId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Proxy</Name>
+                    <Value>$Config/Proxy$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>AuthBaseAddress</Name>
+                    <Value>$Config/AuthBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceBaseAddress</Name>
+                    <Value>$Config/ResourceBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADUserName</Name>
+                    <Value>$Config/ADUserName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADPassword</Name>
+                    <Value>$Config/ADPassword$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+                <!-- true only for Tasks -->
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="POSH" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </ProbeActionModuleType>
+      <WriteActionModuleType ID="QND.TestRunAs.WA" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" default="2"/>
+          <xsd:element name="ClientId" type="xsd:string" minOccurs="1" maxOccurs="1" />
+          <xsd:element name="SubscriptionId" type="xsd:string" minOccurs="1" maxOccurs="1" />
+          <xsd:element name="Proxy" type="xsd:string" minOccurs="1" maxOccurs="1" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" minOccurs="1" maxOccurs="1" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" minOccurs="1" maxOccurs="1" />
+          <xsd:element name="ADUserName" type="xsd:string" minOccurs="1" maxOccurs="1" />
+          <xsd:element name="ADPassword" type="xsd:string" minOccurs="1" maxOccurs="1" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <WriteAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagWriteAction">
+                <ScriptName>DumpParameters.ps1</ScriptName>
+                <ScriptBody>
+                  $IncludeFileContent/Scripts/DumpParameters.ps1$
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ClientId</Name>
+                    <Value>$Config/ClientId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SubscriptionId</Name>
+                    <Value>$Config/SubscriptionId$</Value>
+                  </Parameter>                  
+                  <Parameter>
+                    <Name>Proxy</Name>
+                    <Value>$Config/Proxy$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>AuthBaseAddress</Name>
+                    <Value>$Config/AuthBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceBaseAddress</Name>
+                    <Value>$Config/ResourceBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADUserName</Name>
+                    <Value>$Config/ADUserName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADPassword</Name>
+                    <Value>$Config/ADPassword$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+                <!-- true only for Tasks -->
+              </WriteAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="POSH" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </WriteActionModuleType>
+
+    </ModuleTypes>
+  </TypeDefinitions>
+
+  <Monitoring>
+    <Rules>
+      <Rule ID="QND.DumpParameters" ConfirmDelivery="false" DiscardLevel="100" Enabled="true" Priority="Normal" Remotable="true" 
+            Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription">
+        <Category>Custom</Category>
+        <DataSources>
+          <!-- <DataSource ID="Dumper" TypeID="QND.TestingRunAs">
+            <IntervalSeconds>300</IntervalSeconds>
+            <TimeoutSeconds>300</TimeoutSeconds>
+          </DataSource> -->
+          <DataSource ID="Sched" TypeID="System!System.SimpleScheduler">
+            <IntervalSeconds>86400</IntervalSeconds>
+            <SyncTime />
+          </DataSource>
+        </DataSources>
+        <WriteActions>
+          <!--<WriteAction ID="WriteToDB" TypeID="SC!Microsoft.SystemCenter.CollectEvent"/>-->
+         <!-- <WriteAction ID="Alert" TypeID="Health!System.Health.GenerateAlert">
+            <Priority>0</Priority>
+            <Severity>0</Severity>
+            <AlertMessageId>QND.Test.AlertMessage</AlertMessageId>
+            <AlertParameters />
+            <Suppression>
+              <SuppressionValue/>
+            </Suppression>            
+          </WriteAction> -->
+          <WriteAction ID="Dump" TypeID="QND.TestRunAs.WA" RunAs="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.Proxy">
+            <TimeoutSeconds>300</TimeoutSeconds>
+            <TraceLevel>2</TraceLevel>
+            <ClientId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+            <SubscriptionId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>            
+            <Proxy>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+            <AuthBaseAddress>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+            <ResourceBaseAddress>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+            <ADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</ADUserName>
+            <ADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</ADPassword>
+          </WriteAction>
+        </WriteActions>
+      </Rule>
+    </Rules>
+  </Monitoring>
+  <Presentation>
+    <StringResources>
+      <StringResource ID="QND.Test.AlertMessage"/>
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="QND.Test.AlertMessage">
+          <Name>QND Azure: dump has run</Name>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

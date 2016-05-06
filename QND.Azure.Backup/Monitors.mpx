@@ -19,7 +19,7 @@
         <Configuration>
           <TraceLevel>2</TraceLevel>
           <ScriptTimeout>300</ScriptTimeout>
-          <IntervalSeconds>300</IntervalSeconds>
+          <IntervalSeconds>3601</IntervalSeconds>
           <SyncTime></SyncTime>
           <ThresholdAgeHours>25</ThresholdAgeHours>
           <ThresholdSizeGB>20</ThresholdSizeGB>
@@ -44,7 +44,7 @@
         <Configuration>
           <TraceLevel>2</TraceLevel>
           <ScriptTimeout>300</ScriptTimeout>
-          <IntervalSeconds>300</IntervalSeconds>
+          <IntervalSeconds>3601</IntervalSeconds>
           <SyncTime></SyncTime>
           <ThresholdAgeHours>25</ThresholdAgeHours>
           <ThresholdSizeGB>20</ThresholdSizeGB>

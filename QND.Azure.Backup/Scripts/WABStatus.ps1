@@ -118,7 +118,16 @@ function Log-Event
 	Log-Params ([string]$traceLevel + " " + $computerName + " " + $sourceID + " " + $ManagedEntityId)
 try
 {
-	if (! (Get-Module -Name MSOnlineBackup)) {Import-Module MSOnlineBackup}
+#now it seems we're having issue with this module inside OpsMgr let's try to isolate and ignore it
+	try {
+		if (! (Get-Module -Name MSOnlineBackup)) {Import-Module MSOnlineBackup}
+	}
+	catch {
+		$message = ("Import-Module MSOnlineBackup: {0}`n{1}`n{2}`nTrying to continue anyway" -f $Error, $_.Exception.GetType().FullName, $_.Exception.Message)
+		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING $message $TRACE_WARNING	
+		write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+		Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+	}
     $lastRec = Get-OBAllRecoveryPoints | Sort-Object BackupTime -Descending | Select-Object -First 1
     $machineUSage = Get-OBMachineUsage
 	$policies = Get-OBPolicy | Where {$_.State -eq 'Existing'}
@@ -143,7 +152,9 @@ try
 	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
+	$message = ("Main: {0}`n{1}`n{2}" -f $Error, $_.Exception.GetType().FullName, $_.Exception.Message)
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING $message $TRACE_WARNING	
+
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
     $sizeStatus = 'Fail';

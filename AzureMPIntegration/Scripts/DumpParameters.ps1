@@ -1,13 +1,17 @@
-﻿## This discovery needs to be splitted 'cause potentially can discover a huge number of entities, the disocvery rule is disabled by default
-## Gorup memeberhsip must be changed and split in diffrent rules using the properties we're setting
+﻿
+#Template Notes
+#basic error handling with -ErrorVariable -ErrorAction
+#EV is myErr set to null/cleared before any critical code section and tested for Count -eq 0 after, if different we have an error
+#plain and simple waiting for try/ctach in powershell 2.0
+#then every sensitive function should have a trap statement see http://huddledmasses.org/trap-exception-in-powershell/
 
 #TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
 #SET ErrorLevel to 5 so show discovery info
-#https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
+
 #*************************************************************************
 # Script Name - 
-# Author	  -  Daniele Grandini - QND
-# Version	  - 1.0 30-04-2016
+# Author	  -  - Progel srl
+# Version	  - 1.1 24.09.2007
 # Purpose     - 
 #               
 # Assumptions - 
@@ -37,28 +41,22 @@
 
 
 # Get the named parameters
-param([int]$traceLevel=2,
-[Parameter (Mandatory=$true)] [string]$sourceID,
-[Parameter (Mandatory=$true)] [string]$ManagedEntityId,
-[Parameter (Mandatory=$true)][string]$clientId,
-[Parameter (Mandatory=$true)][string]$SubscriptionId,
-[Parameter (Mandatory=$true)][string]$ResourceGroupId,
-[string]$Proxy,
-[Parameter (Mandatory=$true)][string]$AuthBaseAddress,
-[Parameter (Mandatory=$true)][string]$ResourceBaseAddress,
-[Parameter (Mandatory=$true)][string]$ADUserName,
-[Parameter (Mandatory=$true)][string]$ADPassword,
-[Parameter (Mandatory=$true)][string]$resourceURI,
-[string]$OMSAPIVersion='2015-03-20',
-[int] $LookBackHours=24*7
+param([int]$traceLevel=$(throw 'must have a value'),
+[string]$clientId=$(throw 'must have a value'),
+[string]$SubscriptionId=$(throw 'must have a value'),
+[string]$Proxy=$(throw 'must have a value'),
+[string]$AuthBaseAddress=$(throw 'must have a value'),
+[string]$ResourceBaseAddress=$(throw 'must have a value'),
+[string]$ADUserName=$(throw 'must have a value'),
+[string]$ADPassword=$(throw 'must have a value')
 )
  
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
     [Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
-
-#region Constants	
+	
 #Constants used for event logging
-$SCRIPT_NAME			= "QND.OMS.GetManagedSystems"
+$SCRIPT_NAME			= "DumpParameters"
+
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -91,9 +89,6 @@ $StateDataType       = 3
 
 $EventSource = 'Progel Script'
 $EventLog= 'Operations Manager'
-#endregion
-
-#region Logging
 
 if ([System.Diagnostics.EventLog]::SourceExists($EventSource) -eq $false) {
     [System.Diagnostics.EventLog]::CreateEventSource($EventSource, $eventlog)
@@ -101,7 +96,7 @@ if ([System.Diagnostics.EventLog]::SourceExists($EventSource) -eq $false) {
 
 function Log-Params
 {
-    param($Invocation)
+param($Invocation)
     $line=''
     foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
 	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. Invocation Name:$($Invocation.InvocationName)`n Parameters`n $line") $TRACE_INFO
@@ -116,7 +111,7 @@ function Create-Event
     [string[]] $parameters)
 
     switch ($eventType) {
-        $EVENT_TYPE_SUCCESS {$nativeType=[System.Diagnostics.EventLogEntryType]::Information}
+        $EVENT_TYPE_SUCCESS {$nativeType=[System.Diagnostics.EventLogEntryType]::Success}
         $EVENT_TYPE_ERROR {$nativeType=[System.Diagnostics.EventLogEntryType]::Error}
         $EVENT_TYPE_WARNING {$nativeType=[System.Diagnostics.EventLogEntryType]::Warning}
         $EVENT_TYPE_INFORMATION {$nativeType=[System.Diagnostics.EventLogEntryType]::Information}
@@ -149,9 +144,7 @@ function Log-Event
 		#$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
 	}
 }
-#endregion
 
-#region Discovery Helpers
 Function Throw-EmptyDiscovery
 {
 	param($SourceId, $ManagedEntityId)
@@ -181,38 +174,8 @@ param($SourceId, $ManagedEntityId)
 	}
 }
 
-#endregion
 
-Function Import-ResourceModule
-{
-	param($moduleName, $ArgumentList=$null)
-	if (Get-Module -Name $moduleName) {return}
 
-	$moduleName = '{0}.psm1' -f $moduleName
-	$ResPath = (get-itemproperty -path 'HKLM:\system\currentcontrolset\services\healthservice\Parameters' -Name 'State Directory').'State Directory' + '\Resources'
-	if(Test-Path $ResPath) {
-		$module = @(get-childitem -path $ResPath -Filter $moduleName -Recurse)[0]
-	}
-	if($module) { $module = $module.FullName}
-	else {$module = "$PSScriptRoot\$moduleName"}
-
-	If (Test-Path $module) {Import-Module -Name $module -ArgumentList $ArgumentList}
-	else {Throw [System.DllNotFoundException] ('{0} not found' -f $module)}
-}
-
-Function Discover-System
-{
-	param($obj)
-
-	if ([String]::IsNullOrEmpty($obj.Computer)) {return;}
-		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.ManagedSystem']$")	
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric']/ServiceId$", $resourceURI)				
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.ManagedSystem']/Computer$", $obj.Computer.ToLower())	
-		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.Computer)	
-		$discoveryData.AddInstance($objInstance)	
-}
 #Start by setting up API object.
 	$P_TraceLevel = $TRACE_VERBOSE
 	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
@@ -221,66 +184,13 @@ Function Discover-System
 	$dtStart = Get-Date
 	$P_TraceLevel = $traceLevel
 	Log-Params $MyInvocation
-
-	try {
-		Import-ResourceModule -moduleName QNDAdal -ArgumentList @($false)
-		Import-ResourceModule -moduleName QNDAzure
-	}
-	catch {
-		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot load required powershell modules $Error") $TRACE_ERROR
-		exit 1	
-	}
-
 try
 {
-	if($proxy) {
-		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Proxy is not currently supported {0}" -f $proxy) $TRACE_WARNING
-	}
-	$pwd = ConvertTo-SecureString $ADPassword -AsPlainText -Force
-	$cred = New-Object System.Management.Automation.PSCredential ($ADUserName, $pwd)
-	$connection = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
-}
-catch {
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
-	Throw-KeepDiscoveryInfo
-	exit 1	
-}
-
-try {
-	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
-
-	$uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
-	$query = 'ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer'
-
-	Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ("About to query OMS with $query") $TRACE_VERBOSE
-
-	$QueryArray = @{Query=$Query}
-	$startDate=(Get-Date).AddHours(-$LookBackHours)
-	$endDate=Get-Date
-    $QueryArray+= @{start=('{0}Z' -f $startDate.GetDateTimeFormats('s'))}
-    $QueryArray+= @{end=('{0}Z' -f $endDate.GetDateTimeFormats('s'))}
-    $body = ConvertTo-Json -InputObject $QueryArray
-	$nextLink=$null
-	$systems=@()
-	do {
-		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb POST -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -data $body -TimeoutSeconds 300
-		$nextLink = $result.NextLink
-		$systems += $result.values	
-	} while ($nextLink)
-
-	foreach($sys in $systems) {
-		write-verbose $sys.Computer
-		Discover-System $sys
-	}
-	$discoveryData
-	If ($traceLevel -eq $TRACE_DEBUG)
-	{
-		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
-		#it breaks in exception when run insde OpsMgr and POSH IDE	
-		$g_API.Return($discoveryData)
-	}
+	$bag = $g_api.CreatePropertyBag()
+	$bag.AddValue('Dummy',0)
+	$bag
 	
-	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
 	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
@@ -289,4 +199,15 @@ Catch [Exception] {
 }
 
 
-
+<#
+Comment text...
+ Parameters
+ traceLevel=5  
+ clientId=ae8996b3-84ee-4e14-9c7a-35bb8de53d80  
+ SubscriptionId=ec2b2ab8-ba74-41a0-bf54-39cc0716f414  
+ Proxy=  
+ AuthBaseAddress=https://login.windows.net/prelabs.onmicrosoft.com/  
+ ResourceBaseAddress=https://management.azure.com/  
+ ADUserName=ae8996b3-84ee-4e14-9c7a-35bb8de53d80  
+ ADPassword=OIiGBLfPIP9PdQZI3mOP/ZgFpU0kUlk8MgExVRL4xLY=   
+#>

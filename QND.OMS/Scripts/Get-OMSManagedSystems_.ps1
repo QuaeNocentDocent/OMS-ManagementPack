@@ -8,7 +8,7 @@
 #https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
 
 #*************************************************************************
-# Script Name - Get-OMSManagedSystemsData
+# Script Name - Get-OMSManagedSystems
 # Author	  -  - Progel spa
 # Version  - 1.0 24.09.2007
 # Purpose     - 
@@ -42,13 +42,17 @@
 # Get the named parameters
 param(
 [Parameter (Mandatory=$True)] [int]$traceLevel,
+[Parameter (Mandatory=$true)] [string]$sourceID,
+[Parameter (Mandatory=$true)] [string]$ManagedEntityId,
 [Parameter (Mandatory=$true)] [String]$TenantADName,
 [Parameter (Mandatory=$false)] [String]$Subscription,
 [Parameter (Mandatory=$false)] [String]$Workspace,
 [Parameter (Mandatory=$false)] [String]$ResourceGroup,
 [Parameter (Mandatory=$true)] [String]$Username,
 [Parameter (Mandatory=$true)] [String]$Password,
-[Parameter (Mandatory=$true)] [string]$query,
+[Parameter (Mandatory=$true)] [Int]$ValidHours,
+[Parameter (Mandatory=$true)]  [ValidateSet("Subscription", "Workspace", "System",ignorecase=$true)]
+[string]$discoveryType,
 [String]$Proxyurl #nyi
 
 )
@@ -57,7 +61,7 @@ param(
 	[Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
 	
 #Constants used for event logging
-$SCRIPT_NAME			= "Get-OMSManagedSystemsData"
+$SCRIPT_NAME			= "Get-OMSManagedSystems"
 $SCRIPT_ARGS = 11
 $SCRIPT_STARTED			= 831
 $PROPERTYBAG_CREATED	= 832
@@ -159,13 +163,56 @@ param($SourceId, $ManagedEntityId)
 #type     : Microsoft.OperationalInsights/workspaces
 #location : eastus
 
-Function Throw-StatusBagError
+Function Discover-Subscription
 {
-	$bag = $g_api.CreatePropertyBag()
-	$bag.AddValue("QNDType","Status")
-	$bag.AddValue("Status","Error")
-	$bag.AddValue("Description","$Error")
-	$bag	
+	param($sub)
+		$subInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Azure.Subscription']$")		
+		$subInstance.AddProperty("$MPElement[Name='QND.OMS.Azure.Subscription']/Id$", $sub.subscriptionId)		
+		$subInstance.AddProperty("$MPElement[Name='QND.OMS.Azure.Subscription']/Name$", $sub.displayName)	
+		$subInstance.AddProperty("$MPElement[Name='QND.OMS.Azure.Subscription']/Tenant$", $TenantADName)	
+		$subInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $sub.displayName)	
+		$discoveryData.AddInstance($subInstance)	
+		#$currentTenant = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.AAD.Tenant']$")		
+		#$currentTenant.AddProperty("$MPElement[Name='QND.OMS.AAD.Tenant']/Domain$", $TenantADName)		
+		#$discoveryData.AddInstance($currentTenant)
+		#$rel = $discoveryData.CreateRelationshipInstance("$MPElement[Name='QND.OMS.TenantContainsSubscription']$")
+		#$rel.Source=$currentTenant
+		#$rel.Target=$subInstance
+		#$discoveryData.AddInstance($rel)
+
+}
+
+Function Discover-Workspace
+{
+	param($obj)
+		$obj.Id -match '(?<=(resourceGroups\/))(?<Group>.*)(?=(\/providers))'
+		$group = $matches.Group
+
+		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Workspace']$")	
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Azure.Subscription']/Id$", $subscription)		
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Workspace']/Id$", $obj.Name)		
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Workspace']/Name$", $obj.Name)	
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Workspace']/ResourceGroup$", $Group)	
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Workspace']/Subscription$", $Subscription)	
+		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.Name)	
+		$discoveryData.AddInstance($objInstance)	
+
+
+}
+
+Function Discover-System
+{
+	param($obj)
+
+	if ([String]::IsNullOrEmpty($obj.Computer)) {return;}
+		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.ManagedSystem']$")	
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Azure.Subscription']/Id$", $subscription)
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Workspace']/Id$", $workspace)		
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.ManagedSystem']/Computer$", $obj.Computer)	
+		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.Computer)	
+		$discoveryData.AddInstance($objInstance)	
+
+
 }
 
 #Start by setting up API object.
@@ -209,7 +256,7 @@ try {
 
 	if (!(get-command -Module OMSSearch -Name Get-AADToken -ErrorAction SilentlyContinue)) {
 		Log-Event $START_EVENT_ID $EVENT_TYPE_WARNING ("Get-AADToken Commandlet doesn't exist.") $TRACE_WARNING
-		Throw-StatusBagError
+		Throw-KeepDiscoveryInfo
 		exit 1
 	}
 	$token = Get-AADToken -TenantADName $TenantADName -Username $Username -Password $Password
@@ -225,44 +272,43 @@ try
 
 #ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer | where lastdata > NOW-240HOURS
 #ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | where TimeGenerated > NOW-240HOURS | measure count() by Computer
-
-if(([String]::IsNullOrEmpty($subscription)) -or ([String]::IsNullOrEmpty($workspace)) -or ([String]::IsNullOrEmpty($ResourceGroup))) {Throw-StatusBagError; Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("MIssing SubscriptionId, workspace or resourcegroup") $TRACE_ERROR	}
-$jsystems = Invoke-OMSSearchQuery -Token $token -SubscriptionId $subscription -ResourceGroupName $ResourceGroup -OMSWorkspaceName $workspace -Query $query
-
-foreach($sys in $jsystems) {
-$sys
-	$bag = $g_api.CreatePropertyBag()
-	$bag.AddValue("QNDType","Data")
-	foreach($key in $sys.Keys) {
-		Write-Verbose "$key=$($sys.Item($key))"
-		try {
-			if($key -ieq 'Type') {$bag.AddValue($key,$sys.Type)}
-			elseif ($key -inotlike '_*') {$bag.AddValue($key,$sys.Item($key))}
-			else {write-verbose "Skipping $key"}
+	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
+	switch ($discoveryType) {
+		'Subscription' {
+			$uri="https://management.azure.com/subscriptions?api-version=2015-01-01"
+			$jres = Invoke-ARMGet -Token $token -Uri $uri
+			if(! $jres) {Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Invoke-ARMGet failed $uri " + $Error) $TRACE_ERROR; exit 1;}
+			foreach($sub in $jres.Value) {Discover-Subscription $sub}
 		}
-		catch {Write-verbose "Exception processing $key";$Error.Clear(); continue;}
+		'Workspace' {
+			if([String]::IsNullOrEmpty($subscription)) {Throw-EmptyDiscovery; Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("MIssing SubscriptionId") $TRACE_ERROR	}
+			$uri='https://management.azure.com/subscriptions/{0}/resources?$filter=resourceType eq ''Microsoft.OperationalInsights/workspaces''&api-version=2015-01-01' -f $subscription
+			$jres = Invoke-ARMGet -Token $token -Uri $uri
+			if(! $jres) {Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Invoke-ARMGet failed $uri " + $Error) $TRACE_ERROR; exit 1;}
+			foreach($ws in $jres.Value) {Discover-Workspace $ws}
+		}
+		'System' {
+				if(([String]::IsNullOrEmpty($subscription)) -or ([String]::IsNullOrEmpty($workspace)) -or ([String]::IsNullOrEmpty($ResourceGroup))) {Throw-EmptyDiscovery; Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("MIssing SubscriptionId, workspace or resourcegroup") $TRACE_ERROR	}
+				$query = 'ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer | where lastdata > NOW-{0}HOURS' -f $ValidHours
+				Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ("About to query OMS with $query") $TRACE_VERBOSE
+				$jsystems = Invoke-OMSSearchQuery -Token $token -SubscriptionId $subscription -ResourceGroupName $ResourceGroup -OMSWorkspaceName $workspace -Query $query
+				foreach($sys in $jsystems) {
+					Discover-System $sys
+				}
 
+		}
 	}
-	if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
-	$bag
-}
-	$bag = $g_api.CreatePropertyBag()
-	$bag.AddValue("QNDType","Status")
-	$bag.AddValue("Status","OK")
-	$bag.AddValue("Description","Connection OK")
-	$bag
-	if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
+	$discoveryData
 	If ($traceLevel -eq $TRACE_DEBUG)
 	{
 		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
 		#it breaks in exception when run insde OpsMgr and POSH IDE	
-		$g_API.ReturnItems() 
+		$g_API.Return($discoveryData)
 	}
 	#get all the subscriptions
 	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
-	Throw-StatusBagError
 	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 

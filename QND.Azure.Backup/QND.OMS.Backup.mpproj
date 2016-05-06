@@ -30,9 +30,6 @@
     <AssemblyOriginatorKeyFile />
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="DPMCheat.mpx">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="KBArticles.mpx">
       <SubType>Code</SubType>
     </Compile>
@@ -69,16 +66,11 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ManagementPackReference Include="Microsoft.SystemCenter.DataProtectionManager.2012.Library">
-      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\Microsoft.SystemCenter.DataProtectionManager.2012.Library.mp</HintPath>
-      <Alias>DPM</Alias>
-      <MinVersion>4.2.1276.0</MinVersion>
-      <PackageToBundle>False</PackageToBundle>
-    </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.SystemCenter.InstanceGroup.Library">
       <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.InstanceGroup.Library.mp</HintPath>
       <Alias>MSIL</Alias>
       <MinVersion>7.5.8501.0</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.SystemCenter.Library">
       <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.Library.mp</HintPath>
@@ -143,14 +135,6 @@
       <SubType>Content</SubType>
       <Generator>FragmentGenerator</Generator>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\QND.OMS\QND.OMS.mpproj">
-      <Name>QND.OMS</Name>
-      <Project>{a5239f19-f154-4cd2-a3ad-679e8969286b}</Project>
-      <Private>True</Private>
-      <Alias>OMS</Alias>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>

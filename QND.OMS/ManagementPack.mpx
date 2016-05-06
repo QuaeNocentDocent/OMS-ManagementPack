@@ -7,17 +7,14 @@
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
-        <DisplayString ElementID="QND.OMS">
-          <Name>QND - Microsoft OMS monitoring</Name>
+        <DisplayString ElementID="QND.OMS.LogAnalytics">
+          <Name>QND - Microsoft OMS Log Analytics monitoring</Name>
           <Description>QND Community Management Pack for monitoring Microsoft Operations Management Suite #MSOMS</Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.AAD.Account.SR">
-          <Name>QND - OMS Azure AD connection</Name>
         </DisplayString>
       </DisplayStrings>
       <KnowledgeArticles>
 
-        <KnowledgeArticle ElementID="QND.OMS">
+        <KnowledgeArticle ElementID="QND.OMS.LogAnalytics">
           <MamlContent>
             <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
               <maml:title>Summary</maml:title>

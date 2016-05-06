@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>QND.OMS.Automation</ID>
-      <Version>1.0.0.37</Version>
+      <Version>1.0.0.38</Version>
     </Identity>
     <Name>QND.OMS.Automation</Name>
     <References>
@@ -29,7 +29,7 @@
       </Reference>
       <Reference Alias="OMS">
         <ID>QND.OMS</ID>
-        <Version>1.0.0.51</Version>
+        <Version>1.0.0.54</Version>
         <PublicKeyToken>e5fcf8e8afa3370a</PublicKeyToken>
       </Reference>
     </References>

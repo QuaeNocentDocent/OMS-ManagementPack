@@ -1,0 +1,7 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Resources>
+    <DeployableResource ID="QNDAdalModule.Res" Accessibility="Internal" FileName="QNDAdal.psm1" HasNullStream="false"/>
+    <DeployableResource ID="QNDAzureModule.Res" Accessibility="Internal" FileName="QNDAzure.psm1" HasNullStream="false"/>
+    <DeployableAssembly ID="AADClient.Res" Accessibility="Public" FileName="Microsoft.IdentityModel.Clients.ActiveDirectory.dll" QualifiedName="Microsoft.IdentityModel.Clients.ActiveDirectory, Version=2.23.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" HasNullStream="false" />
+  </Resources>
+</ManagementPackFragment>

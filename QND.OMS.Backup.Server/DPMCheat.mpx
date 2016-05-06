@@ -5,7 +5,7 @@
     <Monitoring>
     <Discoveries>
    
-      <Discovery ID="QND.OMS.Cheat.DPMServerDiscovery" Enabled="true" Target="DPM!Microsoft.SystemCenter.DataProtectionManager.2011.Library.DPMSeed" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+      <Discovery ID="QND.OMS.Backup.Server.Cheat.DPMServerDiscovery" Enabled="true" Target="DPM!Microsoft.SystemCenter.DataProtectionManager.2011.Library.DPMSeed" ConfirmDelivery="false" Remotable="true" Priority="Normal">
         <Category>Discovery</Category>
         <DiscoveryTypes>
           <DiscoveryClass TypeID="DPM!Microsoft.SystemCenter.DataProtectionManager.2011.Library.DPMServer" />
@@ -239,7 +239,7 @@ End Function
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
-        <DisplayString ElementID="QND.OMS.Cheat.DPMServerDiscovery">
+        <DisplayString ElementID="QND.OMS.Backup.Server.Cheat.DPMServerDiscovery">
           <Name>QND OMS - Azure Backup Server Discovery</Name>
         </DisplayString>
       </DisplayStrings>

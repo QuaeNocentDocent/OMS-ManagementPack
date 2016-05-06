@@ -1,13 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS", "QND.OMS.mpproj", "{A5239F19-F154-4CD2-A3AD-679E8969286B}"
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.LogAnalytics", "QND.OMS.LogAnalytics.mpproj", "{A5239F19-F154-4CD2-A3AD-679E8969286B}"
 EndProject
 Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.Backup", "..\QND.Azure.Backup\QND.OMS.Backup.mpproj", "{CC08C0C5-3EBA-43FF-844E-5397ED8CEDC7}"
 EndProject
 Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.Automation", "..\QND.Azure.Automation\QND.OMS.Automation.mpproj", "{D83135FA-E78F-4EF6-955D-25EFE60135F8}"
+EndProject
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.AzureMPIntegration", "..\AzureMPIntegration\QND.AzureMPIntegration.mpproj", "{E4A746E9-990D-4D17-8892-54D78C11538D}"
+EndProject
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.Backup.Server", "..\QND.OMS.Backup.Server\QND.OMS.Backup.Server.mpproj", "{A80179AC-7B16-4800-A43C-8D25F871A435}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +31,14 @@ Global
 		{D83135FA-E78F-4EF6-955D-25EFE60135F8}.Debug|x86.Build.0 = Debug|x86
 		{D83135FA-E78F-4EF6-955D-25EFE60135F8}.Release|x86.ActiveCfg = Release|x86
 		{D83135FA-E78F-4EF6-955D-25EFE60135F8}.Release|x86.Build.0 = Release|x86
+		{E4A746E9-990D-4D17-8892-54D78C11538D}.Debug|x86.ActiveCfg = Debug|x86
+		{E4A746E9-990D-4D17-8892-54D78C11538D}.Debug|x86.Build.0 = Debug|x86
+		{E4A746E9-990D-4D17-8892-54D78C11538D}.Release|x86.ActiveCfg = Release|x86
+		{E4A746E9-990D-4D17-8892-54D78C11538D}.Release|x86.Build.0 = Release|x86
+		{A80179AC-7B16-4800-A43C-8D25F871A435}.Debug|x86.ActiveCfg = Debug|x86
+		{A80179AC-7B16-4800-A43C-8D25F871A435}.Debug|x86.Build.0 = Debug|x86
+		{A80179AC-7B16-4800-A43C-8D25F871A435}.Release|x86.ActiveCfg = Release|x86
+		{A80179AC-7B16-4800-A43C-8D25F871A435}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

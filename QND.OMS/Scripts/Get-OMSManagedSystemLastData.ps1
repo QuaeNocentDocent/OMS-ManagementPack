@@ -1,16 +1,8 @@
 ﻿
-
-## This discovery needs to be splitted 'cause potentially can discover a huge number of entities
-## Gorup memeberhsip must be changed and split in diffrent rules using the properties we're setting
-
-#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
-#SET ErrorLevel to 5 so show discovery info
-#https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
-
 #*************************************************************************
-# Script Name - Get-OMSManagedSystemsData
-# Author	  -  - Progel spa
-# Version  - 1.0 24.09.2007
+# Script Name - 
+# Author	  -  Daniele Grandini - QND
+# Version	  - 1.0 30-04-2016
 # Purpose     - 
 #               
 # Assumptions - 
@@ -29,41 +21,41 @@
 #
 # Status
 #
-# 1.0 History
+# Version History
 #	  1.0 06.08.2010 DG First Release
 #     1.5 15.02.2014 DG minor cosmetics
 #
-# (c) Copyright 2015, Progel spa, All Rights Reserved
+# (c) Copyright 2010, Progel srl, All Rights Reserved
 # Proprietary and confidential to Progel srl              
 #
 #*************************************************************************
 
 
 # Get the named parameters
-param(
-[Parameter (Mandatory=$True)] [int]$traceLevel,
-[Parameter (Mandatory=$true)] [String]$TenantADName,
-[Parameter (Mandatory=$false)] [String]$Subscription,
-[Parameter (Mandatory=$false)] [String]$Workspace,
-[Parameter (Mandatory=$false)] [String]$ResourceGroup,
-[Parameter (Mandatory=$true)] [String]$Username,
-[Parameter (Mandatory=$true)] [String]$Password,
-[String]$Proxyurl #nyi
+param([int]$traceLevel=2,
 
+[Parameter (Mandatory=$true)][string]$clientId,
+[Parameter (Mandatory=$true)][string]$SubscriptionId,
+[string]$Proxy,
+[Parameter (Mandatory=$true)][string]$AuthBaseAddress,
+[Parameter (Mandatory=$true)][string]$ResourceBaseAddress,
+[Parameter (Mandatory=$true)][string]$ADUserName,
+[Parameter (Mandatory=$true)][string]$ADPassword,
+[Parameter (Mandatory=$true)][string]$resourceURI,
+[string]$OMSAPIVersion='2015-03-20',
+[int] $MaxAgeHours=2,
+[int] $LookBackHours=24*7,
+[bool] $allInstances=$false
 )
-
+ 
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
-	[Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
-	
+    [Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
+
+#region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "Get-OMSManagedSystemLastData"
-$SCRIPT_ARGS = 11
-$SCRIPT_STARTED			= 831
-$PROPERTYBAG_CREATED	= 832
-$SCRIPT_ENDED			= 835
+$SCRIPT_NAME			= "QND.OMS.GetLastSystemsData"
 $SCRIPT_VERSION = "1.0"
 
-#region Constants
 #Trace Level Costants
 $TRACE_NONE 	= 0
 $TRACE_ERROR 	= 1
@@ -85,23 +77,59 @@ $FAILURE_EVENT_ID = 4000		#errore generico nello script
 $SUCCESS_EVENT_ID = 1101
 $START_EVENT_ID = 1102
 $STOP_EVENT_ID = 1103
-$INFO_EVENT_ID = 1104
 
 #TypedPropertyBag
 $AlertDataType = 0
 $EventDataType	= 2
 $PerformanceDataType = 2
 $StateDataType       = 3
+
+$EventSource = 'Progel Script'
+$EventLog= 'Operations Manager'
 #endregion
 
-#region Helper Functions
+#region Logging
+
+if ([System.Diagnostics.EventLog]::SourceExists($EventSource) -eq $false) {
+    [System.Diagnostics.EventLog]::CreateEventSource($EventSource, $eventlog)
+}
+
 function Log-Params
 {
-	param($Invocation)
-	$line=''
-	foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
+    param($Invocation)
+    $line=''
+    foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
 	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. Invocation Name:$($Invocation.InvocationName)`n Parameters`n $line") $TRACE_INFO
 }
+
+function Create-Event
+  {
+    param(
+    [int] $eventID, 
+    [int] $eventType,
+    [string] $msg,
+    [string[]] $parameters)
+
+    switch ($eventType) {
+        $EVENT_TYPE_SUCCESS {$nativeType=[System.Diagnostics.EventLogEntryType]::Information}
+        $EVENT_TYPE_ERROR {$nativeType=[System.Diagnostics.EventLogEntryType]::Error}
+        $EVENT_TYPE_WARNING {$nativeType=[System.Diagnostics.EventLogEntryType]::Warning}
+        $EVENT_TYPE_INFORMATION {$nativeType=[System.Diagnostics.EventLogEntryType]::Information}
+        $EVENT_TYPE_AUDITSUCCESS {$nativeType=[System.Diagnostics.EventLogEntryType]::AuditSuccess}
+        $EVENT_TYPE_AUDITFAILURE {$nativeType=[System.Diagnostics.EventLogEntryType]::AuditFailure}
+        default {
+            Write-Verbose 'match?'
+            $nativeType=[System.Diagnostics.EventLogEntryType]::Information
+        }
+    }
+    $event = New-Object System.Diagnostics.EventInstance($eventID,1,$nativeType)
+
+    $evtObject = New-Object System.Diagnostics.EventLog;
+    $evtObject.Log = $EventLog;
+    $evtObject.Source = $EventSource;
+    $parameters = @($msg) + $parameters
+    $evtObject.WriteEvent($event, $parameters)
+  }
 
 
 function Log-Event
@@ -112,10 +140,13 @@ function Log-Event
 	if($level -le $P_TraceLevel)
 	{
 		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
-		$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
+        Create-Event -eventID $eventID -eventType $eventType -msg ($msg + "`n" + "Version :" + $SCRIPT_VERSION) -parameters @($SCRIPT_NAME,$SCRIPT_VERSION)
+		#$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
 	}
 }
+#endregion
 
+#region Discovery Helpers
 Function Throw-EmptyDiscovery
 {
 	param($SourceId, $ManagedEntityId)
@@ -144,15 +175,25 @@ param($SourceId, $ManagedEntityId)
 		$g_API.Return($oDiscoveryData)
 	}
 }
+
 #endregion
 
-Function Throw-StatusBagError
+
+Function Import-ResourceModule
 {
-	$bag = $g_api.CreatePropertyBag()
-	$bag.AddValue("QNDType","Status")
-	$bag.AddValue("Status","Error")
-	$bag.AddValue("Description","$Error")
-	$bag	
+	param($moduleName, $ArgumentList=$null)
+	if (Get-Module -Name $moduleName) {return}
+
+	$moduleName = '{0}.psm1' -f $moduleName
+	$ResPath = (get-itemproperty -path 'HKLM:\system\currentcontrolset\services\healthservice\Parameters' -Name 'State Directory').'State Directory' + '\Resources'
+	if(Test-Path $ResPath) {
+		$module = @(get-childitem -path $ResPath -Filter $moduleName -Recurse)[0]
+	}
+	if($module) { $module = $module.FullName}
+	else {$module = "$PSScriptRoot\$moduleName"}
+
+	If (Test-Path $module) {Import-Module -Name $module -ArgumentList $ArgumentList}
+	else {Throw [System.DllNotFoundException] ('{0} not found' -f $module)}
 }
 
 
@@ -165,88 +206,99 @@ Function Throw-StatusBagError
 	$P_TraceLevel = $traceLevel
 	Log-Params $MyInvocation
 
-
-try {
-	$ResPath = (get-itemproperty -path 'HKLM:\system\currentcontrolset\services\healthservice\Parameters' -Name 'State Directory').'State Directory' + '\Resources'
-	if(Test-Path $ResPath) {
-		$module = @(get-childitem -path $ResPath -Name OMSSearch.psm1 -Recurse)[0]
+	try {
+		Import-ResourceModule -moduleName QNDAdal -ArgumentList @($false)
+		Import-ResourceModule -moduleName QNDAzure
 	}
-	if($module) { $OMSSearchModule = "$ResPath\$module"}
-	else {$OMSSearchModule = '.\OMSSearch.psm1'}
-
-	If (Test-Path $OMSSearchModule) {Import-Module $OMSSearchModule}
-	else {Throw [System.DllNotFoundException] 'OMSSearch.psm1 not found'}
-
-#now load the AAD client resource. The module I'm using assumes the assembly is in the same directory of the module, but OpsMgr resource deployment uses 2 different folders
-
-	$AssemblyName = 'Microsoft.IdentityModel.Clients.ActiveDirectory'
-	$AssemblyVersion = "2.14.0.0"
-	$AssemblyPublicKey = "31bf3856ad364e35"
-
-	$DLLPath = "$ResPath\"+@(get-childitem -path $ResPath -Name "$($AssemblyName).dll" -Recurse)[0]
-	If (!([AppDomain]::CurrentDomain.GetAssemblies() |Where-Object { $_.FullName -eq "$AssemblyName, Version=$AssemblyVersion, Culture=neutral, PublicKeyToken=$AssemblyPublicKey"}))
-	{
-		Log-Event $INFO_EVENT_ID $EVENT_TYPE_INFO ("Loading Assembly $AssemblyName") $TRACE_VERBOSE
-		Try {
-			[Void][System.Reflection.Assembly]::LoadFrom($DLLPath)
-		} Catch {
-			Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Unable to load $DLLPath. $Error") $TRACE_ERROR
-			exit 1
-		}
+	catch {
+		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot load required powershell modules $Error") $TRACE_ERROR
+		exit 1	
 	}
-
-	if (!(get-command -Module OMSSearch -Name Get-AADToken -ErrorAction SilentlyContinue)) {
-		Log-Event $START_EVENT_ID $EVENT_TYPE_WARNING ("Get-AADToken Commandlet doesn't exist.") $TRACE_WARNING
-		Throw-KeepDiscoveryInfo
-		exit 1
-	}
-	$token = Get-AADToken -TenantADName $TenantADName -Username $Username -Password $Password
-	if (! $token) {Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Get-AADToken canno authenticate user $username " + $Error) $TRACE_ERROR; exit 1;}
-}
-catch {
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Main " + $Error) $TRACE_ERROR
-	exit 1
-}
 
 try
 {
-
-#ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer | where lastdata > NOW-240HOURS
-#ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | where TimeGenerated > NOW-240HOURS | measure count() by Computer
-
-if(([String]::IsNullOrEmpty($subscription)) -or ([String]::IsNullOrEmpty($workspace)) -or ([String]::IsNullOrEmpty($ResourceGroup))) {Throw-StatusBagError; Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("MIssing SubscriptionId, workspace or resourcegroup") $TRACE_ERROR	}
-$jsystems = Invoke-OMSSearchQuery -Token $token -SubscriptionId $subscription -ResourceGroupName $ResourceGroup -OMSWorkspaceName $workspace -Query 'ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer'
-
-foreach($sys in $jsystems) {
-	if(! [String]::IsNullOrEmpty($sys.Computer) ) {
-
-		$bag = $g_api.CreatePropertyBag()
-		$bag.AddValue("QNDType","Data")
-		$bag.AddValue('Computer', $sys.Computer)
-		$bag.AddValue('LastData', $sys.lastdata)
-		$diff = [DateTime]::Now - [DateTime]($sys.lastdata)
-		$bag.AddValue('AgeHours', $diff.TotalHours)
-		if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
-		$bag
+	if($proxy) {
+		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Proxy is not currently supported {0}" -f $proxy) $TRACE_WARNING
 	}
+	$pwd = ConvertTo-SecureString $ADPassword -AsPlainText -Force
+	$cred = New-Object System.Management.Automation.PSCredential ($ADUserName, $pwd)
+	$connection = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
 }
-	$bag = $g_api.CreatePropertyBag()
-	$bag.AddValue("QNDType","Status")
-	$bag.AddValue("Status","OK")
-	$bag.AddValue("Description","Connection OK")
-	$bag
+catch {
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
+	exit 1	
+}
+
+try {
+
+	#prepare query body
+	    $uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
+		if ($allInstances) {
+			$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer'
+		}
+		else {
+			$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer | where lastdata < NOW-{0}HOURS' -f $maxAgeHours
+		}
+
+    $QueryArray = @{Query=$Query}
+
+	$startDate=(Get-Date).AddHours(-$LookBackHours)
+	$endDate=Get-Date
+    $QueryArray+= @{start=('{0}Z' -f $startDate.GetDateTimeFormats('s'))}
+    $QueryArray+= @{end=('{0}Z' -f $endDate.GetDateTimeFormats('s'))}
+    $body = ConvertTo-Json -InputObject $QueryArray
+
+	$nextLink=$null
+	$systems=@()
+	do {
+		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb POST -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -data $body -TimeoutSeconds 300
+		$nextLink = $result.NextLink
+		$systems += $result.values	
+	} while ($nextLink)
+
+    if ($systems.count -gt 0) {
+	    if ($allInstances) {
+		    foreach($sys in $systems) {
+			    if(! [String]::IsNullOrEmpty($sys.Computer) ) {
+				    $bag = $g_api.CreatePropertyBag()
+				    $bag.AddValue("QNDType","Data")
+				    $bag.AddValue('Computer', $sys.Computer.ToLower())
+				    $bag.AddValue('LastData', $sys.lastdata)
+				    $diff = [DateTime]::Now - [DateTime]($sys.lastdata)
+				    $bag.AddValue('AgeHours', $diff.TotalHours)
+				    if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
+				    $bag
+			    }
+		    }
+	    }
+	    else {
+			    $bag = $g_api.CreatePropertyBag()
+			    $bag.AddValue("QNDType","Summary")
+			    $bag.AddValue('ObsoleteDataSystems', $systems.count)
+			    $bag.AddValue('AgeHours', $maxAgeHours)
+			    $sampleSys = [System.String]::Join(',',($systems | select -first 10))
+			    $bag.AddValue('First10', $sampleSys)
+			    if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
+			    $bag
+	    }
+    }
+
+
 	If ($traceLevel -eq $TRACE_DEBUG)
 	{
 		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
 		#it breaks in exception when run insde OpsMgr and POSH IDE	
 		$g_API.ReturnItems() 
 	}
-	#get all the subscriptions
+
+	
 	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
-	Throw-StatusBagError
 	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
 }
+
+
+

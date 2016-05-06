@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ProjectGuid>{e4a746e9-990d-4d17-8892-54d78c11538d}</ProjectGuid>
+    <RootNamespace>QND.AzureMPIntegration</RootNamespace>
+    <Name>QND.AzureMPIntegration</Name>
+    <ManagementPackName>QND.AzureMPIntegration</ManagementPackName>
+    <Version>1.0.0.0</Version>
+    <MpFrameworkVersion>v7.0.2</MpFrameworkVersion>
+    <MpFrameworkProfile>OM</MpFrameworkProfile>
+    <ProductVersion>1.1.0.0</ProductVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <GenerateSealed>True</GenerateSealed>
+    <Company>Quae Nocent Docent</Company>
+    <Copyright>Copyright (c) QND. All rights reserved.</Copyright>
+    <DelaySigning>False</DelaySigning>
+    <AssemblyOriginatorKeyFile>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\Firma\QND1.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <DelaySigning>false</DelaySigning>
+    <Company>MyCompany</Company>
+    <Copyright>Copyright (c) MyCompany. All rights reserved.</Copyright>
+    <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile />
+  </PropertyGroup>
+  <ItemGroup>
+    <ManagementPackReference Include="Microsoft.SystemCenter.Library">
+      <Alias>SC</Alias>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.MicrosoftAzure">
+      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\Microsoft.SystemCenter.MicrosoftAzure.mpb</HintPath>
+      <Alias>Azure</Alias>
+      <MinVersion>1.3.18.0</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.Windows.Library">
+      <Alias>Windows</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="System.Health.Library">
+      <Alias>Health</Alias>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="System.Library">
+      <Alias>System</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.Visualization.Library">
+      <Alias>Visualization</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ManagementPack.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Resources.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TestingRunAs.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="QNDAzure" />
+    <Folder Include="QNDAdal" />
+    <Folder Include="Scripts" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\DumpParameters.ps1" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="QNDAdal\Microsoft.IdentityModel.Clients.ActiveDirectory.dll">
+      <SubType>Content</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="QNDAdal\QNDAdal.psm1">
+      <SubType>Content</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="QNDAzure\QNDAzure.psm1">
+      <SubType>Content</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
+</Project>
