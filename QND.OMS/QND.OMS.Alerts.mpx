@@ -3,24 +3,17 @@
     <EntityTypes>
       <ClassTypes>
         
-        <!-- In this section, modify the attributes based on your needs. Ensure the
-             Base attribute matches the application you are modeling.
-             More information can be found in the Management Pack Development Kit: 
-             http://msdn.microsoft.com/en-us/library/ee533867.aspx -->
-        <ClassType ID="QND.OMS.ManagedSystem" Base="System!System.Device" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
-          
-          <!-- Inside this section, you can add and remove properties as needed.
-               More information can be found in the Management Pack Development Kit: 
-               http://msdn.microsoft.com/en-us/library/ee533714.aspx -->
-          <Property ID="Computer" Key="true" Type="string" />
-          <!-- <Property ID="Workspace" Key="true" Type="string" /> -->
+        <ClassType ID="QND.OMS.AlertRule" Base="System!System.LogicalEntity" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          <Property ID="ScheduleId" Key="true" Type="string" MaxLength="2083"/>
+          <Property ID="AlertName" Key="false" Type="string" />
+          <Property ID="Interval" Key="false" Type="int" />
         </ClassType>
       
       </ClassTypes>
       <RelationshipTypes>
-        <RelationshipType ID="QND.OMS.WorkspaceContainsSystem" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
+        <RelationshipType ID="QND.OMS.WorkspaceContainsAlertRule" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
           <Source ID="Workspace" Type="QND.OMS.Workspace"/>
-          <Target ID="System" Type="QND.OMS.ManagedSystem"/>
+          <Target ID="System" Type="QND.OMS.AlertRule"/>
         </RelationshipType>
       </RelationshipTypes>
     </EntityTypes>
@@ -28,14 +21,12 @@
 
   <Monitoring>
     <Discoveries>
-      <Discovery ID="QND.OMS.ManagedSystem.Discovery" ConfirmDelivery="true" Enabled="false" Priority="Normal" Remotable="true" Target="QND.OMS.Workspace">
+      <Discovery ID="QND.OMS.AlertRule.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="QND.OMS.Workspace">
         <Category>Discovery</Category>
         <DiscoveryTypes>
           <DiscoveryClass TypeID="QND.OMS.Workspace" />
         </DiscoveryTypes>
-        <DataSource ID="DS" TypeID="QND.OMS.Entity.Discovery.DS">
-          <IntervalSeconds>14417</IntervalSeconds>
-          <SyncTime></SyncTime>
+        <DataSource ID="DS" TypeID="QND.OMS.AlertRule.Discovery.DS">
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
           <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
@@ -48,39 +39,52 @@
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
           <OMSAPIVersion>2015-03-20</OMSAPIVersion>
-          <LookbackHours>240</LookbackHours>
         </DataSource>
       </Discovery>    
     </Discoveries>
+    <Rules>
+      <Rule ID="QND.OMS.AlertRule.DiscoveryTrigger.Rule" ConfirmDelivery="false" DiscardLevel="100" Enabled="true" Priority="Normal" Remotable="true" Target="QND.OMS.Workspace">
+        <Category>Discovery</Category>
+        <DataSources>
+          <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
+            <IntervalSeconds>43200</IntervalSeconds>
+          </DataSource>
+        </DataSources>
+        <WriteActions>
+          <WriteAction ID="WriteEvent" TypeID="QNDA!QND.DiscoveryEvent.WAT">
+            <LogName>Operations Manager</LogName>
+            <SourceName>OMS Discovery</SourceName>
+            <EventId>1</EventId>
+            <Message>QND</Message>
+            <Key>AlertRule</Key>
+          </WriteAction>
+        </WriteActions>
+      </Rule>
+    </Rules>
     <Monitors>
-      <UnitMonitor ID="QND.OMS.ManagedSystemLastData.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.ManagedSystem" 
-                   ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.ManagedSystem.LastData.MT" ConfirmDelivery="false">
+      <UnitMonitor ID="QND.OMS.AlertRule.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.AlertRule" 
+                   ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.AlertRuleState.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
-        <AlertSettings AlertMessage="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage">
+        <AlertSettings AlertMessage="QND.OMS.AlertRule.Monitor.AlertMessage">
           <AlertOnState>Error</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
           <AlertParameters>
-            <AlertParameter1>$Target/Property[Type="QND.OMS.ManagedSystem"]/Computer$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Property[@Name="AgeHours"]$</AlertParameter2>
+            <AlertParameter1>$Data/Context/Property[@Name="LastAlert"]$</AlertParameter1>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
-          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
-          <OperationalState ID="Late" MonitorTypeStateID="Late" HealthState="Warning" />
-          <OperationalState ID="Obsolete" MonitorTypeStateID="Obsolete" HealthState="Error" />
+          <OperationalState ID="Inactive" MonitorTypeStateID="Inactive" HealthState="Success" />
+          <OperationalState ID="Active" MonitorTypeStateID="Active" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>3611</IntervalSeconds>
+          <IntervalSeconds>580</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <Computer>$Target/Property[Type="QND.OMS.ManagedSystem"]/Computer$</Computer>
-          <DelayLateHours>2</DelayLateHours>
           <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
           <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <!-- <ResourceGroupId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService"]/ResourceGroup$</ResourceGroupId> -->
           <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
           <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
           <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
@@ -88,50 +92,53 @@
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
           <OMSAPIVersion>2015-03-20</OMSAPIVersion>
-          <MaxAgeHours>1</MaxAgeHours>          
-          <LookbackHours>240</LookbackHours>
+          <Tolerance>0.5</Tolerance>
+          <ScheduleId>$Target/Property[Type="QND.OMS.AlertRule"]/ScheduleId$</ScheduleId>
         </Configuration>
       </UnitMonitor>
     </Monitors>
+
   </Monitoring>
     <Presentation>
     <StringResources>
-      <StringResource ID="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage"/>
+      <StringResource ID="QND.OMS.AlertRule.Monitor.AlertMessage"/>
     </StringResources>
   </Presentation>
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
-        
-        <!-- This is the string users of the Operations Console and Web Console will see. 
-             Descriptions are also helpful when the user is doing a search in the Console. -->
-        <DisplayString ElementID="QND.OMS.ManagedSystem">
-          <Name>QND - OMS Managed System</Name>
+        <DisplayString ElementID="QND.OMS.AlertRule">
+          <Name>QND - OMS Alert Rule</Name>
           <Description></Description>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.ManagedSystem" SubElementID="Computer">
-          <Name>Computer Name</Name>
+        <DisplayString ElementID="QND.OMS.AlertRule" SubElementID="ScheduleId">
+          <Name>Schedule Id</Name>
           <Description></Description>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.WorkspaceContainsSystem">
-          <Name>QND -OMS Workspace contains managed systems</Name>
+        <DisplayString ElementID="QND.OMS.AlertRule" SubElementID="Interval">
+          <Name>Interval (min)</Name>
+          <Description></Description>
         </DisplayString>
-        <!--
-        <DisplayString ElementID="QND.OMS.MAPSME.ManagedSystem.Discovery">
-          <Name>QND - Pool should manage System Discovery</Name>
+        <DisplayString ElementID="QND.OMS.AlertRule" SubElementID="AlertName">
+          <Name>ALert Name</Name>
+          <Description></Description>
+        </DisplayString>        
+        <DisplayString ElementID="QND.OMS.WorkspaceContainsAlertRule">
+          <Name>QND -OMS Workspace contains alert rule</Name>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.WorkspaceContainsSystem.Discovery">
-          <Name>QND - OMS workspace contains Managed System discovery</Name>
-        </DisplayString> -->
-        <DisplayString ElementID="QND.OMS.ManagedSystem.Discovery">
-          <Name>QND - OMS Managed System Discovery</Name>
+        <DisplayString ElementID="QND.OMS.AlertRule.Discovery">
+          <Name>QND - OMS Alert Rule Discovery</Name>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.ManagedSystemLastData.Monitor">
-          <Name>Last Data Point</Name>
+        <DisplayString ElementID="QND.OMS.AlertRule.Monitor">
+          <Name>Active</Name>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage">
-          <Name> QND - OMS System Data obsolete</Name>
-          <Description>{0} data is obsolete. Last data point received {1} hours ago</Description>
+        <DisplayString ElementID="QND.OMS.AlertRule.Monitor.AlertMessage">
+          <Name> QND - OMS Alert is active</Name>
+          <Description>Last alert occurrence: {0}.</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AlertRule.DiscoveryTrigger.Rule">
+          <Name>QND - OMS Alert Rule discovery trigger rule</Name>
+          <Description>Triggers a discovery cycle for alert rules</Description>
         </DisplayString>
       </DisplayStrings>
     </LanguagePack>

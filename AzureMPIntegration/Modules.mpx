@@ -1,0 +1,87 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <ModuleTypes>
+
+      <DataSourceModuleType ID="QND.DiscoveryEventScheduler.DS" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:integer" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" ParameterType="int" Selector="$Config/IntervalSeconds$"/>
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+                <DataSource ID="DS" TypeID="System!System.Discovery.Scheduler">
+                  <Scheduler>
+                    <SimpleReccuringSchedule>
+                      <Interval Unit="Seconds">$Config/IntervalSeconds$</Interval>
+                      <SyncTime/>
+                    </SimpleReccuringSchedule>
+                    <ExcludeDates/>
+                  </Scheduler>
+                </DataSource>
+            </MemberModules>
+            <Composition>
+                <Node ID="DS"></Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.TriggerData</OutputType>
+      </DataSourceModuleType>
+            
+      <WriteActionModuleType ID="QND.DiscoveryEvent.WAT" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="LogName" type="xsd:string" />
+          <xsd:element name="SourceName" type="xsd:string" />
+          <xsd:element name="EventId" type="xsd:integer" />
+          <xsd:element name="Message" type="xsd:string" />
+          <xsd:element name="Key" type="xsd:string" />          
+        </Configuration>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <WriteAction ID="WA" TypeID="Windows!Microsoft.Windows.PowerShellWriteAction">
+                <ScriptName>New-DiscoveryEvent.ps1</ScriptName>
+                <ScriptBody>
+                  $IncludeFileContent/Scripts/New-DiscoveryEvent.ps1$
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>EventId</Name>
+                    <Value>$Config/EventId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>EventSource</Name>
+                    <Value>$Config/SourceName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>EventLog</Name>
+                    <Value>$Config/LogName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Message</Name>
+                    <Value>$Config/Message$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Key</Name>
+                    <Value>$Config/Key$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>60</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+                <!-- true only for Tasks -->
+              </WriteAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="WA" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>Windows!Microsoft.Windows.SerializedObjectData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </WriteActionModuleType>
+      
+    </ModuleTypes>
+  </TypeDefinitions>
+</ManagementPackFragment>

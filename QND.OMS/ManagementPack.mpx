@@ -1,8 +1,5 @@
 ﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <TypeDefinitions>
-    <SecureReferences>
-      <SecureReference ID="QND.OMS.AAD.Account.SR" Accessibility="Public" Context="System!System.Entity" />
-    </SecureReferences>
   </TypeDefinitions>
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">

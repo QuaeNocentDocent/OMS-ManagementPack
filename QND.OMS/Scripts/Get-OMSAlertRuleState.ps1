@@ -1,4 +1,8 @@
 ﻿
+
+#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
+#SET ErrorLevel to 5 so show discovery info
+#https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
 #*************************************************************************
 # Script Name - 
 # Author	  -  Daniele Grandini - QND
@@ -33,7 +37,6 @@
 
 # Get the named parameters
 param([int]$traceLevel=2,
-
 [Parameter (Mandatory=$true)][string]$clientId,
 [Parameter (Mandatory=$true)][string]$SubscriptionId,
 [string]$Proxy,
@@ -43,9 +46,7 @@ param([int]$traceLevel=2,
 [Parameter (Mandatory=$true)][string]$ADPassword,
 [Parameter (Mandatory=$true)][string]$resourceURI,
 [string]$OMSAPIVersion='2015-03-20',
-[int] $MaxAgeHours=2,
-[int] $LookBackHours=24*7,
-[int] $allInstances=0 #issues managing boolean values from OpsMgr
+[double]$Tolerance=0.5
 )
  
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
@@ -53,7 +54,7 @@ param([int]$traceLevel=2,
 
 #region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "QND.OMS.GetLastSystemsData"
+$SCRIPT_NAME			= "Get-OMSAlertRuleState"
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -178,7 +179,6 @@ param($SourceId, $ManagedEntityId)
 
 #endregion
 
-
 Function Import-ResourceModule
 {
 	param($moduleName, $ArgumentList=$null)
@@ -222,77 +222,101 @@ try
 	}
 	$pwd = ConvertTo-SecureString $ADPassword -AsPlainText -Force
 	$cred = New-Object System.Management.Automation.PSCredential ($ADUserName, $pwd)
-	$connection = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
+	$authority = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
+	$connection = $authority.CreateAuthorizationHeader()
 }
 catch {
 	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
+	Throw-KeepDiscoveryInfo
 	exit 1	
 }
 
 try {
 
-	#prepare query body
-	    $uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
-		if ($allInstances -gt 0) {
-			$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer'
-		}
-		else {
-			$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer | where lastdata < NOW-{0}HOURS' -f $maxAgeHours
-		}
+	$rules=@{}
 
-    $QueryArray = @{Query=$Query}
-
-	$startDate=(Get-Date).AddHours(-$LookBackHours)
-	$endDate=Get-Date
-    $QueryArray+= @{start=('{0}Z' -f $startDate.GetDateTimeFormats('s'))}
-    $QueryArray+= @{end=('{0}Z' -f $endDate.GetDateTimeFormats('s'))}
-    $body = ConvertTo-Json -InputObject $QueryArray
-
-	$nextLink=$null
-	$systems=@()
+$timeout=300
+    $uri = '{0}{1}/savedSearches?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
+	$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
+	$savedSearches=@()
 	do {
-		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb POST -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -data $body -TimeoutSeconds 300
-		$nextLink = $result.NextLink		
-		if($result.gotValue) {$systems += $result.values}
+		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
+		$nextLink = $result.NextLink
+		$savedSearches += $result.values	
 	} while ($nextLink)
 
-	if ($allInstances -gt 0) {
-		foreach($sys in $systems) {
-			if(! [String]::IsNullOrEmpty($sys.Computer) ) {
-				$bag = $g_api.CreatePropertyBag()
-				$bag.AddValue("QNDType","Data")
-				$bag.AddValue('Computer', $sys.Computer.ToLower())
-				$bag.AddValue('LastData', $sys.lastdata)
-				$diff = [DateTime]::Now - [DateTime]($sys.lastdata)
-				$bag.AddValue('AgeHours', $diff.TotalHours)
-				if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
-				$bag
+	foreach($search in $savedSearches) {
+		$uri = '{0}{1}/schedules?api-version={2}' -f $ResourceBaseAddress,$search.Id,$OMSAPIVersion
+		$nextLink=$null
+		$schedule = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $extLink -data $null -TimeoutSeconds $timeout -ErrorAction SilentlyContinue
+		if($schedule.values) {
+			#take into account just the first schedule for the search maybe this needs to be changed in future
+			if ($schedule.Values[0].properties.Enabled -ieq 'True') {
+			   $uri = '{0}{1}/actions?api-version={2}' -f $ResourceBaseAddress,$schedule.values.id,$OMSAPIVersion
+			   $nextLink=$null
+			   $actions = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout #-ErrorAction SilentlyContinue
+			   if ($actions.Values) {
+					if ($actions.Values[0].properties.Type -ieq 'Alert') {
+						$rules.Add($actions.Values[0].properties.Name, @{
+							"ScheduleId"=$schedule.Values[0].id;
+							"Interval"=$schedule.Values[0].properties.Interval;
+							"Status"='Inactive';
+							"LastAlert"='';
+							"AgeMinutes"=0
+						})
+						Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('{0}, Interval={1}, Name={2}' -f $schedule.Values[0].id, $schedule.Values[0].properties.Interval, $actions.Values[0].properties.Name ) $TRACE_VERBOSE
+					}
+			   }
 			}
 		}
 	}
-	else {
-			$bag = $g_api.CreatePropertyBag()
-			$bag.AddValue("QNDType","Summary")
-			$bag.AddValue('ObsoleteDataSystems', $systems.count)
-			$bag.AddValue('AgeHours', $maxAgeHours)
-			if($systems.count -gt 0) {$sampleSys = [System.String]::Join(',',($systems | select -first 10))}
-			else {$sampleSys=''}
-			$bag.AddValue('First10', $sampleSys)
-			if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
-			$bag
+
+	#now get the alerts in the last 24hours
+	$query='Type:Alert SourceSystem=OMS | measure count() As Count, max(TimeGenerated) As Last by AlertName'
+	$startDate=(Get-Date).AddHours(-24)
+	$endDate=Get-Date
+	$QueryArray = @{query=$Query}
+	$QueryArray+= @{start=('{0}Z' -f $startDate.GetDateTimeFormats('s'))}
+	$QueryArray+= @{end=('{0}Z' -f $endDate.GetDateTimeFormats('s'))}
+    $body = ConvertTo-Json -InputObject $QueryArray
+
+	$uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
+    $nextLink=$null
+	$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb POST -authToken ($connection) -nextLink $nextLink -data $body -TimeoutSeconds $timeout
+
+	foreach($alert in $result.values) {
+		if(! [String]::IsNullOrEmpty($alert.AlertName)) {
+			if($rules.ContainsKey($alert.AlertName)) {
+				$age = (get-Date)-([datetime] $alert.Last)
+				Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('Got Alert for {0}, Last occurrence={1}, Age={2}, Interval={3}' -f $alert.AlertName, $alert.Last, $age.TotalMinutes, $rules.Item($alert.AlertName).Interval) $TRACE_VERBOSE
+				$rules.Item($alert.AlertName).AgeMinutes=$age.TotalMinutes
+				$rules.Item($alert.AlertName).LastAlert=$alert.Last
+				#add 50% to avoid unnecessary flip/flop
+				if($age.TotalMinutes -le ($rules.Item($alert.AlertName).Interval*(1+$Tolerance))) {
+					$rules.Item($alert.AlertName).Status='Active'
+				}
+			}
+		}
 	}
 
-
-
+	#now prepare the property bag and return
+	foreach($key in $rules.Keys) {
+		$bag = $g_api.CreatePropertyBag()
+		$bag.AddValue("ScheduleId",$rules.Item($key).ScheduleId)
+		$bag.AddValue('AlertName', $key)
+		$bag.AddValue('LastAlert', $rules.Item($key).LastAlert)
+		$bag.AddValue('Status', $rules.Item($key).Status)
+		$bag.AddValue('AgeMinutes', $rules.Item($key).AgeMinutes)
+		if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
+		$bag
+	}
 	If ($traceLevel -eq $TRACE_DEBUG)
 	{
 		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
 		#it breaks in exception when run insde OpsMgr and POSH IDE	
 		$g_API.ReturnItems() 
 	}
-
-	
-	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
 	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	

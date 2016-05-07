@@ -82,6 +82,7 @@ param(
     }
     try {
         $nl=$null
+		$gotValue=$false
         if ($proxy) {
             $result = Invoke-WebRequest -Method $HTTPVerb -Uri $restUri -Headers $headers -Body $body -TimeoutSec $timeoutSeconds -UseBasicParsing -Proxy $proxy
         }
@@ -97,7 +98,10 @@ param(
                     $nl = [System.Web.HttpUtility]::UrlDecode($json.nextLink)
                     if ($nl) {$nl=$nl.Replace($restUri,'')}
                     [array]$returnValues = $json
-                    if($json.value -ne $null){[array]$returnValues = $json.value}
+                    if($json.value -ne $null){
+						[array]$returnValues = $json.value
+						$gotValue=$true
+					}
                 }
             }
         }
@@ -109,6 +113,7 @@ param(
         'Values' = $returnValues
         'NextLink' = $nl
         'StatusCode' = $result.StatusCode
+		'GotValue' = $gotValue
         }
     }
     catch {
@@ -120,6 +125,7 @@ param(
         'Values' = $returnValues
         'NextLink' = $nl
         'StatusCode' = $result.StatusCode
+		'GotValue' = $gotValue
         }
 	}
     

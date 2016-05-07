@@ -6,7 +6,7 @@
     <RootNamespace>QND.AzureMPIntegration</RootNamespace>
     <Name>QND.AzureMPIntegration</Name>
     <ManagementPackName>QND.AzureMPIntegration</ManagementPackName>
-    <Version>1.0.0.0</Version>
+    <Version>2.0.0.0</Version>
     <MpFrameworkVersion>v7.0.2</MpFrameworkVersion>
     <MpFrameworkProfile>OM</MpFrameworkProfile>
     <ProductVersion>1.1.0.0</ProductVersion>
@@ -58,7 +58,13 @@
     </ManagementPackReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Folders.mpx">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ManagementPack.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Modules.mpx">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Resources.mpx">
@@ -66,6 +72,10 @@
     </Compile>
     <Compile Include="TestingRunAs.mpx">
       <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views.mptg.mpx">
+      <SubType>Code</SubType>
+      <DependentUpon>Views.mptg</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -75,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Scripts\DumpParameters.ps1" />
+    <EmbeddedResource Include="Scripts\New-DiscoveryEvent.ps1" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="QNDAdal\Microsoft.IdentityModel.Clients.ActiveDirectory.dll">
@@ -86,6 +97,12 @@
     <EmbeddedResource Include="QNDAzure\QNDAzure.psm1">
       <SubType>Content</SubType>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views.mptg">
+      <SubType>Content</SubType>
+      <Generator>FragmentGenerator</Generator>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>

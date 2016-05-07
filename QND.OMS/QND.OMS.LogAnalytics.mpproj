@@ -6,7 +6,7 @@
     <RootNamespace>QND.OMS</RootNamespace>
     <Name>QND.OMS.LogAnalytics</Name>
     <ManagementPackName>QND.OMS.LogAnalytics</ManagementPackName>
-    <Version>1.0.0.0</Version>
+    <Version>2.0.0.0</Version>
     <MpFrameworkVersion>v7.0.2</MpFrameworkVersion>
     <MpFrameworkProfile>OM</MpFrameworkProfile>
     <ProductVersion>1.1.0.0</ProductVersion>
@@ -55,6 +55,12 @@
       <Alias>Windows</Alias>
       <PackageToBundle>false</PackageToBundle>
     </ManagementPackReference>
+    <ManagementPackReference Include="QND.AzureMPIntegration">
+      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\AzureMPIntegration\bin\Debug\QND.AzureMPIntegration.mpb</HintPath>
+      <Alias>QNDA</Alias>
+      <MinVersion>2.0.0.11</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
     <ManagementPackReference Include="System.AdminItem.Library">
       <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\System.AdminItem.Library.mp</HintPath>
       <Alias>SAL</Alias>
@@ -79,9 +85,6 @@
     </ManagementPackReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Folders.mpx">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="KBArticles.mpx">
       <SubType>Code</SubType>
     </Compile>
@@ -89,6 +92,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Modules.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="QND.OMS.Alerts.mpx">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="QND.OMS.ManagedSystem.mpx">
@@ -112,19 +118,13 @@
       <SubType>Content</SubType>
       <Generator>FragmentGenerator</Generator>
     </Content>
+    <EmbeddedResource Include="Scripts\Get-OMSAlertRules.ps1" />
+    <EmbeddedResource Include="Scripts\Get-OMSAlertRuleState.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSManagedSystemLastData.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSManagedSystems.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSManagedSystemsData.ps1" />
     <EmbeddedResource Include="SquaredUp\OMS-Overview.xml" />
     <None Include="Tests\PScript1.ps1" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\AzureMPIntegration\QND.AzureMPIntegration.mpproj">
-      <Name>QND.AzureMPIntegration</Name>
-      <Project>{e4a746e9-990d-4d17-8892-54d78c11538d}</Project>
-      <Private>True</Private>
-      <Alias>QNDA</Alias>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>
