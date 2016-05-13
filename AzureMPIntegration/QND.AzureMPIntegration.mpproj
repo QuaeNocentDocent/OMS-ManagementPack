@@ -67,6 +67,9 @@
     <Compile Include="Modules.mpx">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="QND.OMS.GenericService.mpx">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Resources.mpx">
       <SubType>Code</SubType>
     </Compile>

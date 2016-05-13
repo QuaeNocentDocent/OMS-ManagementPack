@@ -4,7 +4,7 @@
       <DisplayStrings>
         <DisplayString ElementID="QND.OMS.Backup.Server">
           <Name>QND OMS Backup Server Monitoring</Name>
-          <Description>QND OMS Backup Server Monitoring</Description>
+          <Description>QND OMS Backup Server Monitoring. Cheats to discover OMS Backup Server as a standard DPM Server</Description>
         </DisplayString>
       </DisplayStrings>
     </LanguagePack>

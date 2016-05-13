@@ -1,0 +1,42 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        
+        <!-- In this section, modify the attributes based on your needs. Ensure the
+             Base attribute matches the application you are modeling.
+             More information can be found in the Management Pack Development Kit: 
+             http://msdn.microsoft.com/en-us/library/ee533867.aspx -->
+        <ClassType ID="QND.OMS.GenericService" Base="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          <Property ID="ApiVersion" Key="false" Type="string" />        
+        </ClassType>
+      
+      </ClassTypes>
+    </EntityTypes>
+  </TypeDefinitions>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        
+        <!-- This is the string users of the Operations Console and Web Console will see. 
+             Descriptions are also helpful when the user is doing a search in the Console. -->
+        <DisplayString ElementID="QND.OMS.GenericService">
+          <Name>QND OMS Generic Arm Service</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.GenericService" SubElementID="ApiVersion">
+          <Name>ARM API Version</Name>
+          <Description></Description>
+        </DisplayString>
+
+        <!-- Uncomment the below section if you need to add a user friendly string for each property. -->
+        <!--
+        <DisplayString ElementID="QND.AzureMPIntegration.QND" SubElementID="Property1">
+          <Name>Property1 Property</Name>
+          <Description></Description>
+        </DisplayString>
+        -->
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

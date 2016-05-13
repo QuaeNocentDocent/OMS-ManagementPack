@@ -2,166 +2,97 @@
   <TypeDefinitions>
     <EntityTypes>
       <ClassTypes>
-
-        <!-- setting the Name key property in the base class would have been the right choice, but it would have made the disocvery process more complex so I moved back the name property to the single classes-->
-        <ClassType ID="QND.OMS.Backup.Base" Base="System!System.ApplicationComponent" Accessibility="Internal" Abstract="true" Hosted="false" Singleton="false">
-          <Property ID="Id" Key="false" Type="string" MaxLength="512" />
-          <Property ID="Type" Key="false" Type="string" />
+        <!--
+        we can include sku properties if needed
+        {
+    "location": "westeurope",
+    "name": "backupARMLabRE",
+    "etag": "94579bce-806c-4fe4-9267-0df9960406eb",
+    "properties": {
+        "provisioningState": "Succeeded"
+    },
+    "id": "/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE",
+    "type": "Microsoft.RecoveryServices/vaults",
+    "sku": {
+        "name": "RS0",
+        "tier": "Standard"
+    }
+}
+        -->
+        <ClassType ID="QND.OMS.Backup.Vault" Base="QNDA!QND.OMS.GenericService" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">       
         </ClassType>
-        
-        <ClassType ID="QND.OMS.Backup.Vault" Base="QND.OMS.Backup.Base" Accessibility="Internal" Abstract="false" Hosted="true" Singleton="false">
-          <Property ID="Name" Key="true" Type="string" />
-          <Property ID="Location" Key="false" Type="string" />
-          <Property ID="ResourceGroup" Key="false" Type="string" />
-          <!-- included even if we have an hosting relationship to make easier some type of query -->
-          <Property ID="Subscription" Key="false" Type="string" />
-          <Property ID="Sku" Key="false" Type="string" />
+        <ClassType ID="QND.OMS.Recovery.Vault" Base="QNDA!QND.OMS.GenericService" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          <Property ID="StorageType" Key="false" Type="string"/>
+          <Property ID="SkuName" Key="false" Type="string"/>
+          <Property ID="SkuTier" Key="false" Type="string"/>
         </ClassType>
-
-        <ClassType ID="QND.OMS.Backup.Container" Base="QND.OMS.Backup.Base" Accessibility="Internal" Abstract="false" Hosted="true" Singleton="false">
-          <Property ID="Name" Key="true" Type="string" />
-          <Property ID="ContainerType" Key="false" Type="string" />
-        </ClassType>
-
-        <ClassType ID="QND.OMS.Backup.ProtectedItem" Base="QND.OMS.Backup.Base" Accessibility="Internal" Abstract="false" Hosted="true" Singleton="false">
-          <Property ID="Name" Key="true" Type="string" />
-          <Property ID="ItemType" Key="false" Type="string" />
-          <Property ID="PolicyName" Key="false" Type="string" />
-        </ClassType>
-      
-      </ClassTypes>
-      <RelationshipTypes>
-        <RelationshipType ID="QND.OMS.Backup.SubscriptionContainsVault" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
-          <Source ID="Subscription" Type="OMS!QND.OMS.Azure.Subscription"/>
-          <Target ID="Vault" Type="QND.OMS.Backup.Vault"/>
-        </RelationshipType>
-        <RelationshipType ID="QND.OMS.Backup.VaultContainsContainer" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
-          <Source ID="Vault" Type="QND.OMS.Backup.Vault"/>
-          <Target ID="Container" Type="QND.OMS.Backup.Container"/>
-        </RelationshipType>
-        <RelationshipType ID="QND.OMS.Backup.ContainerContainsItem" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
-          <Source ID="Container" Type="QND.OMS.Backup.Container"/>
-          <Target ID="Item" Type="QND.OMS.Backup.ProtectedItem"/>
-        </RelationshipType>        
-      </RelationshipTypes>      
+      </ClassTypes>      
     </EntityTypes>
   </TypeDefinitions>
   <Monitoring>
     <Discoveries>
-        <Discovery ID="QND.OMS.Backup.Vault.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="OMS!QND.OMS.Azure.Subscription">
+        <Discovery ID="QND.OMS.Backup.Vault.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService">
           <Category>Discovery</Category>
           <DiscoveryTypes>
-            <DiscoveryClass TypeID="QND.OMS.Backup.Vault" />
-            <DiscoveryClass TypeID="QND.OMS.Backup.Container" />
-            <DiscoveryClass TypeID="QND.OMS.Backup.ProtectedItem" />            
+            <DiscoveryClass TypeID="QND.OMS.Backup.Vault" />          
           </DiscoveryTypes>
-          <DataSource ID="DS" TypeID="QND.OMS.Backup.Discovery.DS">
-            <TraceLevel>2</TraceLevel>
-            <IntervalSeconds>28800</IntervalSeconds>
+          <DataSource ID="DS" TypeID="QNDA!QND.OMS.ArmService.SeedDiscoverywApi.DS">
+            <IntervalSeconds>507</IntervalSeconds>
             <SyncTime></SyncTime>
-            <TimeoutSeconds>900</TimeoutSeconds>
-            <TenantADName>$Target/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
-            <SubscriptionId>$Target/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Id$</SubscriptionId>
-            <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
-            <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
-            <ExcludedVaultsList></ExcludedVaultsList>
+            <ApiVersion>2015-03-15</ApiVersion>
+            <AzureType>microsoft.backup/BackupVault</AzureType>
+            <ClassId>$MPElement[Name='QND.OMS.Backup.Vault']$</ClassId>
           </DataSource>
         </Discovery>
+      <Discovery ID="QND.OMS.Recovery.Vault.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.Recovery.Vault" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QNDA!QND.OMS.ArmService.SeedDiscoverywApi.DS">
+          <IntervalSeconds>517</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <ApiVersion>2016-05-01</ApiVersion>
+          <AzureType>Microsoft.RecoveryServices/vaults</AzureType>
+          <ClassId>$MPElement[Name='QND.OMS.Recovery.Vault']$</ClassId>
+        </DataSource>
+      </Discovery>
     </Discoveries>
   </Monitoring>
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
 
-<!-- QND.OMS.Backup.Base-->
-        <DisplayString ElementID="QND.OMS.Backup.Base">
-          <Name>QND - OMS Backup Base class</Name>
-          <Description>Base class for OMS Backup artifacts</Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.Base" SubElementID="Id">
-          <Name>Id</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.Base" SubElementID="Type">
-          <Name>Type</Name>
-          <Description></Description>
-        </DisplayString>
-
 <!-- QND.OMS.Backup.Vault-->
         <DisplayString ElementID="QND.OMS.Backup.Vault">
           <Name>QND - OMS Backup Vault</Name>
           <Description></Description>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.Vault" SubElementID="Name">
-          <Name>Name</Name>
+<!-- QND.OMS.Recovery.Vault -->
+        <DisplayString ElementID="QND.OMS.Recovery.Vault">
+          <Name>QND - OMS Recovery Services Vault</Name>
           <Description></Description>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.Vault" SubElementID="Location">
-          <Name>Azure Datacenter</Name>
+        <DisplayString ElementID="QND.OMS.Recovery.Vault" SubElementID="SkuName">
+          <Name>Sku Name</Name>
           <Description></Description>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.Vault" SubElementID="ResourceGroup">
-          <Name>Resource Group</Name>
+        <DisplayString ElementID="QND.OMS.Recovery.Vault" SubElementID="SkuTier">
+          <Name>Sku Tier</Name>
           <Description></Description>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.Vault" SubElementID="Subscription">
-          <Name>Azure Subscription</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.Vault" SubElementID="Sku">
-          <Name>Sku</Name>
+        <DisplayString ElementID="QND.OMS.Recovery.Vault" SubElementID="StorageType">
+          <Name>Storage Type</Name>
           <Description></Description>
         </DisplayString>
 
-<!-- QND.OMS.Backup.Conatiner -->
-        <DisplayString ElementID="QND.OMS.Backup.Container">
-          <Name>QND - OMS Backup Container</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.Container" SubElementID="Name">
-          <Name>Name</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.Container" SubElementID="ContainerType">
-          <Name>Container Type</Name>
-          <Description></Description>
-        </DisplayString>   
-        
-<!-- QND.OMS.Backup.Item -->
-        <DisplayString ElementID="QND.OMS.Backup.ProtectedItem">
-          <Name>QND - OMS Backup Item</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.ProtectedItem" SubElementID="Name">
-          <Name>Name</Name>
-          <Description></Description>
-        </DisplayString>        
-        <DisplayString ElementID="QND.OMS.Backup.ProtectedItem" SubElementID="ItemType">
-          <Name>Item Type</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.ProtectedItem" SubElementID="PolicyName">
-          <Name>Protection Policy Name</Name>
-          <Description></Description>
-        </DisplayString>        
-
-<!-- Relkationships -->
-        <DisplayString ElementID="QND.OMS.Backup.SubscriptionContainsVault">
-          <Name>QND - Azure Subscription Contains Backup Vault</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.VaultContainsContainer">
-          <Name>QND - OMS Backup Vault contains Backup Container</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Backup.ContainerContainsItem">
-          <Name>QND - OMS Backup Container contains Backup Protected Item</Name>
-          <Description></Description>
-        </DisplayString>
 
         <!-- discoveries -->        
         <DisplayString ElementID="QND.OMS.Backup.Vault.Discovery">
-          <Name>QND - OMS Backup Vault global discovery</Name>
+          <Name>QND - OMS Backup Vault (SM) discovery</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Recovery.Vault.Discovery">
+          <Name>QND - OMS Recovery Services Vault discovery</Name>
         </DisplayString>
       </DisplayStrings>
       

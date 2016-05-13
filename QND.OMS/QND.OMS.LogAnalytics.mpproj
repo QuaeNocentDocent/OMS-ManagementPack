@@ -58,7 +58,7 @@
     <ManagementPackReference Include="QND.AzureMPIntegration">
       <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\AzureMPIntegration\bin\Debug\QND.AzureMPIntegration.mpb</HintPath>
       <Alias>QNDA</Alias>
-      <MinVersion>2.0.0.11</MinVersion>
+      <MinVersion>2.0.0.21</MinVersion>
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="System.AdminItem.Library">

@@ -1,5 +1,5 @@
 ﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><Monitoring>
-    <Monitors>
+    <Monitors>      
       <UnitMonitor ID="QND.OMS.Backup.Policy.Age.Monitor" Accessibility="Internal" Enabled="true" Target="QND.OMS.Backup.Agent.Policy" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Backup.Policy.Age.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.Backup.Policy.Age.Monitor.AlertMessage">
@@ -50,6 +50,11 @@
           <ThresholdSizeGB>20</ThresholdSizeGB>
         </Configuration>
       </UnitMonitor>
+
+      <DependencyMonitor ID="QND.OMS.Backup.Agent.Depends.Policy.DM" Accessibility="Internal" Enabled="true" Target="QND.OMS.Backup.Agent" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" RelationshipType="QND.OMS.BackupAgentHostsPolicy" MemberMonitor="QND.OMS.Backup.Policy.Age.Monitor">
+        <Category>AvailabilityHealth</Category>
+        <Algorithm>WorstOf</Algorithm>
+      </DependencyMonitor>
     </Monitors>
   </Monitoring><Presentation>
     <StringResources>
@@ -90,6 +95,10 @@
         <DisplayString ElementID="QND.OMS.Backup.Size.Monitor" SubElementID="WithinLimits">
           <Name>WithinLimits</Name>
           <Description>Within Limits</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Backup.Agent.Depends.Policy.DM">
+          <Name>Policy Status</Name>
+          <Description>Description for new dependency monitor.</Description>
         </DisplayString>
       </DisplayStrings>
     </LanguagePack>

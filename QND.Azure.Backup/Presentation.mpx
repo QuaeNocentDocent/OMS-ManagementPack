@@ -227,7 +227,7 @@
           </Presentation>
           <Target />
         </View>
-        <View ID="QND.OMS.Backup.ContainerState.View" Accessibility="Public" Enabled="true" Target="QND.OMS.Backup.Container" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <View ID="QND.OMS.Recovery.VaultState.View" Accessibility="Public" Enabled="true" Target="QND.OMS.Recovery.Vault" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
           <Category>Operations</Category>
           <Criteria>
             <InMaintenanceMode>false</InMaintenanceMode>
@@ -235,7 +235,36 @@
           <Presentation>
             <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
               <Name>State</Name>
-              <Id>QND.OMS.Backup.Container</Id>
+              <Id>QND.OMS.Recovery.Vault</Id>
+            </ColumnInfo>
+            <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+              <Name>Maintenance Mode</Name>
+              <Id>InMaintenanceMode</Id>
+            </ColumnInfo>
+            <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+              <Name>Name</Name>
+              <Id>Name</Id>
+            </ColumnInfo>
+            <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+              <Name>Path</Name>
+              <Id>Path</Id>
+            </ColumnInfo>
+            <ColumnInfo Index="4" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+              <Name>Display Name</Name>
+              <Id>System.Entity/DisplayName</Id>
+            </ColumnInfo>
+          </Presentation>
+          <Target />
+        </View>        
+        <View ID="QND.OMS.Recovery.Vault.ContainerState.View" Accessibility="Public" Enabled="true" Target="QND.OMS.Recovery.Vault.Container" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+          <Category>Operations</Category>
+          <Criteria>
+            <InMaintenanceMode>false</InMaintenanceMode>
+          </Criteria>
+          <Presentation>
+            <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
+              <Name>State</Name>
+              <Id>QND.OMS.Recovery.Vault.Container</Id>
             </ColumnInfo>
             <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
               <Name>Maintenance Mode</Name>
@@ -256,7 +285,7 @@
           </Presentation>
           <Target />
         </View>
-        <View ID="QND.OMS.Backup.ProtectedItemState.View" Accessibility="Public" Enabled="true" Target="QND.OMS.Backup.ProtectedItem" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <View ID="QND.OMS.Recovery.Vault.ProtectedItemState.View" Accessibility="Public" Enabled="true" Target="QND.OMS.Recovery.Vault.ProtectedItem" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
           <Category>Operations</Category>
           <Criteria>
             <InMaintenanceMode>false</InMaintenanceMode>
@@ -264,7 +293,7 @@
           <Presentation>
             <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
               <Name>State</Name>
-              <Id>QND.OMS.Backup.ProtectedItem</Id>
+              <Id>QND.OMS.Recovery.Vault.ProtectedItem</Id>
             </ColumnInfo>
             <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
               <Name>Maintenance Mode</Name>
@@ -288,7 +317,7 @@
       </Views>
 
     <Folders>
-      <Folder ID="QND.OMS.Backup.Folder" ParentFolder="OMS!QND.OMS.Folders" Accessibility="Public"/>
+      <Folder ID="QND.OMS.Backup.Folder" ParentFolder="QNDA!QND.OMS.Folders" Accessibility="Public"/>
     </Folders>
     <FolderItems>
       
@@ -302,8 +331,9 @@
       <FolderItem ID="QND.OMS.Backup.Alert.FldrItem" ElementID="QND.OMS.Backup.Alert.View" Folder="QND.OMS.Backup.Folder" />
 
       <FolderItem ID="QND.OMS.Backup.VaultState.FldrItem" ElementID="QND.OMS.Backup.VaultState.View" Folder="QND.OMS.Backup.Folder" />
-      <FolderItem ID="QND.OMS.Backup.ContainerState.FldrItem" ElementID="QND.OMS.Backup.ContainerState.View" Folder="QND.OMS.Backup.Folder" />
-      <FolderItem ID="QND.OMS.Backup.ProtectedItemState.FldrItem" ElementID="QND.OMS.Backup.ProtectedItemState.View" Folder="QND.OMS.Backup.Folder" />
+      <FolderItem ID="QND.OMS.Recovery.VaultState.FldrItem" ElementID="QND.OMS.Recovery.VaultState.View" Folder="QND.OMS.Backup.Folder" />
+      <FolderItem ID="QND.OMS.Recovery.Vault.ContainerState.FldrItem" ElementID="QND.OMS.Recovery.Vault.ContainerState.View" Folder="QND.OMS.Backup.Folder" />
+      <FolderItem ID="QND.OMS.Recovery.Vault.ProtectedItemState.FldrItem" ElementID="QND.OMS.Recovery.Vault.ProtectedItemState.View" Folder="QND.OMS.Backup.Folder" />
 
     </FolderItems>
     
@@ -326,16 +356,20 @@
         </DisplayString>
 
         <DisplayString ElementID="QND.OMS.Backup.VaultState.View">
-          <Name>Backup Vaults State</Name>
+          <Name>Backup Vaults State (legacy to migrate)</Name>
           <Description></Description>
         </DisplayString>
 
-        <DisplayString ElementID="QND.OMS.Backup.ContainerState.View">
-          <Name>Backup Containers State</Name>
+        <DisplayString ElementID="QND.OMS.Recovery.VaultState.View">
+          <Name>Recovery Vaults State</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Recovery.Vault.ContainerState.View">
+          <Name>Recovery Containers State</Name>
           <Description></Description>
         </DisplayString>
 
-        <DisplayString ElementID="QND.OMS.Backup.ProtectedItemState.View">
+        <DisplayString ElementID="QND.OMS.Recovery.Vault.ProtectedItemState.View">
           <Name>Protected Items State</Name>
           <Description></Description>
         </DisplayString>

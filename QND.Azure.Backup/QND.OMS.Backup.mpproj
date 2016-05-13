@@ -30,6 +30,9 @@
     <AssemblyOriginatorKeyFile />
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ContainerItemClass.mpx">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="KBArticles.mpx">
       <SubType>Code</SubType>
     </Compile>
@@ -45,21 +48,17 @@
     <Compile Include="Modules.mpx">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Monitors.mpx">
+    <Compile Include="MABMonitors.mpx">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MonitorTypes.mpx">
+    <Compile Include="MABModules.mpx">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Presentation.mpx">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="QND.OMS.Backup.WAB.mpx">
+    <Compile Include="MABClass.mpx">
       <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="AutoMonitors.mptg.mpx">
-      <SubType>Code</SubType>
-      <DependentUpon>AutoMonitors.mptg</DependentUpon>
     </Compile>
     <Compile Include="ItemMonitors.mpx">
       <SubType>Code</SubType>
@@ -78,10 +77,27 @@
       <MinVersion>7.0.8433.0</MinVersion>
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.MicrosoftAzure">
+      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\Microsoft.SystemCenter.MicrosoftAzure.mpb</HintPath>
+      <Alias>Azure</Alias>
+      <MinVersion>1.3.18.0</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.ServiceDesigner.Library">
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.ServiceDesigner.Library.mp</HintPath>
+      <Alias>MSSL</Alias>
+      <MinVersion>7.0.8433.0</MinVersion>
+    </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.Windows.Library">
       <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012\Microsoft.Windows.Library.mp</HintPath>
       <Alias>Windows</Alias>
       <MinVersion>7.5.8501.0</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="QND.AzureMPIntegration">
+      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\AzureMPIntegration\bin\Debug\QND.AzureMPIntegration.mpb</HintPath>
+      <Alias>QNDA</Alias>
+      <MinVersion>2.0.0.21</MinVersion>
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="System.AdminItem.Library">
@@ -125,16 +141,11 @@
     <Folder Include="Scripts" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Scripts\Discover-OMSAzureBackup.ps1" />
-    <EmbeddedResource Include="Scripts\Get-OMSBackupItemStatus.ps1" />
+    <EmbeddedResource Include="Scripts\Get-OMSRecoveryContainer.ps1" />
+    <EmbeddedResource Include="Scripts\Get-OMSRecoveryItemStatus.ps1" />
+    <EmbeddedResource Include="Scripts\Get-OMSRecoveryItems.ps1" />
     <EmbeddedResource Include="Scripts\OBPolicyDiscovery.ps1" />
     <EmbeddedResource Include="Scripts\WABStatus.ps1" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="AutoMonitors.mptg">
-      <SubType>Content</SubType>
-      <Generator>FragmentGenerator</Generator>
-    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>

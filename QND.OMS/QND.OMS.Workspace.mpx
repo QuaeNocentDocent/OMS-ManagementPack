@@ -6,6 +6,7 @@
         <!-- In this section, modify the attributes based on your needs. Ensure the
              Base attribute matches the application you are modeling.
              More information can be found in the Management Pack Development Kit: 
+             
              http://msdn.microsoft.com/en-us/library/ee533867.aspx -->
         <ClassType ID="QND.OMS.Workspace" Base="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
           <Property ID="OMSAPIVersion" Type="string"/>
@@ -21,11 +22,34 @@
         <Category>Discovery</Category>
         <DiscoveryTypes>
           <DiscoveryClass TypeID="QND.OMS.Workspace" />
-        </DiscoveryTypes>        
-        <DataSource ID="DS" TypeID="QND.OMS.Workspace.Discovery.DS">
-          <IntervalSeconds>307</IntervalSeconds>
-          <SyncTime />
-        </DataSource>        
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QNDA!QND.OMS.ArmService.SeedDiscovery.DS">
+          <IntervalSeconds>311</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <ApiVersion>2015-03-20</ApiVersion>
+          <AzureType>Microsoft.OperationalInsights/workspaces</AzureType>
+          <ClassId>$MPElement[Name="QND.OMS.Workspace"]$</ClassId>
+          <InstanceSettings>
+            <Settings>
+              <Setting>
+                <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Name>
+                <Value>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</Name>
+                <Value>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Name>
+                <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="QND.OMS.Workspace"]/OMSAPIVersion$</Name>
+                <Value>2015-03-20</Value>
+              </Setting>
+            </Settings>
+          </InstanceSettings>
+        </DataSource>
       </Discovery>
     </Discoveries>
     <Monitors>
@@ -90,6 +114,10 @@
              Descriptions are also helpful when the user is doing a search in the Console. -->
         <DisplayString ElementID="QND.OMS.Workspace">
           <Name>QND - OMS Workspace</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace" SubElementID="OMSAPIVersion">
+          <Name>OMS API Version</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Workspace.Discovery">

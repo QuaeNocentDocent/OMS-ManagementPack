@@ -235,12 +235,14 @@
 
           <xsd:element name="ResourceURI" type="xsd:string" />
           <xsd:element name="OMSAPIVersion" type="xsd:string" />
+          <xsd:element name="Tolerance" type="xsd:double" minOccurs="0" maxOccurs="1" default="0.5"/>
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="Tolerance" ParameterType="double" Selector="$Config/Tolerance$"/>
         </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
@@ -261,6 +263,7 @@
                 <AADPassword>$Config/AADPassword$</AADPassword>
                 <ResourceURI>$Config/ResourceURI$</ResourceURI>
                 <OMSAPIVersion>$Config/OMSAPIVersion$</OMSAPIVersion>
+                <Tolerance>$Config/Tolerance$</Tolerance>
               </ProbeAction>
             </MemberModules>
             <Composition>
@@ -1068,6 +1071,7 @@
               <AADPassword>$Config/AADPassword$</AADPassword>
               <ResourceURI>$Config/ResourceURI$</ResourceURI>
               <OMSAPIVersion>$Config/OMSAPIVersion$</OMSAPIVersion>
+              <Tolerance>$Config/Tolerance$</Tolerance>
             </DataSource>
             <ConditionDetection ID="InstanceFilter" TypeID="System!System.ExpressionFilter">
               <Expression>

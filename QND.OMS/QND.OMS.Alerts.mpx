@@ -38,7 +38,7 @@
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <OMSAPIVersion>2015-03-20</OMSAPIVersion>
+          <OMSAPIVersion>$Target/Property[Type="QND.OMS.Workspace"]/OMSAPIVersion$</OMSAPIVersion>
         </DataSource>
       </Discovery>    
     </Discoveries>
@@ -91,7 +91,7 @@
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <OMSAPIVersion>2015-03-20</OMSAPIVersion>
+          <OMSAPIVersion>$Target/Host/Property[Type="QND.OMS.Workspace"]/OMSAPIVersion$</OMSAPIVersion>
           <Tolerance>0.5</Tolerance>
           <ScheduleId>$Target/Property[Type="QND.OMS.AlertRule"]/ScheduleId$</ScheduleId>
         </Configuration>

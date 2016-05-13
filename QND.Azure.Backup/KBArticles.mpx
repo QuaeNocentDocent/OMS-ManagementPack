@@ -57,105 +57,8 @@
           </MamlContent>
         </KnowledgeArticle>        
 
-        <KnowledgeArticle ElementID="QND.OMS.Backup.Vault.Connectivity.Monitor">
-          <MamlContent>
-            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
-              <maml:title>Summary</maml:title>
-              <maml:para>The monitor check for ARM API reachability for a specific backup vault. It executes a simple query using the defined credentials for the tenant the workspace is in. Possibile states</maml:para>
-              <maml:list>
-                <maml:listItem>
-                  <maml:para>Healthy: the connection is available.</maml:para>
-                </maml:listItem>
-                <maml:listItem>
-                  <maml:para>Error: resource pool servers cannot reach the ARM api for the backup vault. Monitor is not possible.</maml:para>
-                </maml:listItem>
-              </maml:list>
-              <maml:para>For more info see <maml:navigationLink><maml:linkText>GitHub Wiki</maml:linkText><maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Backup-Connectivity-Monitor" /></maml:navigationLink></maml:para>              
-            </maml:section>
-            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
-              <maml:title>Configuration</maml:title>
-              <maml:para>The following options can be configured on this monitor:</maml:para>
-              <maml:table>
-                <maml:row>
-                  <maml:entry>
-                    <maml:para>Option</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>Definition</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>Default</maml:para>
-                  </maml:entry>
-                </maml:row>
-                <maml:row>
-                  <maml:entry>
-                    <maml:para>IntervalSeconds</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>Amount of time in seconds between checks of the connectivity status</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>3611 seconds</maml:para>
-                  </maml:entry>
-                </maml:row>
-                <maml:row>
-                  <maml:entry>
-                    <maml:para>Sync Time</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>Optional time wihtin the hour to sync the check exectuion to</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para></maml:para>
-                  </maml:entry>
-                </maml:row>
-                <maml:row>
-                  <maml:entry>
-                    <maml:para>TimeoutSeconds</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>Amount of time in seconds to wait for script execution and hance for API Search response</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>30 seconds</maml:para>
-                  </maml:entry>
-                </maml:row>
-                <maml:row>
-                  <maml:entry>
-                    <maml:para>TraceLevel</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>Debugging level (0-5) anything above 2 will log clear text password in eventlog</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>2</maml:para>
-                  </maml:entry>
-                </maml:row>
-              </maml:table>
-            </maml:section>
-            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
-              <maml:title>Causes</maml:title>
-              <maml:para>There three known causes of errors</maml:para>
-              <maml:list>
-                <maml:listItem>
-                  <maml:para>OMS service has issues</maml:para>
-                </maml:listItem>
-                <maml:listItem>
-                  <maml:para>Your proxy /connectivity infrastructure to the cloud has issue</maml:para>
-                </maml:listItem>
-                <maml:listItem>
-                  <maml:para>The runas account used to connect to the workspace is no longer valid / has an expired password</maml:para>
-                </maml:listItem>
-              </maml:list>
-              <maml:para>The alert context tries to give a specific cause for any issue</maml:para>
-            </maml:section>
-            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
-              <maml:title>Resolutions</maml:title>
-              <maml:para>Check the three known causes and fix any issue</maml:para>
-              </maml:section>
-          </MamlContent>
-        </KnowledgeArticle>
-        <KnowledgeArticle ElementID="QND.OMS.Backup.Item.LastJobStatus.Monitor">
+        
+        <KnowledgeArticle ElementID="QND.OMS.Recovery.Item.LastJobStatus.Monitor">
           <MamlContent>
             <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
               <maml:title>Summary</maml:title>
@@ -179,7 +82,7 @@
             </maml:section>
           </MamlContent>
         </KnowledgeArticle>
-        <KnowledgeArticle ElementID="QND.OMS.Backup.Item.JobFailureRate.Monitor">
+        <KnowledgeArticle ElementID="QND.OMS.Recovery.Item.JobFailureRate.Monitor">
           <MamlContent>
             <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
               <maml:title>Summary</maml:title>
@@ -207,7 +110,7 @@
         </KnowledgeArticle>
         
         
-        <KnowledgeArticle ElementID="QND.OMS.Backup.Item.RecoveryPointAge.Monitor">
+        <KnowledgeArticle ElementID="QND.OMS.Recovery.Item.RecoveryPointAge.Monitor">
           <MamlContent>
             <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
               <maml:title>Summary</maml:title>

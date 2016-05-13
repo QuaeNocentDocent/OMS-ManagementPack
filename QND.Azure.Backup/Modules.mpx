@@ -1,34 +1,85 @@
 ﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <TypeDefinitions>
     <ModuleTypes>
-      <DataSourceModuleType ID="QND.OMS.Backup.Discovery.DS" Accessibility="Internal" Batching="false">
+      <DataSourceModuleType ID="QND.OMS.Recovery.Container.Discovery.DS" Accessibility="Internal" Batching="false">
         <Configuration>
-          <xsd:element name="TraceLevel" type="xsd:integer" />
-          <xsd:element name="IntervalSeconds" type="xsd:integer" />
-          <xsd:element name="SyncTime" type="xsd:string" />
-          <xsd:element name="TimeoutSeconds" type="xsd:integer" />
-          <xsd:element name="TenantADName" type="xsd:string" />
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="600" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" default="2"/>
+          <xsd:element name="ClientId" type="xsd:string" />
           <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="ResourceGroupId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
           <xsd:element name="AADUserName" type="xsd:string" />
           <xsd:element name="AADPassword" type="xsd:string" />
-          <xsd:element name="ExcludedVaultsList" type="xsd:string" />
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="APIVersion" type="xsd:string" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
-          <OverrideableParameter ID="ExcludedVaultsList" Selector="$Config/ExcludedVaultsList$" ParameterType="string" />
+          <OverrideableParameter ID="APIVersion" Selector="$Config/APIVersion$" ParameterType="string" />
         </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
             <MemberModules>
-              <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.TimedPowerShell.DiscoveryProvider">
-                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
-                <SyncTime>$Config/SyncTime$</SyncTime>
-                <ScriptName>Discover-OMSAzureBackup.ps1</ScriptName>
+              <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.EventProvider">
+                <ComputerName></ComputerName>
+                <LogName>Operations Manager</LogName>
+                <AllowProxying>false</AllowProxying>
+                <Expression>
+                  <And>
+                    <Expression>
+                      <RegExExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                        </ValueExpression>
+                        <Operator>MatchesRegularExpression</Operator>
+                        <Pattern>1</Pattern>
+                      </RegExExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="Integer">EventLevel</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="Integer">4</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="String">PublisherName</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="String">OMS Discovery</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="String">RecoveryContainer</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+
+                  </And>
+                </Expression>
+              </DataSource>
+              <ProbeAction ID="Discover" TypeID="Windows!Microsoft.Windows.PowerShellDiscoveryProbe">
+                <ScriptName>Get-OMSManagedSystems.ps1</ScriptName>
                 <ScriptBody>
-                  $IncludeFileContent/Scripts/Discover-OMSAzureBackup.ps1$
+                  $IncludeFileContent/Scripts/Get-OMSRecoveryContainer.ps1$
                 </ScriptBody>
                 <Parameters>
                   <Parameter>
@@ -44,71 +95,248 @@
                     <Value>$Target/Id$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>TenantADName</Name>
-                    <Value>$Config/TenantADName$</Value>
+                    <Name>ClientId</Name>
+                    <Value>$Config/ClientId$</Value>
                   </Parameter>
                   <Parameter>
                     <Name>SubscriptionId</Name>
                     <Value>$Config/SubscriptionId$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>Username</Name>
+                    <Name>ResourceGroupId</Name>
+                    <Value>$Config/ResourceGroupId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Proxy</Name>
+                    <Value>$Config/Proxy$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>AuthBaseAddress</Name>
+                    <Value>$Config/AuthBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceBaseAddress</Name>
+                    <Value>$Config/ResourceBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADUsername</Name>
                     <Value>$Config/AADUserName$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>Password</Name>
+                    <Name>ADPassword</Name>
                     <Value>$Config/AADPassword$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>ExcludedVaults</Name>
-                    <Value>$Config/ExcludedVaultsList$</Value>
+                    <Name>ResourceURI</Name>
+                    <Value>$Config/ResourceURI$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>ProxyUrl</Name>
-                    <Value></Value>
+                    <Name>APIVersion</Name>
+                    <Value>$Config/APIVersion$</Value>
                   </Parameter>
                 </Parameters>
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
                 <StrictErrorHandling>false</StrictErrorHandling>
-                <!-- true only for Tasks -->
-              </DataSource>
+              </ProbeAction>
             </MemberModules>
             <Composition>
-              <Node ID="DS" />
+              <Node ID="Discover">
+                <Node ID="DS" />
+              </Node>
             </Composition>
           </Composite>
         </ModuleImplementation>
         <OutputType>System!System.Discovery.Data</OutputType>
       </DataSourceModuleType>
-      <DataSourceModuleType ID="QND.OMS.Backup.ItemStatus.DS" Accessibility="Public" Batching="false">
+      <DataSourceModuleType ID="QND.OMS.Recovery.ProtectedItem.Discovery.DS" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="600" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" default="2"/>
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="ResourceGroupId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="APIVersion" type="xsd:string" />
+          <xsd:element name="ContainerId" type="xsd:string" />          
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="APIVersion" Selector="$Config/APIVersion$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.EventProvider">
+                <ComputerName></ComputerName>
+                <LogName>Operations Manager</LogName>
+                <AllowProxying>false</AllowProxying>
+                <Expression>
+                  <And>
+                    <Expression>
+                      <RegExExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                        </ValueExpression>
+                        <Operator>MatchesRegularExpression</Operator>
+                        <Pattern>1</Pattern>
+                      </RegExExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="Integer">EventLevel</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="Integer">4</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="String">PublisherName</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="String">OMS Discovery</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="String">RecoveryItem</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+
+                  </And>
+                </Expression>
+              </DataSource>
+              <ProbeAction ID="Discover" TypeID="Windows!Microsoft.Windows.PowerShellDiscoveryProbe">
+                <ScriptName>Get-OMSRecoveryItems.ps1</ScriptName>
+                <ScriptBody>
+                  $IncludeFileContent/Scripts/Get-OMSRecoveryItems.ps1$
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SourceId</Name>
+                    <Value>$MPElement$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ManagedEntityId</Name>
+                    <Value>$Target/Id$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ClientId</Name>
+                    <Value>$Config/ClientId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SubscriptionId</Name>
+                    <Value>$Config/SubscriptionId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceGroupId</Name>
+                    <Value>$Config/ResourceGroupId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Proxy</Name>
+                    <Value>$Config/Proxy$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>AuthBaseAddress</Name>
+                    <Value>$Config/AuthBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceBaseAddress</Name>
+                    <Value>$Config/ResourceBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADUsername</Name>
+                    <Value>$Config/AADUserName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADPassword</Name>
+                    <Value>$Config/AADPassword$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceURI</Name>
+                    <Value>$Config/ResourceURI$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>APIVersion</Name>
+                    <Value>$Config/APIVersion$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ContainerId</Name>
+                    <Value>$Config/ContainerId$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="Discover">
+                <Node ID="DS" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
+            
+      <DataSourceModuleType ID="QND.OMS.Recovery.Vault.ItemStatus.DS" Accessibility="Public" Batching="false">
         <Configuration>
           <xsd:element name="IntervalSeconds" type="xsd:int" />
           <xsd:element name="SyncTime" type="xsd:string" />
 
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
-          <xsd:element name="TenantADName" type="xsd:string" />
-          <xsd:element name="VaultId" type="xsd:string" />
-          <xsd:element name="ItemId" type="xsd:string" />
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
           <xsd:element name="AADUserName" type="xsd:string" />
           <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="APIVersion" type="xsd:string" />
+          
           <xsd:element name="LastNJobs" type="xsd:int" />
           <xsd:element name="MaxFailures" type="xsd:int" />
           <xsd:element name="FailureCondition" type="xsd:string" />
-          <xsd:element name="MaxAgeHours" type="xsd:int" />
+          <xsd:element name="AutoMaxAgeHours" type="xsd:int" />
+          <xsd:element name="FixedMaxAgeHours" type="xsd:int" />
           <xsd:element name="LookbackDays" type="xsd:int" />
-          <xsd:element name="RunMode" type="xsd:string" />
+          <xsd:element name="Tolerance" type="xsd:double" minOccurs="0" maxOccurs="1" default="0.5"/>
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
-          
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="Tolerance" ParameterType="double" Selector="$Config/Tolerance$"/>
           <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$"/>
           <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$"/>
           <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$"/>
-          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
+          <OverrideableParameter ID="AutoMaxAgeHours" ParameterType="int" Selector="$Config/AutoMaxAgeHours$"/>
+          <OverrideableParameter ID="FixedMaxAgeHours" ParameterType="int" Selector="$Config/FixedMaxAgeHours$"/>
           <OverrideableParameter ID="LookbackDays" ParameterType="int" Selector="$Config/LookbackDays$"/>
         </OverrideableParameters>
         <ModuleImplementation>
@@ -118,21 +346,25 @@
                 <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
                 <SyncTime>$Config/SyncTime$</SyncTime>
               </DataSource>
-              <ProbeAction ID="Probe" TypeID="QND.OMS.Backup.ItemStatus.PT">
+              <ProbeAction ID="Probe" TypeID="QND.OMS.Recovery.Vault.ProtectedItemStatus.PT">
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
                 <TraceLevel>$Config/TraceLevel$</TraceLevel>
-                <TenantADName>$Config/TenantADName$</TenantADName>
-                <VaultId>$Config/VaultId$</VaultId>
-                <ItemId>$Config/ItemId$</ItemId>
+                <ClientId>$Config/ClientId$</ClientId>
+                <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+                <Proxy>$Config/Proxy$</Proxy>
+                <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+                <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
                 <AADUserName>$Config/AADUserName$</AADUserName>
                 <AADPassword>$Config/AADPassword$</AADPassword>
+                <ResourceURI>$Config/ResourceURI$</ResourceURI>
+                <APIVersion>$Config/APIVersion$</APIVersion>
                 <LastNJobs>$Config/LastNJobs$</LastNJobs>
                 <MaxFailures>$Config/MaxFailures$</MaxFailures>
                 <FailureCondition>$Config/FailureCondition$</FailureCondition>
-                <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
+                <AutoMaxAgeHours>$Config/AutoMaxAgeHours$</AutoMaxAgeHours>
+                <FixedMaxAgeHours>$Config/FixedMaxAgeHours$</FixedMaxAgeHours>
                 <LookbackDays>$Config/LookbackDays$</LookbackDays>
-                <RunMode>$Config/RunMode$</RunMode>
-              
+                <Tolerance>$Config/Tolerance$</Tolerance>              
             </ProbeAction>
             </MemberModules>
             <Composition>
@@ -144,38 +376,46 @@
         </ModuleImplementation>
         <OutputType>System!System.PropertyBagData</OutputType>
       </DataSourceModuleType>
-      <ProbeActionModuleType ID="QND.OMS.Backup.ItemStatus.PT" Accessibility="Public" Batching="false">
+      <ProbeActionModuleType ID="QND.OMS.Recovery.Vault.ProtectedItemStatus.PT" Accessibility="Public" Batching="false">
         <Configuration>
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
-          <xsd:element name="TenantADName" type="xsd:string" />
-          <xsd:element name="VaultId" type="xsd:string" />
-          <xsd:element name="ItemId" type="xsd:string" />          
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
           <xsd:element name="AADUserName" type="xsd:string" />
           <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="APIVersion" type="xsd:string" />
+          
           <xsd:element name="LastNJobs" type="xsd:int" />
           <xsd:element name="MaxFailures" type="xsd:int" />
           <xsd:element name="FailureCondition" type="xsd:string" />
-          <xsd:element name="MaxAgeHours" type="xsd:int" />
-          <xsd:element name="LookbackDays" type="xsd:int" />
-          <xsd:element name="RunMode" type="xsd:string" />
+          <xsd:element name="AutoMaxAgeHours" type="xsd:int" />
+          <xsd:element name="FixedMaxAgeHours" type="xsd:int" />
+          <xsd:element name="LookbackDays" type="xsd:int" />          
+          <xsd:element name="Tolerance" type="xsd:double" minOccurs="0" maxOccurs="1" default="0.5"/>
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="Tolerance" ParameterType="double" Selector="$Config/Tolerance$"/>
           <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$"/>
           <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$"/>
           <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$"/>
-          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
+          <OverrideableParameter ID="AutoMaxAgeHours" ParameterType="int" Selector="$Config/AutoMaxAgeHours$"/>
+          <OverrideableParameter ID="FixedMaxAgeHours" ParameterType="int" Selector="$Config/FixedMaxAgeHours$"/>
           <OverrideableParameter ID="LookbackDays" ParameterType="int" Selector="$Config/LookbackDays$"/>
         </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
             <MemberModules>
               <ProbeAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
-                <ScriptName>Get-OMSBackupItemStatus.ps1</ScriptName>
+                <ScriptName>Get-OMSRecoveryItemStatus.ps1</ScriptName>
                 <ScriptBody>
-                  $IncludeFileContent/Scripts/Get-OMSBackupItemStatus.ps1$
+                  $IncludeFileContent/Scripts/Get-OMSRecoveryItemStatus.ps1$
                 </ScriptBody>
                 <Parameters>
                   <Parameter>
@@ -183,29 +423,49 @@
                     <Value>$Config/TraceLevel$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>TenantADName</Name>
-                    <Value>$Config/TenantADName$</Value>
+                    <Name>clientId</Name>
+                    <Value>$Config/ClientId$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>VaultId</Name>
-                    <Value>$Config/VaultId$</Value>
+                    <Name>Subscription</Name>
+                    <Value>$Config/SubscriptionId$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>Username</Name>
+                    <Name>Proxy</Name>
+                    <Value>$Config/Proxy$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>AuthBaseAddress</Name>
+                    <Value>$Config/AuthBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceBaseAddress</Name>
+                    <Value>$Config/ResourceBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADUsername</Name>
                     <Value>$Config/AADUserName$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>Password</Name>
+                    <Name>ADPassword</Name>
                     <Value>$Config/AADPassword$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>ProxyUrl</Name>
-                    <Value></Value>
+                    <Name>resourceURI</Name>
+                    <Value>$Config/ResourceURI$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>APIVersion</Name>
+                    <Value>$Config/APIVersion$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Tolerance</Name>
+                    <Value>$Config/Tolerance$</Value>
                   </Parameter>
                   <Parameter>
                     <Name>LookbackDays</Name>
                     <Value>$Config/LookbackDays$</Value>
-                  </Parameter>                  
+                  </Parameter>
                   <Parameter>
                     <Name>LastNJobs</Name>
                     <Value>$Config/LastNJobs$</Value>
@@ -219,16 +479,16 @@
                     <Value>$Config/FailureCondition$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>MaxAgeHours</Name>
-                    <Value>$Config/MaxAgeHours$</Value>
+                    <Name>AutoMaxAgeHours</Name>
+                    <Value>$Config/AutoMaxAgeHours$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>ItemId</Name>
-                    <Value>$Config/ItemId$</Value>
+                    <Name>FixedMaxAgeHours</Name>
+                    <Value>$Config/FixedMaxAgeHours$</Value>
                   </Parameter>
-                  <Parameter>
-                    <Name>RunMode</Name>
-                    <Value>$Config/RunMode$</Value>
+                  <Parameter> <!-- this would need a separate parameter-->
+                    <Name>TimeoutSeconds</Name>
+                    <Value>$Config/TimeoutSeconds$</Value>
                   </Parameter>
                 </Parameters>
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
@@ -243,77 +503,79 @@
         </ModuleImplementation>
         <OutputType>System!System.PropertyBagData</OutputType>
         <InputType>System!System.BaseData</InputType>
-      </ProbeActionModuleType>
+      </ProbeActionModuleType>   
     </ModuleTypes>
     <MonitorTypes>
 
-      <UnitMonitorType ID="QND.OMS.Backup.LastJobStatus.MT" Accessibility="Public">
+      <UnitMonitorType ID="QND.OMS.Recovery.LastJobStatus.MT" Accessibility="Public">
         <MonitorTypeStates>
           <MonitorTypeState ID="Completed"/>
           <MonitorTypeState ID="Failed"/>
         </MonitorTypeStates>
         <Configuration>
+          <xsd:element name="ItemId" type="xsd:string" />
+
           <xsd:element name="IntervalSeconds" type="xsd:int" />
           <xsd:element name="SyncTime" type="xsd:string" />
 
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
-          <xsd:element name="TenantADName" type="xsd:string" />
-          <xsd:element name="VaultId" type="xsd:string" />
-          <xsd:element name="ItemId" type="xsd:string" />
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
           <xsd:element name="AADUserName" type="xsd:string" />
           <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="APIVersion" type="xsd:string" />
+
           <xsd:element name="LastNJobs" type="xsd:int" />
           <xsd:element name="MaxFailures" type="xsd:int" />
           <xsd:element name="FailureCondition" type="xsd:string" />
-          <xsd:element name="MaxAgeHours" type="xsd:int" />
-          <xsd:element name="LookbackDays" type="xsd:int" />        
+          <xsd:element name="AutoMaxAgeHours" type="xsd:int" />
+          <xsd:element name="FixedMaxAgeHours" type="xsd:int" />
+          <xsd:element name="LookbackDays" type="xsd:int" />
+          <xsd:element name="Tolerance" type="xsd:double" minOccurs="0" maxOccurs="1" default="0.5"/>
+
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
-
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="Tolerance" ParameterType="double" Selector="$Config/Tolerance$"/>
           <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$"/>
           <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$"/>
           <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$"/>
-          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
+          <OverrideableParameter ID="AutoMaxAgeHours" ParameterType="int" Selector="$Config/AutoMaxAgeHours$"/>
+          <OverrideableParameter ID="FixedMaxAgeHours" ParameterType="int" Selector="$Config/FixedMaxAgeHours$"/>
           <OverrideableParameter ID="LookbackDays" ParameterType="int" Selector="$Config/LookbackDays$"/>
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
-            <DataSource ID="DS" TypeID="QND.OMS.Backup.ItemStatus.DS">
+            <DataSource ID="DS" TypeID="QND.OMS.Recovery.Vault.ItemStatus.DS">
               <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
               <SyncTime>$Config/SyncTime$</SyncTime>
               <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
               <TraceLevel>$Config/TraceLevel$</TraceLevel>
-              <TenantADName>$Config/TenantADName$</TenantADName>
-              <VaultId>$Config/VaultId$</VaultId>
-              <!-- RunbookId is not used in this monitor -->
-              <ItemId></ItemId>
+              <ClientId>$Config/ClientId$</ClientId>
+              <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+              <Proxy>$Config/Proxy$</Proxy>
+              <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+              <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
               <AADUserName>$Config/AADUserName$</AADUserName>
               <AADPassword>$Config/AADPassword$</AADPassword>
+              <ResourceURI>$Config/ResourceURI$</ResourceURI>
+              <APIVersion>$Config/APIVersion$</APIVersion>
               <LastNJobs>$Config/LastNJobs$</LastNJobs>
               <MaxFailures>$Config/MaxFailures$</MaxFailures>
               <FailureCondition>$Config/FailureCondition$</FailureCondition>
-              <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
-              <LookbackDays>$Config/LookbackDays$</LookbackDays>            
-              <RunMode>Data</RunMode>
+              <AutoMaxAgeHours>$Config/AutoMaxAgeHours$</AutoMaxAgeHours>
+              <FixedMaxAgeHours>$Config/FixedMaxAgeHours$</FixedMaxAgeHours>
+              <LookbackDays>$Config/LookbackDays$</LookbackDays>
+              <Tolerance>$Config/Tolerance$</Tolerance>
             </DataSource>
-            <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Equal</Operator>
-                  <ValueExpression>
-                    <Value Type="String">Data</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
             <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
               <Expression>
                     <SimpleExpression>
@@ -342,7 +604,7 @@
               <Expression>
                 <RegExExpression>
                   <ValueExpression>
-                    <XPathQuery Type="Double">Property[@Name='LastJobStatus']</XPathQuery>
+                    <XPathQuery Type="String">Property[@Name='LastJobStatus']</XPathQuery>
                   </ValueExpression>
                   <Operator>MatchesRegularExpression</Operator>
                   <Pattern>$Config/FailureCondition$</Pattern>
@@ -354,91 +616,89 @@
             <RegularDetection MonitorTypeStateID="Completed">
               <Node ID="HealthyCD">
                 <Node ID="Filter">
-                  <Node ID="DataFilter">
                 <Node ID="DS" />
-                  </Node>
                 </Node>
               </Node>
             </RegularDetection>
             <RegularDetection MonitorTypeStateID="Failed">
               <Node ID="UnHealthyCD">
                 <Node ID="Filter">
-                  <Node ID="DataFilter">
                     <Node ID="DS"></Node>
-                  </Node>
                 </Node>
               </Node>
             </RegularDetection>
           </RegularDetections>
         </MonitorImplementation>
       </UnitMonitorType>
-      <UnitMonitorType ID="QND.OMS.Backup.LastRecoveryPointAge.MT" Accessibility="Public">
+      <UnitMonitorType ID="QND.OMS.Recovery.LastRecoveryPointAge.MT" Accessibility="Public">
               <MonitorTypeStates>
                 <MonitorTypeState ID="UpToDate"/>
                 <MonitorTypeState ID="Obsolete"/>
               </MonitorTypeStates>
               <Configuration>
+
+                <xsd:element name="ItemId" type="xsd:string" />
                 <xsd:element name="IntervalSeconds" type="xsd:int" />
                 <xsd:element name="SyncTime" type="xsd:string" />
-
+                
                 <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
                 <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
-                <xsd:element name="TenantADName" type="xsd:string" />
-                <xsd:element name="VaultId" type="xsd:string" />
-                <xsd:element name="ItemId" type="xsd:string" />
+                <xsd:element name="ClientId" type="xsd:string" />
+                <xsd:element name="SubscriptionId" type="xsd:string" />
+                <xsd:element name="Proxy" type="xsd:string" />
+                <xsd:element name="AuthBaseAddress" type="xsd:string" />
+                <xsd:element name="ResourceBaseAddress" type="xsd:string" />
                 <xsd:element name="AADUserName" type="xsd:string" />
                 <xsd:element name="AADPassword" type="xsd:string" />
+                <xsd:element name="ResourceURI" type="xsd:string" />
+                <xsd:element name="APIVersion" type="xsd:string" />
+
                 <xsd:element name="LastNJobs" type="xsd:int" />
                 <xsd:element name="MaxFailures" type="xsd:int" />
                 <xsd:element name="FailureCondition" type="xsd:string" />
-                <xsd:element name="MaxAgeHours" type="xsd:int" />
-                <xsd:element name="LookbackDays" type="xsd:int" />        
+                <xsd:element name="AutoMaxAgeHours" type="xsd:int" />
+                <xsd:element name="FixedMaxAgeHours" type="xsd:int" />
+                <xsd:element name="LookbackDays" type="xsd:int" />
+                <xsd:element name="Tolerance" type="xsd:double" minOccurs="0" maxOccurs="1" default="0.5"/>
+       
               </Configuration>
               <OverrideableParameters>
                 <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
                 <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
-
                 <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
                 <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+                <OverrideableParameter ID="Tolerance" ParameterType="double" Selector="$Config/Tolerance$"/>
                 <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$"/>
                 <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$"/>
                 <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$"/>
-                <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
+                <OverrideableParameter ID="AutoMaxAgeHours" ParameterType="int" Selector="$Config/AutoMaxAgeHours$"/>
+                <OverrideableParameter ID="FixedMaxAgeHours" ParameterType="int" Selector="$Config/FixedMaxAgeHours$"/>
                 <OverrideableParameter ID="LookbackDays" ParameterType="int" Selector="$Config/LookbackDays$"/>
               </OverrideableParameters>
               <MonitorImplementation>
                 <MemberModules>
-                  <DataSource ID="DS" TypeID="QND.OMS.Backup.ItemStatus.DS">
+                  <DataSource ID="DS" TypeID="QND.OMS.Recovery.Vault.ItemStatus.DS">
                     <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
                     <SyncTime>$Config/SyncTime$</SyncTime>
                     <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
                     <TraceLevel>$Config/TraceLevel$</TraceLevel>
-                    <TenantADName>$Config/TenantADName$</TenantADName>
-                    <VaultId>$Config/VaultId$</VaultId>
-                    <!-- RunbookId is not used in this monitor -->
-                    <ItemId></ItemId>
+                    <ClientId>$Config/ClientId$</ClientId>
+                    <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+                    <Proxy>$Config/Proxy$</Proxy>
+                    <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+                    <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
                     <AADUserName>$Config/AADUserName$</AADUserName>
                     <AADPassword>$Config/AADPassword$</AADPassword>
+                    <ResourceURI>$Config/ResourceURI$</ResourceURI>
+                    <APIVersion>$Config/APIVersion$</APIVersion>
                     <LastNJobs>$Config/LastNJobs$</LastNJobs>
                     <MaxFailures>$Config/MaxFailures$</MaxFailures>
                     <FailureCondition>$Config/FailureCondition$</FailureCondition>
-                    <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
-                    <LookbackDays>$Config/LookbackDays$</LookbackDays>            
-                    <RunMode>Data</RunMode>
+                    <AutoMaxAgeHours>$Config/AutoMaxAgeHours$</AutoMaxAgeHours>
+                    <FixedMaxAgeHours>$Config/FixedMaxAgeHours$</FixedMaxAgeHours>
+                    <LookbackDays>$Config/LookbackDays$</LookbackDays>
+                    <Tolerance>$Config/Tolerance$</Tolerance>
                   </DataSource>
-                  <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
-                    <Expression>
-                      <SimpleExpression>
-                        <ValueExpression>
-                          <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
-                        </ValueExpression>
-                        <Operator>Equal</Operator>
-                        <ValueExpression>
-                          <Value Type="String">Data</Value>
-                        </ValueExpression>
-                      </SimpleExpression>
-                    </Expression>
-                  </ConditionDetection>
                   <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
                     <Expression>
                           <SimpleExpression>
@@ -483,18 +743,14 @@
                   <RegularDetection MonitorTypeStateID="UpToDate">
                     <Node ID="HealthyCD">
                       <Node ID="Filter">
-                        <Node ID="DataFilter">
                       <Node ID="DS" />
-                        </Node>
                       </Node>
                     </Node>
                   </RegularDetection>
                   <RegularDetection MonitorTypeStateID="Obsolete">
                     <Node ID="UnHealthyCD">
                       <Node ID="Filter">
-                        <Node ID="DataFilter">
                           <Node ID="DS"></Node>
-                        </Node>
                       </Node>
                     </Node>
                   </RegularDetection>
@@ -507,67 +763,67 @@
           <MonitorTypeState ID="OK"/>
         </MonitorTypeStates>
         <Configuration>
+          <xsd:element name="ItemId" type="xsd:string" />
           <xsd:element name="IntervalSeconds" type="xsd:int" />
           <xsd:element name="SyncTime" type="xsd:string" />
 
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
-          <xsd:element name="TenantADName" type="xsd:string" />
-          <xsd:element name="VaultId" type="xsd:string" />
-          <xsd:element name="ItemId" type="xsd:string" />
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
           <xsd:element name="AADUserName" type="xsd:string" />
           <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="APIVersion" type="xsd:string" />
+
           <xsd:element name="LastNJobs" type="xsd:int" />
           <xsd:element name="MaxFailures" type="xsd:int" />
           <xsd:element name="FailureCondition" type="xsd:string" />
-          <xsd:element name="MaxAgeHours" type="xsd:int" />
+          <xsd:element name="AutoMaxAgeHours" type="xsd:int" />
+          <xsd:element name="FixedMaxAgeHours" type="xsd:int" />
           <xsd:element name="LookbackDays" type="xsd:int" />
+          <xsd:element name="Tolerance" type="xsd:double" minOccurs="0" maxOccurs="1" default="0.5"/>
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
-
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="Tolerance" ParameterType="double" Selector="$Config/Tolerance$"/>
           <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$"/>
           <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$"/>
           <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$"/>
-          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
+          <OverrideableParameter ID="AutoMaxAgeHours" ParameterType="int" Selector="$Config/AutoMaxAgeHours$"/>
+          <OverrideableParameter ID="FixedMaxAgeHours" ParameterType="int" Selector="$Config/FixedMaxAgeHours$"/>
           <OverrideableParameter ID="LookbackDays" ParameterType="int" Selector="$Config/LookbackDays$"/>
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
-            <DataSource ID="DS" TypeID="QND.OMS.Backup.ItemStatus.DS">
+            <DataSource ID="DS" TypeID="QND.OMS.Recovery.Vault.ItemStatus.DS">
               <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
               <SyncTime>$Config/SyncTime$</SyncTime>
               <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
               <TraceLevel>$Config/TraceLevel$</TraceLevel>
-              <TenantADName>$Config/TenantADName$</TenantADName>
-              <VaultId>$Config/VaultId$</VaultId>
-              <!-- RunbookId is not used in this monitor -->
-              <ItemId></ItemId>
+              <ClientId>$Config/ClientId$</ClientId>
+              <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+              <Proxy>$Config/Proxy$</Proxy>
+              <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+              <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
               <AADUserName>$Config/AADUserName$</AADUserName>
               <AADPassword>$Config/AADPassword$</AADPassword>
+              <ResourceURI>$Config/ResourceURI$</ResourceURI>
+              <APIVersion>$Config/APIVersion$</APIVersion>
               <LastNJobs>$Config/LastNJobs$</LastNJobs>
               <MaxFailures>$Config/MaxFailures$</MaxFailures>
               <FailureCondition>$Config/FailureCondition$</FailureCondition>
-              <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
+              <AutoMaxAgeHours>$Config/AutoMaxAgeHours$</AutoMaxAgeHours>
+              <FixedMaxAgeHours>$Config/FixedMaxAgeHours$</FixedMaxAgeHours>
               <LookbackDays>$Config/LookbackDays$</LookbackDays>
-              <RunMode>Data</RunMode>
+              <Tolerance>$Config/Tolerance$</Tolerance>
             </DataSource>
-            <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Equal</Operator>
-                  <ValueExpression>
-                    <Value Type="String">Data</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
             <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
               <Expression>
                 <SimpleExpression>
@@ -612,123 +868,21 @@
             <RegularDetection MonitorTypeStateID="OK">
               <Node ID="HealthyCD">
                 <Node ID="Filter">
-                  <Node ID="DataFilter">
                     <Node ID="DS" />
-                  </Node>
                 </Node>
               </Node>
             </RegularDetection>
             <RegularDetection MonitorTypeStateID="TooMany">
               <Node ID="UnHealthyCD">
                 <Node ID="Filter">
-                  <Node ID="DataFilter">
                     <Node ID="DS"></Node>
                   </Node>
-                </Node>
               </Node>
             </RegularDetection>
           </RegularDetections>
         </MonitorImplementation>
       </UnitMonitorType>
 
-      <UnitMonitorType ID="QND.OMS.Backup.Connectivity.MT" Accessibility="Public">
-        <MonitorTypeStates>
-          <MonitorTypeState ID="Healthy"/>
-          <MonitorTypeState ID="UnReachable"/>
-        </MonitorTypeStates>
-        <Configuration>
-          <xsd:element name="IntervalSeconds" type="xsd:int" />
-          <xsd:element name="SyncTime" type="xsd:string" />
-          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
-          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
-          <xsd:element name="TenantADName" type="xsd:string" />
-          <xsd:element name="VaultId" type="xsd:string" />
-          <xsd:element name="AADUserName" type="xsd:string" />
-          <xsd:element name="AADPassword" type="xsd:string" />
-        </Configuration>
-        <OverrideableParameters>
-          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
-          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
-        </OverrideableParameters>
-        <MonitorImplementation>
-          <MemberModules>
-            <DataSource ID="DS" TypeID="QND.OMS.Backup.ItemStatus.DS">
-                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
-                <SyncTime>$Config/SyncTime$</SyncTime>
-                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
-                <TraceLevel>$Config/TraceLevel$</TraceLevel>
-                <TenantADName>$Config/TenantADName$</TenantADName>
-                <VaultId>$Config/VaultId$</VaultId>
-                <ItemId></ItemId>
-                <AADUserName>$Config/AADUserName$</AADUserName>
-                <AADPassword>$Config/AADPassword$</AADPassword>
-                <LastNJobs>-1</LastNJobs>
-                <MaxFailures>-1</MaxFailures>
-                <FailureCondition></FailureCondition>
-                <MaxAgeHours>-1</MaxAgeHours>
-                <LookbackDays>-1</LookbackDays>
-                <RunMode>Status</RunMode>
-            </DataSource>
-            <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Equal</Operator>
-                  <ValueExpression>
-                    <Value Type="String">Status</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
-            <ConditionDetection ID="ConnectOKCD" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='Status']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Equal</Operator>
-                  <ValueExpression>
-                    <Value Type="String">OK</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
-            <ConditionDetection ID="ConnectKOCD" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="Double">Property[@Name='Status']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Equal</Operator>
-                  <ValueExpression>
-                    <Value Type="String">Error</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
-          </MemberModules>
-          <RegularDetections>
-            <RegularDetection MonitorTypeStateID="Healthy">
-              <Node ID="ConnectOKCD">
-                <Node ID="Filter">
-                  <Node ID="DS" />
-                </Node>
-              </Node>
-            </RegularDetection>
-            <RegularDetection MonitorTypeStateID="UnReachable">
-              <Node ID="ConnectKOCD">
-                <Node ID="Filter">
-                  <Node ID="DS"></Node>
-                </Node>
-              </Node>
-            </RegularDetection>
-          </RegularDetections>
-        </MonitorImplementation>
-      </UnitMonitorType>      
     </MonitorTypes>
   </TypeDefinitions>
 </ManagementPackFragment>
