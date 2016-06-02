@@ -1,8 +1,8 @@
 ﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Monitoring>
     <Monitors>
-      <UnitMonitor ID="QND.OMS.Automation.Runbook.ExecStatus.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Runbook"
-             ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatusGenericCooked.MT" ConfirmDelivery="false">
+      <UnitMonitor ID="QND.OMS.Automation.Runbook.ExecStatus.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.RunbookGen"
+             ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatus2StateCooked.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.Automation.Runbook.ExecStatus.Monitor.AlertMessage">
           <AlertOnState>Error</AlertOnState>
@@ -10,79 +10,103 @@
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
           <AlertParameters>
-            <AlertParameter1>$Data/Context/Property[@Name="Failures"]$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Property[@Name="MaxFailures"]$</AlertParameter2>
-            <AlertParameter3>$Data/Context/Property[@Name="JobsSelected"]$</AlertParameter3>
+            <AlertParameter1>$Data/Context/Property[@Name="jobFailures"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="lastnJobs"]$</AlertParameter2>
+            <AlertParameter3>$Data/Context/Property[@Name="maxFailures"]$</AlertParameter3>
+            <AlertParameter4>$Data/Context/Property[@Name="lastjobStatus"]$</AlertParameter4>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
-          <OperationalState ID="Successful" MonitorTypeStateID="Healthy" HealthState="Success" />
-          <OperationalState ID="Failed" MonitorTypeStateID="UnHealthy" HealthState="Error" />
+          <OperationalState ID="Successful" MonitorTypeStateID="LessEqual" HealthState="Success" />
+          <OperationalState ID="Failed" MonitorTypeStateID="Greater" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>3601</IntervalSeconds>
+          <IntervalSeconds>3611</IntervalSeconds>
           <SyncTime></SyncTime>
-          
-          <Property>Failures</Property>
-          <MaxThreshold>0</MaxThreshold>
-
+          <Property>jobFailures</Property>
+          <MaxThreshold>2</MaxThreshold>
+          <RunbookId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</RunbookId>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <TenantADName>$Target/Host/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
-          <AccountId>$Target/Host/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>        
-          <RunbookId>$Target/Property[Type="QND.OMS.Automation.Runbook"]/Id$</RunbookId>
-          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
-          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
-          <LastNJobs>1</LastNJobs>
-          <MaxFailures>0</MaxFailures>
-          <FailureCondition>^[4|9]$</FailureCondition>
-          <MaxAgeHours>-1</MaxAgeHours>
-          <MaxRuntimeMinutes>-1</MaxRuntimeMinutes>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <Heartbeat>11</Heartbeat>
 
+          <Tolerance>0.5</Tolerance>
+          <OnlySJWH>1</OnlySJWH>
+          <LookbackDays>-1</LookbackDays>
+          <LastNJobs>5</LastNJobs>
+          <MaxFailures>2</MaxFailures>
+          <!--.net regex doesn't parse ^(?!Completed).*$ -->
+          <FailureCondition>Failed</FailureCondition>
+          <MaxAgeHours>-1</MaxAgeHours>
+          <MaxRuntimeMinutes>180</MaxRuntimeMinutes>
+          <WebHookExpirationDays>15</WebHookExpirationDays>
+          <WebHookExpirationSilence>20</WebHookExpirationSilence>
         </Configuration>
       </UnitMonitor>
-      
-      <UnitMonitor ID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Runbook"
-             ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookWebHookExpirationCooked.MT" ConfirmDelivery="false">
+
+      <UnitMonitor ID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.RunbookGen"
+             ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatus3StateCooked.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor.AlertMessage">
-          <AlertOnState>Warning</AlertOnState>
+          <AlertOnState>Error</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
           <AlertParameters>
-            <AlertParameter1>$Data/Context/Property[@Name="DaysToExpiration"]$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Property[@Name="WebHookName"]$</AlertParameter2>
+            <AlertParameter1>$Data/Context/Property[@Name="webHookDaysToExpiration"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="webHookStatus"]$</AlertParameter2>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
-          <OperationalState ID="Valid" MonitorTypeStateID="Valid" HealthState="Success" />
-          <OperationalState ID="AboutToExpire" MonitorTypeStateID="AboutToExpire" HealthState="Warning" />          
-          <OperationalState ID="Expired" MonitorTypeStateID="Expired" HealthState="Error" />
+          <OperationalState ID="Valid" MonitorTypeStateID="Greater" HealthState="Success" />
+          <OperationalState ID="AboutToExpire" MonitorTypeStateID="InBetween" HealthState="Warning" />
+          <OperationalState ID="Expired" MonitorTypeStateID="Less" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>86400</IntervalSeconds>
+          <IntervalSeconds>3611</IntervalSeconds>
           <SyncTime></SyncTime>
+          <Property>webHookDaysToExpiration</Property>
+          <ThresholdHigh>1</ThresholdHigh>
+          <ThresholdLow>15</ThresholdLow>
+          <RunbookId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</RunbookId>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <TenantADName>$Target/Host/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
-          <AccountId>$Target/Host/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
-          <RunbookId>$Target/Property[Type="QND.OMS.Automation.Runbook"]/Id$</RunbookId>
-          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
-          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
-          <LastNJobs>1</LastNJobs>
-          <MaxFailures>0</MaxFailures>
-          <FailureCondition>^[4|9]$</FailureCondition>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <Heartbeat>11</Heartbeat>
+
+          <Tolerance>0.5</Tolerance>
+          <OnlySJWH>1</OnlySJWH>
+          <LookbackDays>-1</LookbackDays>
+          <LastNJobs>5</LastNJobs>
+          <MaxFailures>2</MaxFailures>
+          <!--.net regex doesn't parse ^(?!Completed).*$ -->
+          <FailureCondition>Failed</FailureCondition>
           <MaxAgeHours>-1</MaxAgeHours>
-          <MaxRuntimeMinutes>-1</MaxRuntimeMinutes>
-          <WebHookExpirationDays>30</WebHookExpirationDays>
-          <WebHookExpirationSilence>30</WebHookExpirationSilence>
+          <MaxRuntimeMinutes>180</MaxRuntimeMinutes>
+          <WebHookExpirationDays>15</WebHookExpirationDays>
+          <WebHookExpirationSilence>20</WebHookExpirationSilence>
         </Configuration>
-      </UnitMonitor>      
-      
-      <!-- this can be improved checking only on runbooks with a schedule set -->
-      <UnitMonitor ID="QND.OMS.Automation.Runbook.RunAge.Monitor" Accessibility="Public" Enabled="false" Target="QND.OMS.Automation.Runbook"
-             ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatusGenericNotCooked.MT" ConfirmDelivery="false">
+      </UnitMonitor>
+
+      <UnitMonitor ID="QND.OMS.Automation.Runbook.RunAge.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.RunbookGen"
+             ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatus2StateCooked.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.Automation.Runbook.RunAge.Monitor.AlertMessage">
           <AlertOnState>Error</AlertOnState>
@@ -90,75 +114,98 @@
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
           <AlertParameters>
-            <AlertParameter1>$Data/Context/Property[@Name="LastJobExecutionTime"]$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Property[@Name="LastJobExecutionAgeHours"]$</AlertParameter2>
-            <AlertParameter3>$Data/Context/Property[@Name="MaxAge"]$</AlertParameter3>
+            <AlertParameter1>$Data/Context/Property[@Name="lastRunAgeHours"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="maxAge"]$</AlertParameter2>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
-          <OperationalState ID="Successful" MonitorTypeStateID="Healthy" HealthState="Success" />
-          <OperationalState ID="Failed" MonitorTypeStateID="UnHealthy" HealthState="Error" />
+          <OperationalState ID="Successful" MonitorTypeStateID="LessEqual" HealthState="Success" />
+          <OperationalState ID="Failed" MonitorTypeStateID="Greater" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>3617</IntervalSeconds>
+          <IntervalSeconds>3611</IntervalSeconds>
           <SyncTime></SyncTime>
-
-          <Property>LastJobExecutionAgeHours</Property>
-          <MaxThreshold>24</MaxThreshold>
-
+          <Property>lastRunObsolete</Property>
+          <MaxThreshold>0</MaxThreshold>
+          <RunbookId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</RunbookId>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <TenantADName>$Target/Host/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
-          <AccountId>$Target/Host/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
-          <RunbookId>$Target/Property[Type="QND.OMS.Automation.Runbook"]/Id$</RunbookId>
-          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
-          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
-          <LastNJobs>1</LastNJobs>
-          <MaxFailures>0</MaxFailures>
-          <FailureCondition>^[4|9]$</FailureCondition>
-          <MaxAgeHours>24</MaxAgeHours>
-          <MaxRuntimeMinutes>-1</MaxRuntimeMinutes>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <Heartbeat>11</Heartbeat>
+
+          <Tolerance>0.5</Tolerance>
+          <OnlySJWH>1</OnlySJWH>
+          <LookbackDays>-1</LookbackDays>
+          <LastNJobs>5</LastNJobs>
+          <MaxFailures>2</MaxFailures>
+          <!--.net regex doesn't parse ^(?!Completed).*$ -->
+          <FailureCondition>Failed</FailureCondition>
+          <MaxAgeHours>-1</MaxAgeHours>
+          <MaxRuntimeMinutes>180</MaxRuntimeMinutes>
+          <WebHookExpirationDays>15</WebHookExpirationDays>
+          <WebHookExpirationSilence>20</WebHookExpirationSilence>
         </Configuration>
       </UnitMonitor>
 
-      <UnitMonitor ID="QND.OMS.Automation.Runbook.LongRunning.Monitor" Accessibility="Public" Enabled="false" Target="QND.OMS.Automation.Runbook"
-       ParentMonitorID="Health!System.Health.PerformanceState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatusGenericNotCooked.MT" ConfirmDelivery="false">
-        <Category>PerformanceHealth</Category>
+      <UnitMonitor ID="QND.OMS.Automation.Runbook.LongRunning.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.RunbookGen"
+             ParentMonitorID="Health!System.Health.PerformanceState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatus2StateCooked.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.Automation.Runbook.LongRunning.Monitor.AlertMessage">
           <AlertOnState>Error</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
           <AlertParameters>
-            <AlertParameter1>$Data/Context/Property[@Name="LastJobRuntimeMinutes"]$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Property[@Name="MaxRuntime"]$</AlertParameter2>
+            <AlertParameter1>$Data/Context/Property[@Name="lastRuntimeMin"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="maxRuntime"]$</AlertParameter2>
+            <AlertParameter3>$Data/Context/Property[@Name="lastCompletedRuntimeMin"]$</AlertParameter3>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
-          <OperationalState ID="Successful" MonitorTypeStateID="Healthy" HealthState="Success" />
-          <OperationalState ID="Failed" MonitorTypeStateID="UnHealthy" HealthState="Error" />
+          <OperationalState ID="Successful" MonitorTypeStateID="LessEqual" HealthState="Success" />
+          <OperationalState ID="Failed" MonitorTypeStateID="Greater" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>3737</IntervalSeconds>
+          <IntervalSeconds>3611</IntervalSeconds>
           <SyncTime></SyncTime>
-
-          <Property>LastJobRuntimeMinutes</Property>
-          <MaxThreshold>30</MaxThreshold>
-
+          <Property>longRunning</Property>
+          <MaxThreshold>0</MaxThreshold>
+          <RunbookId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</RunbookId>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <TenantADName>$Target/Host/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
-          <AccountId>$Target/Host/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
-          <RunbookId>$Target/Property[Type="QND.OMS.Automation.Runbook"]/Id$</RunbookId>
-          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
-          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
-          <LastNJobs>1</LastNJobs>
-          <MaxFailures>0</MaxFailures>
-          <FailureCondition>^[4|9]$</FailureCondition>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <Heartbeat>11</Heartbeat>
+
+          <Tolerance>0.5</Tolerance>
+          <OnlySJWH>1</OnlySJWH>
+          <LookbackDays>-1</LookbackDays>
+          <LastNJobs>5</LastNJobs>
+          <MaxFailures>2</MaxFailures>
+          <!--.net regex doesn't parse ^(?!Completed).*$ -->
+          <FailureCondition>Failed</FailureCondition>
           <MaxAgeHours>-1</MaxAgeHours>
-          <MaxRuntimeMinutes>30</MaxRuntimeMinutes>        
+          <MaxRuntimeMinutes>180</MaxRuntimeMinutes>
+          <WebHookExpirationDays>15</WebHookExpirationDays>
+          <WebHookExpirationSilence>20</WebHookExpirationSilence>
         </Configuration>
       </UnitMonitor>
+
     </Monitors>
   </Monitoring>
   <Presentation>
@@ -177,7 +224,7 @@
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.ExecStatus.Monitor.AlertMessage">
           <Name>QND - Azure Automation Runbook execution failed</Name>
-          <Description>The runbook failures count {0} is over the threshold set {1} over the last {2} runs.
+          <Description>The runbook failures count {0} is over the threshold set {1} over the last {2} runs. Last run status is {3}.
               More details in the alert context
           </Description>
         </DisplayString>
@@ -187,7 +234,7 @@
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.RunAge.Monitor.AlertMessage">
           <Name>QND - Azure Automation Runbook last execution too old</Name>
-          <Description>The runbook last run is dated {0} the age in hours {1} is over the threshold set at {2} hours.
+          <Description>The runbook last run is {0} hours old which is over the threshold set at {1} hours.
               More details in the alert context
           </Description>
         </DisplayString>
@@ -198,7 +245,7 @@
         <DisplayString ElementID="QND.OMS.Automation.Runbook.LongRunning.Monitor.AlertMessage">
           <Name>QND - Azure Automation Runbook execution is taking too long</Name>
           <Description>
-            The last runbook execution took {0} minutes which is over the set threshold of {1}.
+            The last runbook execution took {0} minutes which is over the set threshold of {1}. The last completed job took {2} minutes.
             More details in the alert context
           </Description>
         </DisplayString>
@@ -209,7 +256,7 @@
         <DisplayString ElementID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor.AlertMessage">
           <Name>QND - Azure Automation Runbook webhook expired or near expiration</Name>
           <Description>
-            One or more web hooks are expired or about to expire. Days to expiration {0} sample web hook name {1}.
+            One or more web hooks are expired or about to expire. Days to expiration {0}.
             More details in the alert context
           </Description>
         </DisplayString>

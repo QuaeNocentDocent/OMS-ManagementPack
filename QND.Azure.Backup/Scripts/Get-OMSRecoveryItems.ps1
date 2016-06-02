@@ -314,7 +314,7 @@ try {
 		('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''AzureIaasVM'' and itemType eq ''VM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
 		('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''MAB'' and itemType eq ''FileFolder''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
 	)
-	Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting items") $TRACE_VERBOSE
+	Log-Event $SUCCESS_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting items") $TRACE_VERBOSE
 
 	foreach($uri in $uris) {
 		$nextLink=$null

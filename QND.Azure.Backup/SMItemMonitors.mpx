@@ -1,10 +1,10 @@
 ﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Monitoring>
     <Monitors>
-      <UnitMonitor ID="QND.OMS.Recovery.Item.LastJobStatus.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Recovery.Vault.ProtectedItem"
-             ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Recovery.LastJobStatus.MT" ConfirmDelivery="false">
+      <UnitMonitor ID="QND.OMS.Backup.Item.LastJobStatus.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Backup.Vault.ProtectedItem"
+             ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Backup.LastJobStatus.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
-        <AlertSettings AlertMessage="QND.OMS.Recovery.Item.LastJobStatus.Monitor.AlertMessage">
+        <AlertSettings AlertMessage="QND.OMS.Backup.Item.LastJobStatus.Monitor.AlertMessage">
           <AlertOnState>Warning</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
@@ -20,7 +20,7 @@
           <OperationalState ID="Failed" MonitorTypeStateID="Failed" HealthState="Warning" />
         </OperationalStates>
         <Configuration>
-          <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
+          <ItemId>$Target/Property[Type="QND.OMS.Backup.Vault.ProtectedItem"]/Id$</ItemId>
 
           <IntervalSeconds>21600</IntervalSeconds>
           <SyncTime></SyncTime>
@@ -34,7 +34,7 @@
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <ResourceURI>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Host/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <APIVersion>2015-03-15</APIVersion>
 
           <LastNJobs>1</LastNJobs>
           <MaxFailures>0</MaxFailures>
@@ -48,10 +48,10 @@
         </Configuration>
       </UnitMonitor>
 
-      <UnitMonitor ID="QND.OMS.Recovery.Item.RecoveryPointAge.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Recovery.Vault.ProtectedItem"
-        ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Recovery.LastRecoveryPointAge.MT" ConfirmDelivery="false">
+      <UnitMonitor ID="QND.OMS.Backup.Item.RecoveryPointAge.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Backup.Vault.ProtectedItem"
+        ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Backup.LastRecoveryPointAge.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
-        <AlertSettings AlertMessage="QND.OMS.Recovery.Item.RecoveryPointAge.Monitor.AlertMessage">
+        <AlertSettings AlertMessage="QND.OMS.Backup.Item.RecoveryPointAge.Monitor.AlertMessage">
           <AlertOnState>Error</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
@@ -66,7 +66,7 @@
           <OperationalState ID="Failed" MonitorTypeStateID="Obsolete" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
+          <ItemId>$Target/Property[Type="QND.OMS.Backup.Vault.ProtectedItem"]/Id$</ItemId>
 
           <IntervalSeconds>3607</IntervalSeconds>
           <SyncTime></SyncTime>
@@ -80,7 +80,7 @@
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <ResourceURI>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Host/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <APIVersion>2015-03-15</APIVersion>
 
           <LastNJobs>-1</LastNJobs>
           <MaxFailures>0</MaxFailures>
@@ -94,10 +94,10 @@
         </Configuration>
       </UnitMonitor>
 
-      <UnitMonitor ID="QND.OMS.Recovery.Item.JobFailureRate.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Recovery.Vault.ProtectedItem"
-        ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Backup.FailureRate.MT" ConfirmDelivery="false">
+      <UnitMonitor ID="QND.OMS.Backup.Item.JobFailureRate.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Backup.Vault.ProtectedItem"
+        ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Backup.JobFailureRate.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
-        <AlertSettings AlertMessage="QND.OMS.Recovery.Item.JobFailureRate.Monitor.AlertMessage">
+        <AlertSettings AlertMessage="QND.OMS.Backup.Item.JobFailureRate.Monitor.AlertMessage">
           <AlertOnState>Warning</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
@@ -112,7 +112,7 @@
           <OperationalState ID="Failed" MonitorTypeStateID="TooMany" HealthState="Warning" />
         </OperationalStates>
         <Configuration>
-          <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
+          <ItemId>$Target/Property[Type="QND.OMS.Backup.Vault.ProtectedItem"]/Id$</ItemId>
 
           <IntervalSeconds>86400</IntervalSeconds>
           <SyncTime></SyncTime>
@@ -126,7 +126,7 @@
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <ResourceURI>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Host/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <APIVersion>2015-03-15</APIVersion>
 
           <LastNJobs>5</LastNJobs>
           <MaxFailures>1</MaxFailures>
@@ -144,38 +144,38 @@
   </Monitoring>
   <Presentation>
     <StringResources>
-      <StringResource ID="QND.OMS.Recovery.Item.LastJobStatus.Monitor.AlertMessage"/>
-      <StringResource ID="QND.OMS.Recovery.Item.RecoveryPointAge.Monitor.AlertMessage"/>
-      <StringResource ID="QND.OMS.Recovery.Item.JobFailureRate.Monitor.AlertMessage"/>    
+      <StringResource ID="QND.OMS.Backup.Item.LastJobStatus.Monitor.AlertMessage"/>
+      <StringResource ID="QND.OMS.Backup.Item.RecoveryPointAge.Monitor.AlertMessage"/>
+      <StringResource ID="QND.OMS.Backup.Item.JobFailureRate.Monitor.AlertMessage"/>    
     </StringResources>
   </Presentation>
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
-        <DisplayString ElementID="QND.OMS.Recovery.Item.LastJobStatus.Monitor">
+        <DisplayString ElementID="QND.OMS.Backup.Item.LastJobStatus.Monitor">
           <Name>Last Backup Job Result</Name>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.Recovery.Item.LastJobStatus.Monitor.AlertMessage">
+        <DisplayString ElementID="QND.OMS.Backup.Item.LastJobStatus.Monitor.AlertMessage">
           <Name>QND - OMS Backup Job failed</Name>
           <Description>The last backup job failed {0}. The jub run time has been {1} hours. The most recent recovery point is {2}.
               More details in the alert context
           </Description>
         </DisplayString>
         
-        <DisplayString ElementID="QND.OMS.Recovery.Item.RecoveryPointAge.Monitor">
+        <DisplayString ElementID="QND.OMS.Backup.Item.RecoveryPointAge.Monitor">
           <Name>Recovery Point Age</Name>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.Recovery.Item.RecoveryPointAge.Monitor.AlertMessage">
+        <DisplayString ElementID="QND.OMS.Backup.Item.RecoveryPointAge.Monitor.AlertMessage">
           <Name>QND - OMS recovery point is too old</Name>
           <Description>The most receent recovery point is too old. The recovery point date is {1} the age in hours is {0}.
               More details in the alert context
           </Description>
         </DisplayString>
 
-        <DisplayString ElementID="QND.OMS.Recovery.Item.JobFailureRate.Monitor">
+        <DisplayString ElementID="QND.OMS.Backup.Item.JobFailureRate.Monitor">
           <Name>Jobs failure rate</Name>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.Recovery.Item.JobFailureRate.Monitor.AlertMessage">
+        <DisplayString ElementID="QND.OMS.Backup.Item.JobFailureRate.Monitor.AlertMessage">
           <Name>QND - OMS the jobs failure rate is too high</Name>
           <Description>
             The error rate is {1} jobs on {0} runs.

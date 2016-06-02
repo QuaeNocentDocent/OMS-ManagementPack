@@ -1,7 +1,4 @@
-﻿## This discovery needs to be splitted 'cause potentially can discover a huge number of entities, the disocvery rule is disabled by default
-## Gorup memeberhsip must be changed and split in diffrent rules using the properties we're setting
-
-#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
+﻿#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
 #SET ErrorLevel to 5 so show discovery info
 #https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
 #*************************************************************************
@@ -49,7 +46,8 @@ param([int]$traceLevel=2,
 [Parameter (Mandatory=$true)][string]$ADUserName,
 [Parameter (Mandatory=$true)][string]$ADPassword,
 [Parameter (Mandatory=$true)][string]$resourceURI,
-[string]$OMSAPIVersion='2015-03-20'
+[Parameter (Mandatory=$true)][string]$apiVersion,
+[Parameter (Mandatory=$true)][string]$containerId
 )
  
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
@@ -57,7 +55,7 @@ param([int]$traceLevel=2,
 
 #region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "QND.OMS.GetAlertRule"
+$SCRIPT_NAME			= "Get-OMSBackupItem"
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -199,29 +197,81 @@ Function Import-ResourceModule
 	else {Throw [System.DllNotFoundException] ('{0} not found' -f $module)}
 }
 
-Function Discover-AlertRule
+
+<#
+
+ContainerId: /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/Windows;pre
+             -subca.pre.lab
+# MAB + FileFolder
+
+id         : /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/Windows;PRE
+             -SUBCA.PRE.LAB/protectedItems/FileFolder;C
+name       : C
+type       : Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems
+properties : @{friendlyName=C:\; computerName=PRE-SUBCA.PRE.LAB; protectedItemType=MabFileFolderProtectedItem; backupManagementType=MAB; workloadType=FileFolder; containerName=PRE-SUBCA.PRE.LAB; 
+             lastRecoveryPoint=2016-05-12T09:16:43.0837478Z} 
+#>
+
+<#
+
+ContainerId: /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/IaasVMConta
+             iner;iaasvmcontainer;pre-infrastructure;pre-adsync
+
+AzureIaasVM + VM
+id         : /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/IaasVMConta
+             iner;iaasvmcontainer;pre-infrastructure;pre-adsync/protectedItems/VM;iaasvmcontainer;pre-infrastructure;pre-adsync
+name       : iaasvmcontainer;pre-infrastructure;pre-adsync
+type       : Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems
+properties : @{friendlyName=pre-adsync; virtualMachineId=/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/Pre-Infrastructure/providers/Microsoft.ClassicCompute/virtualMachines/pre-adsync; 
+             protectionStatus=Healthy; protectionState=IRPending; lastBackupStatus=; lastBackupTime=2001-01-01T00:00:00Z; protectedItemType=Microsoft.ClassicCompute/virtualMachines; 
+             backupManagementType=AzureIaasVM; workloadType=VM; containerName=iaasvmcontainer;pre-infrastructure;pre-adsync; 
+             policyId=/Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupPolicies/VMLab1; policyName=VMLab1}
+ 
+#>
+
+
+
+Function Discover-BackupItem
 {
-	param($Id, $Interval, $AlertName)
+	param($obj, $containerId)
 
-	try {
-		$serviceName = $resourceURI.Split('/')
-		$serviceName=$serviceName[$serviceName.Count-1]
+	#$obj
+    try {
+
+
+
+		if ($obj) {
+			$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Backup.Vault.ProtectedItem']$")	
+			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
+			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)
+			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric']/ServiceId$", $resourceURI)	
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Backup.Vault.Container']/Id$", $containerId)		
+
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Backup.Vault.ProtectedItem']/Id$", $obj.id)	
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Backup.Vault.ProtectedItem']/Name$", $obj.name)	
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Backup.Vault.ProtectedItem']/ItemType$", $obj.properties.itemType)	
+			$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.properties.friendlyName)	
+
+			$obj.properties.containerId -match '(^.*protectedItems\/)' | Out-Null
+			if ($matches -and $obj.properties.protectionPolicyId) {
+				$policyName=$obj.properties.protectionPolicyId.Replace($matches[0],'')
+			}
+			else {
+				$policyName=''
+			}
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Backup.Vault.ProtectedItem']/PolicyName$", $policyName)	
+
+			$discoveryData.AddInstance($objInstance)	
 		}
-	catch {
-		$serviceName='unknown'
-	}
-		$displayName=('{0} ({1})' -f $AlertName, $serviceName)
+    }
+    catch {
+        Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Error disocvering backup Item {2} in vault {0}\{1} - {3}' -f $resourceURI, $containerId, $obj.Id, $Error[0]) $TRACE_WARNING	
+	    write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+	    Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+    }
 
-		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.AlertRule']$")	
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric']/ServiceId$", $resourceURI)				
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/ScheduleId$", $Id)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/Interval$", $Interval)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/AlertName$", $AlertName)	
-		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $DisplayName)	
-		$discoveryData.AddInstance($objInstance)	
 }
+
 #Start by setting up API object.
 	$P_TraceLevel = $TRACE_VERBOSE
 	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
@@ -247,8 +297,7 @@ try
 	}
 	$pwd = ConvertTo-SecureString $ADPassword -AsPlainText -Force
 	$cred = New-Object System.Management.Automation.PSCredential ($ADUserName, $pwd)
-	$authority = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
-	$connection = $authority.CreateAuthorizationHeader()
+	$connection = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
 }
 catch {
 	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
@@ -257,39 +306,32 @@ catch {
 }
 
 try {
+	$timeoutSeconds=300
 	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
 
-	$rules=@()
-
-$timeout=300
-    $uri = '{0}{1}/savedSearches?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
-	$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
-	$savedSearches=@()
-	do {
-		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
-		$nextLink = $result.NextLink
-		$savedSearches += $result.values	
-	} while ($nextLink)
-
-	foreach($search in $savedSearches) {
-		$uri = '{0}{1}/schedules?api-version={2}' -f $ResourceBaseAddress,$search.Id,$OMSAPIVersion
+	#don't have an API for optimized discovery so we must retrieve evrything and then filter epr container
+	#I chose this way so that the disocvery payload doen't become huge
+	$uris =@(
+		('{0}{1}/protectedItems?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+	)
+	Log-Event $SUCCESS_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting items") $TRACE_VERBOSE
+	$rContainer=$containerId.Replace('containers','registeredContainers')
+	foreach($uri in $uris) {
 		$nextLink=$null
-		$schedule = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $extLink -data $null -TimeoutSeconds $timeout -ErrorAction SilentlyContinue
-		if($schedule.values) {
-			#take into account just the first schedule for the search maybe this needs to be changed in future
-			if ($schedule.Values[0].properties.Enabled -ieq 'True') {
-			   $uri = '{0}{1}/actions?api-version={2}' -f $ResourceBaseAddress,$schedule.values.id,$OMSAPIVersion
-			   $nextLink=$null
-			   $actions = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout #-ErrorAction SilentlyContinue
-			   if ($actions.Values) {
-					if ($actions.Values[0].properties.Type -ieq 'Alert') {
-						Discover-AlertRule -Id $schedule.Values[0].id -Interval $schedule.Values[0].properties.Interval -AlertName $actions.Values[0].properties.Name
-						Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('{0}, Interval={1}, Name={2}' -f $schedule.Values[0].id, $schedule.Values[0].properties.Interval, $actions.Values[0].properties.Name ) $TRACE_VERBOSE
+		do {
+			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -TimeoutSeconds $timeoutSeconds
+			$nextLink = $result.NextLink
+			if($result.gotValue) {	
+				foreach($item in $result.Values) {
+					if($item.properties.containerId -imatch $rContainer) {
+						write-verbose $item.properties.friendlyName
+						Discover-BackupItem -obj $item -containerId $containerId
 					}
-			   }
+				}
 			}
-		}
+		} while ($nextLink)
 	}
+
 	$discoveryData
 	If ($traceLevel -eq $TRACE_DEBUG)
 	{
@@ -298,13 +340,14 @@ $timeout=300
 		$g_API.Return($discoveryData)
 	}
 	
-	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
 	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
 }
+
 
 
 

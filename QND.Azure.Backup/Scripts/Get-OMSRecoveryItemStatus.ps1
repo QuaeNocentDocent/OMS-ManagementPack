@@ -210,7 +210,7 @@ param(
 	$items=@()
 	foreach($uri in $uris) {
 		$nextLink=$null
-		Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting items $uri") $TRACE_VERBOSE
+		Log-Event $SUCCESS_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting items $uri") $TRACE_VERBOSE
 		do {
 			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken $connection -nextLink $nextLink -TimeoutSeconds $timeoutSeconds
 			$nextLink = $result.NextLink
@@ -340,11 +340,14 @@ properties : @{jobType=AzureIaaSVMJob; duration=02:05:37.9565506; actionsInfo=Sy
 		$policySLA=@{}
 		$policies = Get-OMSRecItems -uris $uris -connection $connection
 		foreach($pol in $policies) {
-			switch ($pol.properties.backupSchedule.scheduleRun) 
+			switch ($pol.properties.schedulePolicy.scheduleRunFrequency) 
 			{
 				'Daily' {$slaHours=24*(1+$Tolerance)}
 				'Weekly' {$slaHours=(24*7)*(1+$Tolerance)}
-				default {$slaHours=24*(1+$Tolerance)}
+				default {
+					$slaHours=24*(1+$Tolerance)
+					Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unknown schedule policy {0}' -f $pol.properties.schedulePolicy.scheduleRunFrequency) $TRACE_WARNING	
+				}
 			}
 			$policySLA.Add($pol.name,$slaHours)
 		}
@@ -367,7 +370,7 @@ scheduleRunTimes     : {2016-02-24T16:30:00}
 
 			foreach($item in $items) {      
 			try {
-				Log-Event -eventID $INFO_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
+				Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
 					-msg ('Processing {0}' `
 						-f $item.Name) `
 					-level $TRACE_VERBOSE   
@@ -463,7 +466,7 @@ scheduleRunTimes     : {2016-02-24T16:30:00}
 				if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
 				$bag
 
-				Log-Event -eventID $INFO_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
+				Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
 					-msg ('{0} - retunred jobs {1} selected jobs {2} failures {3} last job status {4} last job duration {5} last recovery point {6} last recovery point age {7}' `
 						-f $item.Id, $itemJobs.Count, $selectedJobs.Count, $failures, $lastJobStatus, $lastjobDurationHours, $lastRecPointDate, $lastRecoveryPointAgeHours) `
 					-level $TRACE_VERBOSE              

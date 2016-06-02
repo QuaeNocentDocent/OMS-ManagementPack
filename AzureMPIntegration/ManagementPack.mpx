@@ -3,7 +3,7 @@
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
         <DisplayString ElementID="QND.AzureMPIntegration">
-          <Name>QND Azure MP Integration MP</Name>
+          <Name>QND - Azure MP Integration</Name>
           <Description>Common modules and resources to integrate with Microsoft Azure MP</Description>
         </DisplayString>
       </DisplayStrings>

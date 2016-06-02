@@ -1,7 +1,7 @@
 ﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <TypeDefinitions>
     <ModuleTypes>
-      <DataSourceModuleType ID="QND.OMS.Recovery.Container.Discovery.DS" Accessibility="Internal" Batching="false">
+      <DataSourceModuleType ID="QND.OMS.Backup.Container.Discovery.DS" Accessibility="Internal" Batching="false">
         <Configuration>
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="600" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" default="2"/>
@@ -68,7 +68,7 @@
                         </ValueExpression>
                         <Operator>Equal</Operator>
                         <ValueExpression>
-                          <Value Type="String">RecoveryContainer</Value>
+                          <Value Type="String">BackupContainer</Value>
                         </ValueExpression>
                       </SimpleExpression>
                     </Expression>
@@ -79,7 +79,7 @@
               <ProbeAction ID="Discover" TypeID="Windows!Microsoft.Windows.PowerShellDiscoveryProbe">
                 <ScriptName>Get-OMSManagedSystems.ps1</ScriptName>
                 <ScriptBody>
-                  $IncludeFileContent/Scripts/Get-OMSRecoveryContainer.ps1$
+                  $IncludeFileContent/Scripts/Get-OMSBackupContainer.ps1$
                 </ScriptBody>
                 <Parameters>
                   <Parameter>
@@ -148,7 +148,7 @@
         </ModuleImplementation>
         <OutputType>System!System.Discovery.Data</OutputType>
       </DataSourceModuleType>
-      <DataSourceModuleType ID="QND.OMS.Recovery.ProtectedItem.Discovery.DS" Accessibility="Internal" Batching="false">
+      <DataSourceModuleType ID="QND.OMS.Backup.ProtectedItem.Discovery.DS" Accessibility="Internal" Batching="false">
         <Configuration>
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="600" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" default="2"/>
@@ -216,7 +216,7 @@
                         </ValueExpression>
                         <Operator>Equal</Operator>
                         <ValueExpression>
-                          <Value Type="String">RecoveryItem</Value>
+                          <Value Type="String">BackupItem</Value>
                         </ValueExpression>
                       </SimpleExpression>
                     </Expression>
@@ -225,9 +225,9 @@
                 </Expression>
               </DataSource>
               <ProbeAction ID="Discover" TypeID="Windows!Microsoft.Windows.PowerShellDiscoveryProbe">
-                <ScriptName>Get-OMSRecoveryItems.ps1</ScriptName>
+                <ScriptName>Get-OMSBackupItem.ps1</ScriptName>
                 <ScriptBody>
-                  $IncludeFileContent/Scripts/Get-OMSRecoveryItems.ps1$
+                  $IncludeFileContent/Scripts/Get-OMSBackupItem.ps1$
                 </ScriptBody>
                 <Parameters>
                   <Parameter>
@@ -300,8 +300,8 @@
         </ModuleImplementation>
         <OutputType>System!System.Discovery.Data</OutputType>
       </DataSourceModuleType>
-            
-      <DataSourceModuleType ID="QND.OMS.Recovery.Vault.ItemStatus.DS" Accessibility="Public" Batching="false">
+       
+      <DataSourceModuleType ID="QND.OMS.Backup.Vault.ItemStatus.DS" Accessibility="Public" Batching="false">
         <Configuration>
           <xsd:element name="IntervalSeconds" type="xsd:int" />
           <xsd:element name="SyncTime" type="xsd:string" />
@@ -346,7 +346,7 @@
                 <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
                 <SyncTime>$Config/SyncTime$</SyncTime>
               </DataSource>
-              <ProbeAction ID="Probe" TypeID="QND.OMS.Recovery.Vault.ProtectedItemStatus.PT">
+              <ProbeAction ID="Probe" TypeID="QND.OMS.Backup.Vault.ProtectedItemStatus.PT">
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
                 <TraceLevel>$Config/TraceLevel$</TraceLevel>
                 <ClientId>$Config/ClientId$</ClientId>
@@ -376,7 +376,7 @@
         </ModuleImplementation>
         <OutputType>System!System.PropertyBagData</OutputType>
       </DataSourceModuleType>
-      <ProbeActionModuleType ID="QND.OMS.Recovery.Vault.ProtectedItemStatus.PT" Accessibility="Public" Batching="false">
+      <ProbeActionModuleType ID="QND.OMS.Backup.Vault.ProtectedItemStatus.PT" Accessibility="Public" Batching="false">
         <Configuration>
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
@@ -413,9 +413,9 @@
           <Composite>
             <MemberModules>
               <ProbeAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
-                <ScriptName>Get-OMSRecoveryItemStatus.ps1</ScriptName>
+                <ScriptName>Get-OMSBackupItemStatus.ps1</ScriptName>
                 <ScriptBody>
-                  $IncludeFileContent/Scripts/Get-OMSRecoveryItemStatus.ps1$
+                  $IncludeFileContent/Scripts/Get-OMSBackupItemStatus.ps1$
                 </ScriptBody>
                 <Parameters>
                   <Parameter>
@@ -427,7 +427,7 @@
                     <Value>$Config/ClientId$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>SubscriptionId</Name>
+                    <Name>Subscription</Name>
                     <Value>$Config/SubscriptionId$</Value>
                   </Parameter>
                   <Parameter>
@@ -486,14 +486,13 @@
                     <Name>FixedMaxAgeHours</Name>
                     <Value>$Config/FixedMaxAgeHours$</Value>
                   </Parameter>
-                  <Parameter> <!-- this would need a separate parameter-->
+                  <Parameter> 
                     <Name>TimeoutSeconds</Name>
                     <Value>$Config/TimeoutSeconds$</Value>
                   </Parameter>
                 </Parameters>
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
                 <StrictErrorHandling>false</StrictErrorHandling>
-                <!-- true only for Tasks -->
               </ProbeAction>
             </MemberModules>
             <Composition>
@@ -507,7 +506,7 @@
     </ModuleTypes>
     <MonitorTypes>
 
-      <UnitMonitorType ID="QND.OMS.Recovery.LastJobStatus.MT" Accessibility="Public">
+      <UnitMonitorType ID="QND.OMS.Backup.LastJobStatus.MT" Accessibility="Public">
         <MonitorTypeStates>
           <MonitorTypeState ID="Completed"/>
           <MonitorTypeState ID="Failed"/>
@@ -554,7 +553,7 @@
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
-            <DataSource ID="DS" TypeID="QND.OMS.Recovery.Vault.ItemStatus.DS">
+            <DataSource ID="DS" TypeID="QND.OMS.Backup.Vault.ItemStatus.DS">
               <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
               <SyncTime>$Config/SyncTime$</SyncTime>
               <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
@@ -630,7 +629,7 @@
           </RegularDetections>
         </MonitorImplementation>
       </UnitMonitorType>
-      <UnitMonitorType ID="QND.OMS.Recovery.LastRecoveryPointAge.MT" Accessibility="Public">
+      <UnitMonitorType ID="QND.OMS.Backup.LastRecoveryPointAge.MT" Accessibility="Public">
               <MonitorTypeStates>
                 <MonitorTypeState ID="UpToDate"/>
                 <MonitorTypeState ID="Obsolete"/>
@@ -677,7 +676,7 @@
               </OverrideableParameters>
               <MonitorImplementation>
                 <MemberModules>
-                  <DataSource ID="DS" TypeID="QND.OMS.Recovery.Vault.ItemStatus.DS">
+                  <DataSource ID="DS" TypeID="QND.OMS.Backup.Vault.ItemStatus.DS">
                     <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
                     <SyncTime>$Config/SyncTime$</SyncTime>
                     <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
@@ -757,7 +756,7 @@
                 </RegularDetections>
               </MonitorImplementation>
             </UnitMonitorType>
-      <UnitMonitorType ID="QND.OMS.Backup.FailureRate.MT" Accessibility="Public">
+      <UnitMonitorType ID="QND.OMS.Backup.JobFailureRate.MT" Accessibility="Public">
         <MonitorTypeStates>
           <MonitorTypeState ID="TooMany"/>
           <MonitorTypeState ID="OK"/>
@@ -802,7 +801,7 @@
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
-            <DataSource ID="DS" TypeID="QND.OMS.Recovery.Vault.ItemStatus.DS">
+            <DataSource ID="DS" TypeID="QND.OMS.Backup.Vault.ItemStatus.DS">
               <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
               <SyncTime>$Config/SyncTime$</SyncTime>
               <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
@@ -882,7 +881,6 @@
           </RegularDetections>
         </MonitorImplementation>
       </UnitMonitorType>
-
     </MonitorTypes>
   </TypeDefinitions>
 </ManagementPackFragment>

@@ -1,5 +1,4 @@
-﻿## This discovery needs to be splitted 'cause potentially can discover a huge number of entities, the disocvery rule is disabled by default
-## Gorup memeberhsip must be changed and split in diffrent rules using the properties we're setting
+﻿
 
 #TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
 #SET ErrorLevel to 5 so show discovery info
@@ -38,18 +37,23 @@
 
 # Get the named parameters
 param([int]$traceLevel=2,
-[Parameter (Mandatory=$true)] [string]$sourceID,
-[Parameter (Mandatory=$true)] [string]$ManagedEntityId,
 [Parameter (Mandatory=$true)][string]$clientId,
 [Parameter (Mandatory=$true)][string]$SubscriptionId,
-[Parameter (Mandatory=$true)][string]$ResourceGroupId,
 [string]$Proxy,
 [Parameter (Mandatory=$true)][string]$AuthBaseAddress,
 [Parameter (Mandatory=$true)][string]$ResourceBaseAddress,
 [Parameter (Mandatory=$true)][string]$ADUserName,
 [Parameter (Mandatory=$true)][string]$ADPassword,
 [Parameter (Mandatory=$true)][string]$resourceURI,
-[string]$OMSAPIVersion='2015-03-20'
+[string]$APIVersion='2016-05-01',
+[double]$Tolerance=0.5,
+[Parameter (Mandatory=$false)] [int]$LookbackDays=8,
+[Parameter (Mandatory=$false)] [int]$LastNJobs=5,
+[Parameter (Mandatory=$false)] [int]$MaxFailures=0,
+[Parameter (Mandatory=$false)] [String]$FailureCondition='Failed',
+[Parameter (Mandatory=$false)] [int]$AutoMaxAgeHours=0,
+[Parameter (Mandatory=$false)] [int]$FixedMaxAgeHours=24,
+[Parameter (Mandatory=$false)] [int]$timeoutSeconds=300
 )
  
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
@@ -57,7 +61,7 @@ param([int]$traceLevel=2,
 
 #region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "QND.OMS.GetAlertRule"
+$SCRIPT_NAME			= "Get-OMSBackupItemStatus"
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -182,6 +186,41 @@ param($SourceId, $ManagedEntityId)
 
 #endregion
 
+Function Format-Time
+{
+	[OutputType([String])]
+	param($utcTime)
+
+
+	$fTime=$utcTime.ToString('yyyy-MM-dd hh:mm:ss tt')
+	#don't know why tt doens't work
+	#quick fix without reverting to -net framework formatting
+	if($fTime.IndexOf('M') -eq -1) {
+		if ($utcTime.Hour -lt 13) {$fTime+= 'AM'} else {$fTime += 'PM'}
+	}
+	return $fTime
+}
+
+Function Get-OMSRecItems
+{
+param(
+	$uris, $connection
+)
+
+	$items=@()
+	foreach($uri in $uris) {
+		$nextLink=$null
+		Log-Event $SUCCESS_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting items $uri") $TRACE_VERBOSE
+		do {
+			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken $connection -nextLink $nextLink -TimeoutSeconds $timeoutSeconds
+			$nextLink = $result.NextLink
+			if($result.gotValue) {$items+=$result.Values}
+		} while ($nextLink)
+	}
+	return $items
+}
+
+#region Common
 Function Import-ResourceModule
 {
 	param($moduleName, $ArgumentList=$null)
@@ -199,29 +238,6 @@ Function Import-ResourceModule
 	else {Throw [System.DllNotFoundException] ('{0} not found' -f $module)}
 }
 
-Function Discover-AlertRule
-{
-	param($Id, $Interval, $AlertName)
-
-	try {
-		$serviceName = $resourceURI.Split('/')
-		$serviceName=$serviceName[$serviceName.Count-1]
-		}
-	catch {
-		$serviceName='unknown'
-	}
-		$displayName=('{0} ({1})' -f $AlertName, $serviceName)
-
-		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.AlertRule']$")	
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric']/ServiceId$", $resourceURI)				
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/ScheduleId$", $Id)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/Interval$", $Interval)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/AlertName$", $AlertName)	
-		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $DisplayName)	
-		$discoveryData.AddInstance($objInstance)	
-}
 #Start by setting up API object.
 	$P_TraceLevel = $TRACE_VERBOSE
 	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
@@ -255,49 +271,186 @@ catch {
 	Throw-KeepDiscoveryInfo
 	exit 1	
 }
+#endregion
 
 try {
-	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
 
-	$rules=@()
 
-$timeout=300
-    $uri = '{0}{1}/savedSearches?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
-	$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
-	$savedSearches=@()
-	do {
-		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
-		$nextLink = $result.NextLink
-		$savedSearches += $result.values	
-	} while ($nextLink)
 
-	foreach($search in $savedSearches) {
-		$uri = '{0}{1}/schedules?api-version={2}' -f $ResourceBaseAddress,$search.Id,$OMSAPIVersion
-		$nextLink=$null
-		$schedule = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $extLink -data $null -TimeoutSeconds $timeout -ErrorAction SilentlyContinue
-		if($schedule.values) {
-			#take into account just the first schedule for the search maybe this needs to be changed in future
-			if ($schedule.Values[0].properties.Enabled -ieq 'True') {
-			   $uri = '{0}{1}/actions?api-version={2}' -f $ResourceBaseAddress,$schedule.values.id,$OMSAPIVersion
-			   $nextLink=$null
-			   $actions = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout #-ErrorAction SilentlyContinue
-			   if ($actions.Values) {
-					if ($actions.Values[0].properties.Type -ieq 'Alert') {
-						Discover-AlertRule -Id $schedule.Values[0].id -Interval $schedule.Values[0].properties.Interval -AlertName $actions.Values[0].properties.Name
-						Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('{0}, Interval={1}, Name={2}' -f $schedule.Values[0].id, $schedule.Values[0].properties.Interval, $actions.Values[0].properties.Name ) $TRACE_VERBOSE
-					}
-			   }
+	$uris =@(
+		('{0}{1}/protectedItems?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+	)
+	$items = Get-OMSRecItems -uris $uris -connection $connection
+
+	$now = Format-Time -utcTime ((Get-Date).ToUniversalTime())
+	$then = Format-Time -utcTime (((Get-Date).ToUniversalTime()).AddDays(-$LookbackDays))
+	$uris=@(
+		('{0}{1}/jobs?api-version={2}&$filter=operation eq ''Backup'' and startTime eq ''{3}'' and endTime eq ''{4}''' -f $ResourceBaseAddress,$resourceURI,$APIVersion, $then, $now)
+	)
+
+	if($LastNJobs -gt 1) {$jobs = Get-OMSRecItems -uris $uris -connection $connection}
+
+	$uris=@(
+		('{0}{1}/protectionPolicies?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+	)
+
+	if($AutoMaxAgeHours -eq 0) {
+		$policySLA=@{}
+		$policies = Get-OMSRecItems -uris $uris -connection $connection
+		foreach($pol in $policies) {
+			switch ($pol.properties.backupSchedule.scheduleRun) 
+			{
+				'Daily' {$slaHours=24*(1+$Tolerance)}
+				'Weekly' {$slaHours=(24*7)*(1+$Tolerance)}
+				default {
+					$slaHours=24*(1+$Tolerance)
+					Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unknown schedule policy {0}' -f $pol.properties.schedulePolicy.scheduleRunFrequency) $TRACE_WARNING	
+				}
 			}
+			$policySLA.Add($pol.name,$slaHours)
 		}
 	}
-	$discoveryData
+
+
+			foreach($item in $items) {      
+			try {
+				Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
+					-msg ('Processing {0}' `
+						-f $item.Name) `
+					-level $TRACE_VERBOSE   
+
+
+
+				$lastRecPointDate='2015-01-01'
+				if($item.properties.lastRecoveryPoint) {$lastRecPointDate = $item.properties.lastRecoveryPoint}
+				$lastRecoveryPointAgeHours = ((Get-Date) - [datetime]$lastRecPointDate).TotalHours
+
+				#getting jobs
+				if ($LastNJobs -gt 1) {
+					$itemJobs=@($jobs | where {$_.properties.entityFriendlyName -ieq $item.properties.friendlyName})
+					$lastJob = $itemjobs | where {$_.properties.status -ieq 'Completed'} | Select-Object -First 1
+					$selectedJobs = @($itemJobs | Select-Object -First $LastNJobs)
+					$failures = @($selectedJobs | where {$_.properties.status -match $FailureCondition}).Count
+					if ($lastJob) {						
+						$uri=('{0}{1}?api-version={2}' -f $ResourceBaseAddress,$lastJob.Id,$APIVersion)
+						$lastJobDetails = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken $connection -nextLink $null -TimeoutSeconds $timeoutSeconds
+						if($lastJobDetails.StatusCode -eq 200) { $lastJobDetails=$lastJobDetails.Values[0]}
+						else {$lastJobDetails=$null}
+					}
+				}
+				else {
+					$uri=('{0}{1}/jobs/{3}?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion,$item.properties.lastBackupJobId)
+					$lastJobDetails = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken $connection -nextLink $null -TimeoutSeconds $timeoutSeconds
+					if($lastJobDetails.StatusCode -eq 200) { $lastJobDetails=$lastJobDetails.Values[0]}
+					else {$lastJobDetails=$null}
+				}
+
+				#get last job stats
+				$lastjobDurationHours=-1
+				$lastJobSizeGB=-1
+				$lastJobStatus='n.a.'
+				if($lastJobDetails) {
+					if ($lastJobDetails.properties) {
+						try {
+						$lastJobStatus = $lastJobDetails.properties.status
+						$lastjobDurationHours = (([datetime]$lastJobDetails.properties.duration).TimeOfDay).TotalHours
+						$lastJobSizeGB = ([int]($lastJobDetails.properties.propertyBag.'Backup Size').Replace(' MB',''))/1024
+						}
+						catch {
+							Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Issue getting last job details for {0} - {1}' -f $item.name, $uri) $TRACE_WARNING	
+						}
+					}
+				}
+				#if MaxAAgeHours==0 then let's go dynaminc and try to infer the SLA from the policy
+				$ageError='False'
+				switch ($item.properties.itemType)
+				{
+					'IaasVM' {$ageMode='Auto'}
+					default { 
+						$ageMode='Fixed'
+						Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unrecognized Item Type {0}' -f $item.properties.protectedItemType) $TRACE_WARNING	
+					}
+				}
+					
+				if($ageMode -eq 'Auto') {
+					$specificAge=$AutoMaxAgeHours
+					switch ($AutoMaxAgeHours) {
+						0 {
+							try {
+								$item.properties.containerId -match '(^.*protectedItems\/)' | Out-Null
+								$policyName=$item.properties.protectionPolicyId.Replace($matches[0],'')
+							}
+							catch {
+								$policyName='-'
+							}
+							if ($policySLA.ContainsKey($policyName)) {
+								$specificAge=$policySLA[$policyName]
+								$ageError=($lastRecoveryPointAgeHours -gt $specificAge).ToString()
+							}
+							else {
+								$specificAge=24*(1+$Tolerance)
+								$ageError=($lastRecoveryPointAgeHours -gt $specificAge).ToString()
+							}
+							break;
+						}
+						-1 {$ageError='False'; break;}
+						default {$ageError=($lastRecoveryPointAgeHours -gt $AutoMaxAgeHours).ToString()}
+					}
+				}
+				else {
+						
+						switch ($FixedMaxAgeHours) {
+						-1 {$ageError='False'; break;}
+						default {
+							$specificAge=$FixedMaxAgeHours*(1+$Tolerance)
+							$ageError=($lastRecoveryPointAgeHours -gt $specificAge).ToString()
+							}
+						}
+				}
+				$bag = $g_api.CreatePropertyBag()
+				$bag.AddValue('ItemId', $item.Id)
+				#return calculated status and input parameters
+				$execError=($failures -gt $MaxFailures).ToString()
+
+				$bag.AddValue('JobsReturned', $itemJobs.Count)
+				$bag.AddValue('JobsSelected', $selectedJobs.Count)
+				$bag.AddValue('Failures', $failures)
+				$bag.AddValue('LastJobDurationHours', $lastjobDurationHours)
+				$bag.AddValue('LastJobSizeGB', $lastJobSizeGB)
+				$bag.AddValue('LastJobStatus', $lastJobStatus)
+				$bag.AddValue('LastRecoveryPointDate', $lastRecPointDate)
+				$bag.AddValue('LastRecoveryPointAge', $lastRecoveryPointAgeHours)
+
+				$bag.AddValue('ExecError', $execError)
+				$bag.AddValue('AgeError', $ageError)
+
+				$bag.AddValue('MaxFailures', $MaxFailures)
+				$bag.AddValue('MaxAgeHours', $specificAge)
+
+
+				if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
+				$bag
+
+				Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
+					-msg ('{0} - retunred jobs {1} selected jobs {2} failures {3} last job status {4} last job duration {5} last recovery point {6} last recovery point age {7}' `
+						-f $item.Id, $itemJobs.Count, $selectedJobs.Count, $failures, $lastJobStatus, $lastjobDurationHours, $lastRecPointDate, $lastRecoveryPointAgeHours) `
+					-level $TRACE_VERBOSE              
+				}
+			catch {
+				Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Error getting stats for item {0} - {1}' -f $Item.Name, $Error[0]) $TRACE_WARNING	
+				write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+				Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+				continue;
+			}
+		}
+
+	
 	If ($traceLevel -eq $TRACE_DEBUG)
 	{
 		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
 		#it breaks in exception when run insde OpsMgr and POSH IDE	
-		$g_API.Return($discoveryData)
+		$g_API.ReturnItems() 
 	}
-	
 	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
@@ -305,6 +458,4 @@ Catch [Exception] {
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
 }
-
-
 

@@ -54,7 +54,7 @@ param([int]$traceLevel=2,
 
 #region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "Get-OMSBackupItems"
+$SCRIPT_NAME			= "Get-OMSRecoveryContainer"
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -300,7 +300,7 @@ try {
 	)	
 
 	foreach($uri in $uris) {
-		Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting $uri") $TRACE_VERBOSE
+		Log-Event $SUCCESS_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting $uri") $TRACE_VERBOSE
 		$nextLink=$null
 		do {
 			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -TimeoutSeconds $timeoutSeconds

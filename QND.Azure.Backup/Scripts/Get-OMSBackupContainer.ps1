@@ -1,7 +1,4 @@
-﻿## This discovery needs to be splitted 'cause potentially can discover a huge number of entities, the disocvery rule is disabled by default
-## Gorup memeberhsip must be changed and split in diffrent rules using the properties we're setting
-
-#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
+﻿#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
 #SET ErrorLevel to 5 so show discovery info
 #https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
 #*************************************************************************
@@ -49,7 +46,7 @@ param([int]$traceLevel=2,
 [Parameter (Mandatory=$true)][string]$ADUserName,
 [Parameter (Mandatory=$true)][string]$ADPassword,
 [Parameter (Mandatory=$true)][string]$resourceURI,
-[string]$OMSAPIVersion='2015-03-20'
+[Parameter (Mandatory=$true)][string]$apiVersion
 )
  
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
@@ -57,7 +54,7 @@ param([int]$traceLevel=2,
 
 #region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "QND.OMS.GetAlertRule"
+$SCRIPT_NAME			= "Get-OMSBackupContainer"
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -199,29 +196,79 @@ Function Import-ResourceModule
 	else {Throw [System.DllNotFoundException] ('{0} not found' -f $module)}
 }
 
-Function Discover-AlertRule
+
+# File system
+<#
+
+id         : /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/Windows;pre
+             -subca.pre.lab
+name       : Windows;pre-subca.pre.lab
+type       : Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers
+properties : @{canReRegister=True; containerId=493672; friendlyName=PRE-SUBCA.PRE.LAB; backupManagementType=MAB; registrationStatus=Registered; healthStatus=; containerType=Windows; 
+             protectableObjectType=MABWindowsContainer} 
+#>
+
+# IaasVM
+<#
+id         : /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/IaasVMConta
+             iner;iaasvmcontainer;pre-infrastructure;pre-adsync
+name       : IaasVMContainer;iaasvmcontainer;pre-infrastructure;pre-adsync
+type       : Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers
+properties : @{virtualMachineId=/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/Pre-Infrastructure/providers/Microsoft.ClassicCompute/virtualMachines/pre-adsync; 
+             virtualMachineVersion=ClassicCompute; resourceGroup=Pre-Infrastructure; friendlyName=pre-adsync; backupManagementType=AzureIaasVM; registrationStatus=Registered; healthStatus=Healthy; 
+             containerType=Microsoft.ClassicCompute/virtualMachines; protectableObjectType=Microsoft.ClassicCompute/virtualMachines} 
+#>
+
+# DPM Sources
+#uniqueName    : fsrveuazbck01.furla.dom
+#containerType : Machine
+#properties    : @{containerId=482742; friendlyName=FSRVEUAZBCK01.FURLA.DOM; containerStampId=3f2a1395-55ed-4e55-8f40-de1f8a6c2a24; containerStampUri=https://pod01-prot1b.we.backup.windowsazure.com; 
+#                canReRegister=False; customerType=DPMVenus}
+
+Function Discover-BackupContainer
 {
-	param($Id, $Interval, $AlertName)
+	param($obj)
 
-	try {
-		$serviceName = $resourceURI.Split('/')
-		$serviceName=$serviceName[$serviceName.Count-1]
+	
+	if($obj) {
+
+		try {
+			if($obj.uniqueName) {
+				$containerType=('{0}/{1}' -f $obj.ContainerType, $obj.properties.customerType )
+				$id=$obj.UniqueName
+				$name=$obj.UniqueName
+				$type='microsoft.backup/MachineContainer'
+				$displayName=$obj.properties.friendlyName
+			}
+			else {
+				$containerType=$obj.properties.containerType
+				$id=$obj.Id
+				$name=$obj.Name
+				$type=$obj.type
+				$displayName=$obj.properties.friendlyName
+			}
+
+
+			$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Backup.Vault.Container']$")	
+			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
+			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)
+			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric']/ServiceId$", $resourceURI)	
+
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Backup.Vault.Container']/Id$", $id)		
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Backup.Vault.Container']/Name$", $name)		
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Backup.Vault.Container']/ContainerType$", $containerType)	
+			$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $displayName)	
+			$discoveryData.AddInstance($objInstance)	
 		}
-	catch {
-		$serviceName='unknown'
+		catch {
+			Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Error disocvering backup container {1} in vault {0} - {2}' -f $name, $Id, $Error[0]) $TRACE_WARNING	
+			write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+			Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+		}
 	}
-		$displayName=('{0} ({1})' -f $AlertName, $serviceName)
-
-		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.AlertRule']$")	
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric']/ServiceId$", $resourceURI)				
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/ScheduleId$", $Id)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/Interval$", $Interval)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/AlertName$", $AlertName)	
-		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $DisplayName)	
-		$discoveryData.AddInstance($objInstance)	
 }
+
+
 #Start by setting up API object.
 	$P_TraceLevel = $TRACE_VERBOSE
 	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
@@ -247,8 +294,7 @@ try
 	}
 	$pwd = ConvertTo-SecureString $ADPassword -AsPlainText -Force
 	$cred = New-Object System.Management.Automation.PSCredential ($ADUserName, $pwd)
-	$authority = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
-	$connection = $authority.CreateAuthorizationHeader()
+	$connection = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
 }
 catch {
 	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
@@ -257,39 +303,30 @@ catch {
 }
 
 try {
+	$timeoutSeconds=300
 	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
+	#backupContainers?&api-version=2015-03-15
+	#$uri='https://management.azure.com{0}/containers?&api-version=2015-03-15' -f $vault.Id
+	$uris =@(
+		('{0}{1}/backupContainers?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
+		('{0}{1}/containers?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)		
+	)	
 
-	$rules=@()
-
-$timeout=300
-    $uri = '{0}{1}/savedSearches?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
-	$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
-	$savedSearches=@()
-	do {
-		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
-		$nextLink = $result.NextLink
-		$savedSearches += $result.values	
-	} while ($nextLink)
-
-	foreach($search in $savedSearches) {
-		$uri = '{0}{1}/schedules?api-version={2}' -f $ResourceBaseAddress,$search.Id,$OMSAPIVersion
+	foreach($uri in $uris) {
+		Log-Event $SUCCESS_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting $uri") $TRACE_VERBOSE
 		$nextLink=$null
-		$schedule = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $extLink -data $null -TimeoutSeconds $timeout -ErrorAction SilentlyContinue
-		if($schedule.values) {
-			#take into account just the first schedule for the search maybe this needs to be changed in future
-			if ($schedule.Values[0].properties.Enabled -ieq 'True') {
-			   $uri = '{0}{1}/actions?api-version={2}' -f $ResourceBaseAddress,$schedule.values.id,$OMSAPIVersion
-			   $nextLink=$null
-			   $actions = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout #-ErrorAction SilentlyContinue
-			   if ($actions.Values) {
-					if ($actions.Values[0].properties.Type -ieq 'Alert') {
-						Discover-AlertRule -Id $schedule.Values[0].id -Interval $schedule.Values[0].properties.Interval -AlertName $actions.Values[0].properties.Name
-						Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('{0}, Interval={1}, Name={2}' -f $schedule.Values[0].id, $schedule.Values[0].properties.Interval, $actions.Values[0].properties.Name ) $TRACE_VERBOSE
-					}
-			   }
+		do {
+			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -TimeoutSeconds $timeoutSeconds
+			$nextLink = $result.NextLink
+			if($result.gotValue) {	
+				foreach($container in $result.Values) {
+					write-verbose $container.properties.friendlyName					
+					Discover-BackupContainer $container
+				}
 			}
-		}
+		} while ($nextLink)
 	}
+
 	$discoveryData
 	If ($traceLevel -eq $TRACE_DEBUG)
 	{
@@ -298,13 +335,14 @@ $timeout=300
 		$g_API.Return($discoveryData)
 	}
 	
-	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
 	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
 }
+
 
 
 

@@ -24,7 +24,7 @@
           <DiscoveryClass TypeID="QND.OMS.Workspace" />
         </DiscoveryTypes>
         <DataSource ID="DS" TypeID="QNDA!QND.OMS.ArmService.SeedDiscovery.DS">
-          <IntervalSeconds>311</IntervalSeconds>
+          <IntervalSeconds>14450</IntervalSeconds>
           <SyncTime></SyncTime>
           <ApiVersion>2015-03-20</ApiVersion>
           <AzureType>Microsoft.OperationalInsights/workspaces</AzureType>
@@ -42,6 +42,10 @@
               <Setting>
                 <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Name>
                 <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+              </Setting>
+            <Setting>
+                <Name>$MPElement[Name="System!System.Entity"]/DisplayName$</Name>
+                <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceName$ ($Target/Host/Host/Property[Type="System!System.Entity"]/DisplayName$)</Value>
               </Setting>
               <Setting>
                 <Name>$MPElement[Name="QND.OMS.Workspace"]/OMSAPIVersion$</Name>

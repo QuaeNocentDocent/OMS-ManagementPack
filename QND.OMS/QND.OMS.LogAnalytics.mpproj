@@ -18,7 +18,7 @@
     <Company>Quae Nocent Nocent (QND)</Company>
     <Copyright>Copyright (c) QND. All rights reserved.</Copyright>
     <DelaySigning>False</DelaySigning>
-    <AssemblyOriginatorKeyFile>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\Firma\QND1.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\..\..\Firma\QND1.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugSymbols>false</DebugSymbols>
@@ -41,7 +41,7 @@
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.SystemCenter.MicrosoftAzure">
-      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\Microsoft.SystemCenter.MicrosoftAzure.mpb</HintPath>
+      <HintPath>..\References\Microsoft.SystemCenter.MicrosoftAzure.mpb</HintPath>
       <Alias>Azure</Alias>
       <MinVersion>1.3.18.0</MinVersion>
       <PackageToBundle>False</PackageToBundle>
@@ -58,7 +58,7 @@
     <ManagementPackReference Include="QND.AzureMPIntegration">
       <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\AzureMPIntegration\bin\Debug\QND.AzureMPIntegration.mpb</HintPath>
       <Alias>QNDA</Alias>
-      <MinVersion>2.0.0.21</MinVersion>
+      <MinVersion>2.0.0.37</MinVersion>
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="System.AdminItem.Library">
@@ -92,6 +92,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Modules.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Presentation.mpx">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="QND.OMS.Alerts.mpx">

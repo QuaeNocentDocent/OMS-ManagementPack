@@ -9,7 +9,7 @@
       </AggregateMonitor>
                           
       <UnitMonitor ID="QND.OMS.Automation.Account.Connectivity.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Account"
-        ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.Connectivity.MT" ConfirmDelivery="false">
+        ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows!Microsoft.Windows.MissingEventLogSingleEventLog2StateMonitorType" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.Automation.Account.Connectivity.Monitor.AlertMessage">
           <AlertOnState>Error</AlertOnState>
@@ -17,26 +17,109 @@
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
           <AlertParameters>
-            <AlertParameter2>$Data/Context/Property[@Name="Description"]$</AlertParameter2>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
-          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
-          <OperationalState ID="UnHealthy" MonitorTypeStateID="UnReachable" HealthState="Error" />
+          <OperationalState ID="Healthy" MonitorTypeStateID="EventRaised" HealthState="Success" />
+          <OperationalState ID="UnHealthy" MonitorTypeStateID="MissingEventRaised" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>3611</IntervalSeconds>
-          <SyncTime></SyncTime>
-          <TimeoutSeconds>900</TimeoutSeconds>
-          <TraceLevel>2</TraceLevel>
-          <TenantADName>$Target/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
-          <AccountId>$Target/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
-          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
-          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <ComputerName>.</ComputerName>
+          <LogName>Operations Manager</LogName>
+          <Expression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                    <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">11</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Progel Script</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[1]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Get-OMSRunbookStatus</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </Expression>
+          <MissingComputerName>.</MissingComputerName>
+          <MissingLogName>Operations Manager</MissingLogName>
+          <MissingExpression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">11</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Progel Script</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[1]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Get-OMSRunbookStatus</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>            
+          </MissingExpression>
+          <Consolidator>
+            <ConsolidationProperties/>
+            <TimeControl>
+              <GenericSchedule>
+               <SimpleReccuringSchedule>
+                  <Interval Unit="Minutes">240</Interval>
+                </SimpleReccuringSchedule>
+                <ExcludeDates/>
+              </GenericSchedule>
+            </TimeControl>
+            <CountingCondition>
+              <CountMode>OnNewItemNOP_OnTimerOutputRestart</CountMode>
+            </CountingCondition>
+          </Consolidator>        
         </Configuration>
       </UnitMonitor>
       <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookExecStatus.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.ExecStatus.Monitor"
-          ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountContainsRunbook"
+          ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountHostsRunbook"
           Remotable="true" Target="QND.OMS.Automation.Account">
         <Category>AvailabilityHealth</Category>
         <Algorithm>Percentage</Algorithm>
@@ -45,7 +128,7 @@
         <MemberUnAvailable>Warning</MemberUnAvailable>
       </DependencyMonitor>
       <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookRunAge.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.RunAge.Monitor"
-          ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountContainsRunbook"
+          ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountHostsRunbook"
           Remotable="true" Target="QND.OMS.Automation.Account">
         <Category>AvailabilityHealth</Category>
         <Algorithm>Percentage</Algorithm>
@@ -54,7 +137,7 @@
         <MemberUnAvailable>Warning</MemberUnAvailable>
       </DependencyMonitor>
     <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookWebHookExpiration.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor"
-          ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountContainsRunbook"
+          ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountHostsRunbook"
           Remotable="true" Target="QND.OMS.Automation.Account">
         <Category>AvailabilityHealth</Category>
         <Algorithm>Percentage</Algorithm>
@@ -63,7 +146,7 @@
         <MemberUnAvailable>Warning</MemberUnAvailable>
       </DependencyMonitor>      
       <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookLongRunning.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.LongRunning.Monitor"
-          ParentMonitorID="Health!System.Health.PerformanceState" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountContainsRunbook"
+          ParentMonitorID="Health!System.Health.PerformanceState" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountHostsRunbook"
           Remotable="true" Target="QND.OMS.Automation.Account">
         <Category>AvailabilityHealth</Category>
         <Algorithm>Percentage</Algorithm>
@@ -86,13 +169,12 @@
           <Name>Execution Status</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Account.Connectivity.Monitor.AlertMessage">
-          <Name>QND - Azure Automation Account Unreachable</Name>
-          <Description>The account is unreachable. Error:{0}</Description>
+          <Name>QND - OMS Azure Automation Account monitor not running</Name>
+          <Description>The monitoriong for the automation account is uneffective. The automation account is unreachable or the agent is stalled.</Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Account.Connectivity.Monitor">
           <Name>Connectivity</Name>
         </DisplayString>
-
         <DisplayString ElementID="QND.OMS.Automation.AccountToRunbookRunAge.DepMonitor">
           <Name>Last Exectuion Time</Name>
         </DisplayString>
@@ -102,7 +184,6 @@
         <DisplayString ElementID="QND.OMS.Automation.AccountToRunbookWebHookExpiration.DepMonitor">
           <Name>WebHooks Validity</Name>
         </DisplayString>        
-
         <DisplayString ElementID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor">
           <Name>Runbooks</Name>
         </DisplayString>

@@ -143,6 +143,10 @@
                       <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
                     </Setting>
                     <Setting>
+                      <Name>$MPElement[Name="System!System.Entity"]/DisplayName$</Name>
+                      <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceName$ ($Target/Host/Host/Property[Type="System!System.Entity"]/DisplayName$)</Value>
+                    </Setting>                    
+                    <Setting>
                       <Name>$MPElement[Name="QND.OMS.GenericService"]/ApiVersion$</Name>
                       <Value>$Config/ApiVersion$</Value>
                     </Setting>                    
@@ -158,7 +162,102 @@
           </Composite>
         </ModuleImplementation>
         <OutputType>System!System.Discovery.Data</OutputType>
-      </DataSourceModuleType>      
+      </DataSourceModuleType>
+      <DataSourceModuleType ID="QND.OMS.ArmResource.SeedDiscovery.DS" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+          <xsd:element name="AzureType" type="xsd:string" />
+          <xsd:element name="ClassId" type="xsd:string" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="DS" TypeID="System!System.Discovery.Scheduler">
+                <Scheduler>
+                  <SimpleReccuringSchedule>
+                    <Interval Unit="Seconds">$Config/IntervalSeconds$</Interval>
+                    <SyncTime>$Config/SyncTime$</SyncTime>
+                  </SimpleReccuringSchedule>
+                  <ExcludeDates/>
+                </Scheduler>
+              </DataSource>
+              <ConditionDetection ID="Mapper" TypeID="System!System.Discovery.FilteredClassSnapshotDataMapper">
+                <Expression>
+                  <SimpleExpression>
+                    <ValueExpression>
+                      <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/Type$</Value>
+                    </ValueExpression>
+                    <Operator>Equal</Operator>
+                    <ValueExpression>
+                      <Value Type="String">$Config/AzureType$</Value>
+                    </ValueExpression>
+                  </SimpleExpression>
+                </Expression>
+                <ClassId>$Config/ClassId$</ClassId>
+                <InstanceSettings>
+                  <Settings>
+                    <Setting>
+                      <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Name>
+                      <Value>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</Name>
+                      <Value>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Name>
+                      <Value>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</Name>
+                      <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</Value>
+                    </Setting>
+
+                    <Setting>
+                      <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceName$</Name>
+                      <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceName$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/Type$</Name>
+                      <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/Type$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/SubscriptionId$</Name>
+                      <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/SubscriptionId$</Value>
+                    </Setting>
+
+                    <Setting>
+                      <Name>$MPElement[Name="QND.OMS.GenericResource"]/ResourceGroup$</Name>
+                      <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmResource"]/ResourceGroup$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="QND.OMS.GenericResource"]/Tags$</Name>
+                      <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmResource"]/Tags$</Value>
+                    </Setting>
+
+                    <Setting>
+                      <Name>$MPElement[Name="System!System.Entity"]/DisplayName$</Name>
+                      <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceName$ ($Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceName$)</Value>
+                    </Setting>
+
+                  </Settings>
+                </InstanceSettings>
+              </ConditionDetection>
+            </MemberModules>
+            <Composition>
+              <Node ID="Mapper">
+                <Node ID="DS" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
       
       <WriteActionModuleType ID="QND.DiscoveryEvent.WAT" Accessibility="Public" Batching="false">
         <Configuration>

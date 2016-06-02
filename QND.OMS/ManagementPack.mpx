@@ -5,7 +5,7 @@
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
         <DisplayString ElementID="QND.OMS.LogAnalytics">
-          <Name>QND - Microsoft OMS Log Analytics monitoring</Name>
+          <Name>QND - OMS Log Analytics</Name>
           <Description>QND Community Management Pack for monitoring Microsoft Operations Management Suite #MSOMS</Description>
         </DisplayString>
       </DisplayStrings>

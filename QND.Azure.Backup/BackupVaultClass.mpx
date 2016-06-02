@@ -37,7 +37,7 @@
             <DiscoveryClass TypeID="QND.OMS.Backup.Vault" />          
           </DiscoveryTypes>
           <DataSource ID="DS" TypeID="QNDA!QND.OMS.ArmService.SeedDiscoverywApi.DS">
-            <IntervalSeconds>507</IntervalSeconds>
+            <IntervalSeconds>14437</IntervalSeconds>
             <SyncTime></SyncTime>
             <ApiVersion>2015-03-15</ApiVersion>
             <AzureType>microsoft.backup/BackupVault</AzureType>
@@ -50,7 +50,7 @@
           <DiscoveryClass TypeID="QND.OMS.Recovery.Vault" />
         </DiscoveryTypes>
         <DataSource ID="DS" TypeID="QNDA!QND.OMS.ArmService.SeedDiscoverywApi.DS">
-          <IntervalSeconds>517</IntervalSeconds>
+          <IntervalSeconds>14539</IntervalSeconds>
           <SyncTime></SyncTime>
           <ApiVersion>2016-05-01</ApiVersion>
           <AzureType>Microsoft.RecoveryServices/vaults</AzureType>

@@ -21,7 +21,7 @@
         <!-- This is the string users of the Operations Console and Web Console will see. 
              Descriptions are also helpful when the user is doing a search in the Console. -->
         <DisplayString ElementID="QND.OMS.GenericService">
-          <Name>QND OMS Generic Arm Service</Name>
+          <Name>QND - OMS Generic Arm Service</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.GenericService" SubElementID="ApiVersion">

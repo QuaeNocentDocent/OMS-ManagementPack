@@ -70,7 +70,10 @@ param(
         $contentLength = $byteArray.Length
         $headers.Add("Content-Length",$contentLength)
     }
-    if ($nextLink) {$restUri = $startUri+$nextLink}
+    if ($nextLink) {
+        if($nextLink.Substring(0,4) -ieq 'http') {$restUri=$nextLink}
+        else {$restUri = $startUri+$nextLink}
+    }
     else {$restUri=$startUri}
     Write-Verbose ('HTTP {0} {1}' -f $HTTPVerb, $restUri)
     Write-Verbose 'Dumping Headers...'
@@ -109,23 +112,30 @@ param(
 			$returnValues=$null
 			$nl=$null
 		}
+        $StatusCode=$result.StatusCode
       $returnObject = new-object -TypeName PSCustomObject -Property @{
         'Values' = $returnValues
         'NextLink' = $nl
-        'StatusCode' = $result.StatusCode
+        'StatusCode' = $StatusCode
 		'GotValue' = $gotValue
         }
     }
     catch {
-     Write-Error ('Exception processing query {0}' -f $_.GetType().FullName)
-     Write-Verbose $_
+        Write-Error ('Exception processing query {0}' -f $_.GetType().FullName)
+        Write-Verbose $_
+        $nl=$null
+        if ($result) {$StatusCode=$result.StatusCode}
+        else {
+            $StatusCode=500
+            [array]$returnValues = $_.Message
+        }
     }
 	finally {
-      $returnObject = new-object -TypeName PSCustomObject -Property @{
-        'Values' = $returnValues
-        'NextLink' = $nl
-        'StatusCode' = $result.StatusCode
-		'GotValue' = $gotValue
+          $returnObject = new-object -TypeName PSCustomObject -Property @{
+            'Values' = $returnValues
+            'NextLink' = $nl
+            'StatusCode' = $StatusCode
+		    'GotValue' = $gotValue
         }
 	}
     

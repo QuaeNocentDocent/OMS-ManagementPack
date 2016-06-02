@@ -30,7 +30,7 @@
       </Presentation>
       <Target />
     </View>
-      <View ID="QND.OMS.Automation.RunbookState.View" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Runbook" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+      <View ID="QND.OMS.Automation.RunbookState.View" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.RunbookGen" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
         <Category>Operations</Category>
         <Criteria>
  
@@ -38,7 +38,7 @@
         <Presentation>
           <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
             <Name>State</Name>
-            <Id>QND.OMS.Automation.Runbook</Id>
+            <Id>QND.OMS.Automation.RunbookGen</Id>
           </ColumnInfo>
           <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
             <Name>Maintenance Mode</Name>
@@ -64,7 +64,7 @@
       </Views>
 
     <Folders>
-      <Folder ID="QND.OMS.Automation.Folder" ParentFolder="OMS!QND.OMS.Folders" Accessibility="Public"/>
+      <Folder ID="QND.OMS.Automation.Folder" ParentFolder="QNDA!QND.OMS.Folders" Accessibility="Public"/>
     </Folders>
     <FolderItems>
       

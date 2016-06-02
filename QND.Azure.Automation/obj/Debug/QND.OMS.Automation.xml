@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>QND.OMS.Automation</ID>
-      <Version>1.0.0.38</Version>
+      <Version>2.0.0.38</Version>
     </Identity>
     <Name>QND.OMS.Automation</Name>
     <References>
@@ -12,10 +12,20 @@
         <Version>7.0.8433.0</Version>
         <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
       </Reference>
+      <Reference Alias="Azure">
+        <ID>Microsoft.SystemCenter.MicrosoftAzure</ID>
+        <Version>1.3.18.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
       <Reference Alias="Windows">
         <ID>Microsoft.Windows.Library</ID>
         <Version>7.5.8501.0</Version>
         <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="QNDA">
+        <ID>QND.AzureMPIntegration</ID>
+        <Version>2.0.0.37</Version>
+        <PublicKeyToken>e5fcf8e8afa3370a</PublicKeyToken>
       </Reference>
       <Reference Alias="Health">
         <ID>System.Health.Library</ID>
@@ -27,507 +37,59 @@
         <Version>7.5.8501.0</Version>
         <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
       </Reference>
-      <Reference Alias="OMS">
-        <ID>QND.OMS</ID>
-        <Version>1.0.0.54</Version>
-        <PublicKeyToken>e5fcf8e8afa3370a</PublicKeyToken>
-      </Reference>
     </References>
   </Manifest>
   <TypeDefinitions>
     <EntityTypes>
       <ClassTypes>
-        <ClassType ID="QND.OMS.Automation.Account" Base="System!System.ApplicationComponent" Accessibility="Internal" Abstract="false" Hosted="true" Singleton="false">
-          <Property ID="Id" Key="false" Type="string" MaxLength="512" />
-          <Property ID="Name" Key="true" Type="string" />
-          <Property ID="ResourceGroup" Key="false" Type="string" />
-          <!-- included even if we have an hosting relationship to make easier some type of query -->
-          <Property ID="Subscription" Key="false" Type="string" />
-          <Property ID="Location" Key="false" Type="string" />
-          <Property ID="Type" Key="false" Type="string" />
-          <Property ID="Sku" Key="false" Type="string" />
-        </ClassType>
-        <ClassType ID="QND.OMS.Automation.Runbook" Base="System!System.ApplicationComponent" Accessibility="Internal" Abstract="false" Hosted="true" Singleton="false">
-          <Property ID="Id" Key="false" Type="string" MaxLength="512" />
-          <Property ID="Name" Key="true" Type="string" />
-          <Property ID="Location" Key="false" Type="string" />
-          <Property ID="Type" Key="false" Type="string" />
+        <ClassType ID="QND.OMS.Automation.Account" Base="QNDA!QND.OMS.GenericService" Accessibility="Internal" Abstract="false" Hosted="true" Singleton="false"></ClassType>
+        <ClassType ID="QND.OMS.Automation.RunbookGen" Base="QNDA!QND.OMS.GenericResource" Accessibility="Internal" Abstract="false" Hosted="true" Singleton="false">
           <Property ID="RunbookType" Key="false" Type="string" />
         </ClassType>
       </ClassTypes>
       <RelationshipTypes>
-        <RelationshipType ID="QND.OMS.SubscriptionContainsAutomationAccount" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
-          <Source ID="Subscription" Type="OMS!QND.OMS.Azure.Subscription" />
-          <Target ID="Account" Type="QND.OMS.Automation.Account" />
-        </RelationshipType>
-        <RelationshipType ID="QND.OMS.Automation.AccountContainsRunbook" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
+        <RelationshipType ID="QND.OMS.Automation.AccountHostsRunbook" Accessibility="Internal" Base="System!System.Hosting">
           <Source ID="Account" Type="QND.OMS.Automation.Account" />
-          <Target ID="Runbook" Type="QND.OMS.Automation.Runbook" />
+          <Target ID="Runbook" Type="QND.OMS.Automation.RunbookGen" />
         </RelationshipType>
       </RelationshipTypes>
     </EntityTypes>
     <ModuleTypes>
-      <DataSourceModuleType ID="QND.OMS.Automation.Discovery.DS" Accessibility="Internal" Batching="false">
-        <Configuration>
-          <xsd:element name="TraceLevel" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="TimeoutSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="SubscriptionId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="ExcludedAccountsList" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-        </Configuration>
-        <OverrideableParameters>
-          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
-          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
-          <OverrideableParameter ID="ExcludedAccountsList" Selector="$Config/ExcludedAccountsList$" ParameterType="string" />
-        </OverrideableParameters>
-        <ModuleImplementation>
-          <Composite>
-            <MemberModules>
-              <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.TimedPowerShell.DiscoveryProvider">
-                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
-                <SyncTime>$Config/SyncTime$</SyncTime>
-                <ScriptName>Discover-AzureAutomation.ps1</ScriptName>
-                <ScriptBody>
-                  <![CDATA[#$guid='{{{0}}}' -f (new-guid).guid
-
-## This discovery needs to be splitted 'cause potentially can discover a huge number of entities
-## Gorup memeberhsip must be changed and split in diffrent rules using the properties we're setting
-
-#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
-#SET ErrorLevel to 5 so show discovery info
-#https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
-
-#*************************************************************************
-# Script Name - Discover-AzureAutomation
-# Author	  - Daniele Grandini
-# Version  - 1.0 20.10.2015
-# Purpose     - 
-#               
-# Assumptions - 
-#				
-#               
-# Parameters  - TraceLevel
-#             - ComputerName
-#				- SourceId
-#				- ManagedEntityId
-# Command Line - .\test.ps1 4 "serverName" '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}' '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}'
-# If discovery must be added the followinf parameters
-#				SourceId ($ MPElement $ )
-#				ManagedEntityId ($ Target/Id $)
-#
-# Output properties
-#
-# Status
-#
-# 1.0 History
-#	  1.0 06.08.2010 DG First Release
-#     1.5 15.02.2014 DG minor cosmetics
-#
-# (c) Copyright 2015, Progel spa, All Rights Reserved
-# Proprietary and confidential to Progel srl              
-#
-#*************************************************************************
-
-
-# Get the named parameters
-param(
-[Parameter (Mandatory=$True)] [int]$traceLevel,
-[Parameter (Mandatory=$true)] [string]$sourceID,
-[Parameter (Mandatory=$true)] [string]$ManagedEntityId,
-[Parameter (Mandatory=$true)] [String]$TenantADName,
-[Parameter (Mandatory=$true)] [String]$SubscriptionId,
-[Parameter (Mandatory=$true)] [String]$Username,
-[Parameter (Mandatory=$true)] [String]$Password,
-[Parameter (Mandatory=$false)] [String]$ExcludedAccounts,
-[String]$Proxyurl #nyi
-
-)
-
-	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
-	[Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
-	
-#Constants used for event logging
-$SCRIPT_NAME			= "Disocver-AzureAccount"
-$SCRIPT_ARGS = 9
-$SCRIPT_STARTED			= 831
-$PROPERTYBAG_CREATED	= 832
-$SCRIPT_ENDED			= 835
-$SCRIPT_VERSION = "1.0"
-
-#region Constants
-#Trace Level Costants
-$TRACE_NONE 	= 0
-$TRACE_ERROR 	= 1
-$TRACE_WARNING = 2
-$TRACE_INFO 	= 3
-$TRACE_VERBOSE = 4
-$TRACE_DEBUG = 5
-
-#Event Type Constants
-$EVENT_TYPE_SUCCESS      = 0
-$EVENT_TYPE_ERROR        = 1
-$EVENT_TYPE_WARNING      = 2
-$EVENT_TYPE_INFORMATION  = 4
-$EVENT_TYPE_AUDITSUCCESS = 8
-$EVENT_TYPE_AUDITFAILURE = 16
-
-#Standard Event IDs
-$FAILURE_EVENT_ID = 4000		#errore generico nello script
-$SUCCESS_EVENT_ID = 1101
-$START_EVENT_ID = 1102
-$STOP_EVENT_ID = 1103
-$INFO_EVENT_ID = 1104
-
-#TypedPropertyBag
-$AlertDataType = 0
-$EventDataType	= 2
-$PerformanceDataType = 2
-$StateDataType       = 3
-#endregion
-
-#region Helper Functions
-function Log-Params
-{
-	param($Invocation)
-	$line=''
-	foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
-	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. Invocation Name:$($Invocation.InvocationName)`n Parameters`n $line") $TRACE_INFO
-}
-
-
-function Log-Event
-{
-	param($eventID, $eventType, $msg, $level)
-	
-	Write-Verbose ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
-	if($level -le $P_TraceLevel)
-	{
-		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
-		$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
-	}
-}
-
-Function Throw-EmptyDiscovery
-{
-	param($SourceId, $ManagedEntityId)
-
-	$oDiscoveryData = $g_API.CreateDiscoveryData(0, $SourceId, $ManagedEntityId)
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
-	$oDiscoveryData
-	If($traceLevel -eq $TRACE_DEBUG)
-	{
-		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent
-		$g_API.Return($oDiscoveryData)
-	}
-}
-
-Function Throw-KeepDiscoveryInfo
-{
-param($SourceId, $ManagedEntityId)
-	$oDiscoveryData = $g_API.CreateDiscoveryData(0,$SourceId,$ManagedEntityId)
-	#Instead of Snapshot discovery, submit Incremental discovery data
-	$oDiscoveryData.IsSnapshot = $false
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
-	$oDiscoveryData    
-	If($traceLevel -eq $TRACE_DEBUG)
-	{
-		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
-		$g_API.Return($oDiscoveryData)
-	}
-}
-#endregion
-
-
-#id       : /subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OaaSCSHRWRPZB6GXQVDR3MZN4LZ2ID5KGAHA3HNK26JFKSEGZK7HOMRALQ-West-Europe/providers/Microsoft.Automati
-#           on/automationAccounts/PreLabsAutoWE
-#name     : PreLabsAutoWE
-#type     : Microsoft.Automation/automationAccounts
-#location : westeurope
-#tags     : 
-
-#name       : PreLabsAutoWE
-#id         : /subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OaaSCSHRWRPZB6GXQVDR3MZN4LZ2ID5KGAHA3HNK26JFKSEGZK7HOMRALQ-West-Europe/providers/Microsoft.Automa
-#             tion/automationAccounts/PreLabsAutoWE
-#type       : Microsoft.Automation/AutomationAccounts
-#location   : West Europe
-#tags       : 
-#etag       : 
-#properties : @{sku=; state=Ok; creationTime=2015-03-18T16:42:16.713+00:00; lastModifiedBy=; lastModifiedTime=2015-10-19T11:02:30.847+00:00}
-
-Function Discover-AutomationAccount
-{
-	param($obj, $ResourceGroup, $Subscription)
-
-		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Automation.Account']$")	
-		$objInstance.AddProperty("$MPElement[Name='OMS!QND.OMS.Azure.Subscription']/Id$", $subscription)		
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Account']/Id$", $obj.Id)		
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Account']/Name$", $obj.Name)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Account']/ResourceGroup$", $ResourceGroup)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Account']/Subscription$", $Subscription)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Account']/Location$", $obj.location)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Account']/Type$", $obj.type)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Account']/Sku$", $obj.properties.sku.name)	
-
-		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.Name)	
-		$discoveryData.AddInstance($objInstance)	
-}
-
-
-#id         : /subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OaaSCSHRWRPZB6GXQVDR3MZN4LZ2ID5KGAHA3HNK26JFKSEGZK7HOMRALQ-West-Europe/providers/Microsoft.Automa
-#             tion/automationAccounts/PreLabsAutoWE/runbooks/Tagetik-FirstConfig
-#name       : Tagetik-FirstConfig
-#type       : Microsoft.Automation/AutomationAccounts/Runbooks
-#location   : West Europe
-#tags       : 
-#etag       : "635772989264900000"
-#properties : @{description=Cross cloud DSC configuration; logVerbose=False; logProgress=False; logActivityTrace=1; runbookType=Script; parameters=; state=Edit; jobCount=9; 
-#             provisioningState=; serviceManagementTags=; creationTime=2015-09-03T14:41:21.733+00:00; lastModifiedBy=live.com#daniele.grandini@live.it; 
-#             lastModifiedTime=2015-09-08T08:48:46.49+00:00}
-
-#PS C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\QND.OMS\OMSSearch> $jres.properties
-
-#description           : Cross cloud DSC configuration
-#logVerbose            : False
-#logProgress           : False
-#logActivityTrace      : 1
-#runbookType           : Script
-#parameters            : @{AzureSubscription=; adminPassword=; publicPort=; LocalAdmin=; ConfigName=; publicDnsName=; assetsRG=; assetsStg=; assetName=; assetsContainer=; 
-#                        destinationFolder=}
-#state                 : Edit
-#jobCount              : 9
-#provisioningState     : 
-#serviceManagementTags : 
-#creationTime          : 2015-09-03T14:41:21.733+00:00
-#lastModifiedBy        : live.com#daniele.grandini@live.it
-#lastModifiedTime      : 2015-09-08T08:48:46.49+00:00
-
-
-Function Discover-AutomationRunbook
-{
-	param($obj, $subscription, $account)
-
-    try {
-	if ([String]::IsNullOrEmpty($obj.Name)) {return;}
-		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Automation.Runbook']$")	
-		$objInstance.AddProperty("$MPElement[Name='OMS!QND.OMS.Azure.Subscription']/Id$", $subscription)
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Account']/Name$", $account)		
-
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Runbook']/Id$", $obj.Id)	
-        $objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Runbook']/Name$", $obj.Name)	
-        $objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Runbook']/Type$", $obj.Type)	
-        $objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Runbook']/Location$", $obj.Location)	
-        $objInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.Runbook']/RunbookType$", $obj.Properties.runbookType)	
-
-		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.Name)	
-		$discoveryData.AddInstance($objInstance)	
-    }
-    catch {
-        Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Error disocverying runbook {1} in account {0} - {2}' -f $account.name, $obj.Id, $Error[0]) $TRACE_WARNING	
-	    write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
-	    Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
-    }
-
-}
-
-#Start by setting up API object.
-	$P_TraceLevel = $TRACE_VERBOSE
-	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
-	#$g_RegistryStatePath = "HKLM\" + $g_API.GetScriptStateKeyPath($SCRIPT_NAME)
-
-	$dtStart = Get-Date
-	$P_TraceLevel = $traceLevel
-	Log-Params $MyInvocation
-
-
-try {
-	$ResPath = (get-itemproperty -path 'HKLM:\system\currentcontrolset\services\healthservice\Parameters' -Name 'State Directory').'State Directory' + '\Resources'
-	if(Test-Path $ResPath) {
-		$module = @(get-childitem -path $ResPath -Name OMSSearch.psm1 -Recurse)[0]
-	}
-	if($module) { $OMSSearchModule = "$ResPath\$module"}
-	else {$OMSSearchModule = '.\OMSSearch.psm1'}
-    if(! (Get-MOdule -Name OMSSearch)) {
-	    If (Test-Path $OMSSearchModule) {Import-Module $OMSSearchModule}
-	    else {Throw [System.DllNotFoundException] 'OMSSearch.psm1 not found'}
-    }
-
-#now load the AAD client resource. The module I'm using assumes the assembly is in the same directory of the module, but OpsMgr resource deployment uses 2 different folders
-
-	$AssemblyName = 'Microsoft.IdentityModel.Clients.ActiveDirectory'
-	$AssemblyVersion = "2.14.0.0"
-	$AssemblyPublicKey = "31bf3856ad364e35"
-
-	$DLLPath = "$ResPath\"+@(get-childitem -path $ResPath -Name "$($AssemblyName).dll" -Recurse)[0]
-	If (!([AppDomain]::CurrentDomain.GetAssemblies() |Where-Object { $_.FullName -eq "$AssemblyName, Version=$AssemblyVersion, Culture=neutral, PublicKeyToken=$AssemblyPublicKey"}))
-	{
-		Log-Event $INFO_EVENT_ID $EVENT_TYPE_INFO ("Loading Assembly $AssemblyName") $TRACE_VERBOSE
-		Try {
-			[Void][System.Reflection.Assembly]::LoadFrom($DLLPath)
-		} Catch {
-			Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Unable to load $DLLPath. $Error") $TRACE_ERROR
-			exit 1
-		}
-	}
-
-	if (!(get-command -Module OMSSearch -Name Get-AADToken -ErrorAction SilentlyContinue)) {
-		Log-Event $START_EVENT_ID $EVENT_TYPE_WARNING ("Get-AADToken Commandlet doesn't exist.") $TRACE_WARNING
-		Throw-KeepDiscoveryInfo
-		exit 1
-	}
-	$token = Get-AADToken -TenantADName $TenantADName -Username $Username -Password $Password
-	if (! $token) {Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Get-AADToken canno authenticate user $username " + $Error) $TRACE_ERROR; exit 1;}
-}
-catch {
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Main " + $Error) $TRACE_ERROR
-	exit 1
-}
-
-try
-{
-    $exclusions=@()
-    if (! ([String]::IsNullOrEmpty($ExcludedAccounts))) {$exclusions = $ExcludedAccounts.Split(',')}
-    
-	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
-    #first discover the accounts
-	$uri='https://management.azure.com/subscriptions/{0}/resources?api-version=2014-04-01-preview&$filter=(resourceType eq ''microsoft.automation/automationaccounts'')' -f $SubscriptionId
-	$jres = Invoke-ARMGet -Token $token -Uri $uri
-	if(! $jres) {Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Invoke-ARMGet failed $uri " + $Error) $TRACE_ERROR; exit 1;}
-	foreach($account in $jres.Value) {
-        if ($exclusions -inotcontains $account.Name) {
-            #get account details
-            Log-Event -eventID $INFO_EVENT_ID -eventType $EVENT_TYPE_INFORMATION -msg ('Discovering Automation Account {0}' -f $account.Name) -level $TRACE_VERBOSE
-            try {
-                $account.Id -match '(?<=(resourceGroups\/))(?<Group>.*)(?=(\/providers))'
-		        $ResourceGroup = $matches.Group
-                #$uri='https://management.azure.com/subscriptions/{0}/resourceGroups/{2}/providers/Microsoft.Automation/automationAccounts/{1}?api-version=2015-01-01-preview' -f $SubscriptionId, $account.name, $resourceGroup
-                $uri='https://management.azure.com{0}?api-version=2015-01-01-preview' -f $account.Id
-                $accountDet = Invoke-ARMGet -Token $token -Uri $uri
-                Discover-AutomationAccount -obj $accountDet -ResourceGroup $ResourceGroup -Subscription $SubscriptionId
-            }
-            catch {
-                Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Error disocverying account {0} - {1}' -f $account.name, $Error[0]) $TRACE_WARNING	
-	            write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
-	            Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
-                continue;
-            }
-            try {
-                #now discover the runbooks for this account
-
-                $uri='https://management.azure.com{0}/runbooks?api-version=2015-01-01-preview' -f $account.Id
-                $runbooks = Invoke-ARMGet -Token $token -Uri $uri
-                foreach($runbook in $runbooks.Value) {      
-                    Log-Event -eventID $INFO_EVENT_ID -eventType $EVENT_TYPE_INFORMATION -msg ('Discovering Runbook {1} in Automation Account {0}' -f $account.Name, $runbook.Name) -level $TRACE_VERBOSE              
-                    Discover-AutomationRunbook -obj $runbook -subscription $SubscriptionId -account $account.Name
-                } 
-            }
-            catch {
-                Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Error disocverying runbooks for account {0} - {1}' -f $account.name, $Error[0]) $TRACE_WARNING	
-	            write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
-	            Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
-                continue;
-            }
-        }
-        else {Log-Event -eventID $INFO_EVENT_ID -eventType $EVENT_TYPE_INFORMATION -msg ('Automation Account {0} filtreed out' -f $account.Name) -level $TRACE_INFO}
-    }
-
-	$discoveryData
-	If ($traceLevel -eq $TRACE_DEBUG)
-	{
-		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
-		#it breaks in exception when run insde OpsMgr and POSH IDE	
-		$g_API.Return($discoveryData)
-	}
-	#get all the subscriptions
-	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
-}
-Catch [Exception] {
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
-	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
-	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
-}
-]]>
-                </ScriptBody>
-                <Parameters>
-                  <Parameter>
-                    <Name>TraceLevel</Name>
-                    <Value>$Config/TraceLevel$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>SourceId</Name>
-                    <Value>$MPElement$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>ManagedEntityId</Name>
-                    <Value>$Target/Id$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>TenantADName</Name>
-                    <Value>$Config/TenantADName$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>SubscriptionId</Name>
-                    <Value>$Config/SubscriptionId$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>Username</Name>
-                    <Value>$Config/AADUserName$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>Password</Name>
-                    <Value>$Config/AADPassword$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>ExcludedAccounts</Name>
-                    <Value>$Config/ExcludedAccountsList$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>ProxyUrl</Name>
-                    <Value></Value>
-                  </Parameter>
-                </Parameters>
-                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
-                <StrictErrorHandling>false</StrictErrorHandling>
-                <!-- true only for Tasks -->
-              </DataSource>
-            </MemberModules>
-            <Composition>
-              <Node ID="DS" />
-            </Composition>
-          </Composite>
-        </ModuleImplementation>
-        <OutputType>System!System.Discovery.Data</OutputType>
-      </DataSourceModuleType>
       <DataSourceModuleType ID="QND.OMS.Automation.RunbookStatus.DS" Accessibility="Public" Batching="false">
         <Configuration>
           <xsd:element name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="AccountId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="RunbookId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ClientId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SubscriptionId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Proxy" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="LastNJobs" type="xsd:int" default="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxFailures" type="xsd:int" default="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="FailureCondition" type="xsd:string" default="^[4|9]$" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxAgeHours" type="xsd:int" default="-1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxRuntimeMinutes" type="xsd:int" default="-1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="WebHookExpirationDays" type="xsd:int" default="-1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="WebHookExpirationSilence" type="xsd:int" default="-1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="RunMode" type="xsd:string" default="Data" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceURI" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="APIVersion" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Heartbeat" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Tolerance" type="xsd:double" minOccurs="0" maxOccurs="1" default="0.5" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="OnlySJWH" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="LookbackDays" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="LastNJobs" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MaxFailures" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="FailureCondition" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MaxAgeHours" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MaxRuntimeMinutes" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WebHookExpirationDays" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WebHookExpirationSilence" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$" />
+          <OverrideableParameter ID="Tolerance" ParameterType="double" Selector="$Config/Tolerance$" />
+          <OverrideableParameter ID="OnlySJWH" ParameterType="int" Selector="$Config/OnlySJWH$" />
+          <OverrideableParameter ID="LookbackDays" ParameterType="int" Selector="$Config/LookbackDays$" />
           <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$" />
           <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$" />
           <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$" />
@@ -546,11 +108,19 @@ Catch [Exception] {
               <ProbeAction ID="Probe" TypeID="QND.OMS.Automation.RunbookStatus.PT">
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
                 <TraceLevel>$Config/TraceLevel$</TraceLevel>
-                <TenantADName>$Config/TenantADName$</TenantADName>
-                <AccountId>$Config/AccountId$</AccountId>
-                <RunbookId>$Config/RunbookId$</RunbookId>
+                <ClientId>$Config/ClientId$</ClientId>
+                <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+                <Proxy>$Config/Proxy$</Proxy>
+                <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+                <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
                 <AADUserName>$Config/AADUserName$</AADUserName>
                 <AADPassword>$Config/AADPassword$</AADPassword>
+                <ResourceURI>$Config/ResourceURI$</ResourceURI>
+                <APIVersion>$Config/APIVersion$</APIVersion>
+                <Heartbeat>$Config/Heartbeat$</Heartbeat>
+                <Tolerance>$Config/Tolerance$</Tolerance>
+                <OnlySJWH>$Config/OnlySJWH$</OnlySJWH>
+                <LookbackDays>$Config/LookbackDays$</LookbackDays>
                 <LastNJobs>$Config/LastNJobs$</LastNJobs>
                 <MaxFailures>$Config/MaxFailures$</MaxFailures>
                 <FailureCondition>$Config/FailureCondition$</FailureCondition>
@@ -558,7 +128,6 @@ Catch [Exception] {
                 <MaxRuntimeMinutes>$Config/MaxRuntimeMinutes$</MaxRuntimeMinutes>
                 <WebHookExpirationDays>$Config/WebHookExpirationDays$</WebHookExpirationDays>
                 <WebHookExpirationSilence>$Config/WebHookExpirationSilence$</WebHookExpirationSilence>
-                <RunMode>$Config/RunMode$</RunMode>
               </ProbeAction>
             </MemberModules>
             <Composition>
@@ -574,11 +143,19 @@ Catch [Exception] {
         <Configuration>
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="AccountId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="RunbookId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ClientId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SubscriptionId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Proxy" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceURI" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="APIVersion" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Heartbeat" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Tolerance" type="xsd:double" minOccurs="0" maxOccurs="1" default="0.5" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="OnlySJWH" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="LookbackDays" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="LastNJobs" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="MaxFailures" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="FailureCondition" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
@@ -586,15 +163,18 @@ Catch [Exception] {
           <xsd:element name="MaxRuntimeMinutes" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="WebHookExpirationDays" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="WebHookExpirationSilence" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="RunMode" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$" />
+          <OverrideableParameter ID="Tolerance" ParameterType="double" Selector="$Config/Tolerance$" />
+          <OverrideableParameter ID="OnlySJWH" ParameterType="int" Selector="$Config/OnlySJWH$" />
+          <OverrideableParameter ID="LookbackDays" ParameterType="int" Selector="$Config/LookbackDays$" />
           <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$" />
           <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$" />
           <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$" />
           <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$" />
+          <OverrideableParameter ID="MaxRuntimeMinutes" ParameterType="int" Selector="$Config/MaxRuntimeMinutes$" />
           <OverrideableParameter ID="WebHookExpirationDays" ParameterType="int" Selector="$Config/WebHookExpirationDays$" />
           <OverrideableParameter ID="WebHookExpirationSilence" ParameterType="int" Selector="$Config/WebHookExpirationSilence$" />
         </OverrideableParameters>
@@ -602,18 +182,17 @@ Catch [Exception] {
           <Composite>
             <MemberModules>
               <ProbeAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
-                <ScriptName>Get-AutomationRunbookStatus.ps1</ScriptName>
+                <ScriptName>Get-OMSRunbookStatus.ps1</ScriptName>
                 <ScriptBody>
                   <![CDATA[
 
 #TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
 #SET ErrorLevel to 5 so show discovery info
 #https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
-
 #*************************************************************************
-# Script Name - Get-AutomationRunbookStatus
-# Author	  - Daniele Grandini - Progel spa
-# Version  - 1.0 21/10/2015
+# Script Name - 
+# Author	  -  Daniele Grandini - QND
+# Version	  - 1.0 30-04-2016
 # Purpose     - 
 #               
 # Assumptions - 
@@ -632,43 +211,51 @@ Catch [Exception] {
 #
 # Status
 #
-# 1.0 History
+# Version History
+#	  1.0 06.08.2010 DG First Release
+#     1.5 15.02.2014 DG minor cosmetics
 #
-# (c) Copyright 2015, Progel spa, All Rights Reserved
-# Proprietary and confidential to Progel spa              
+# (c) Copyright 2010, Progel srl, All Rights Reserved
+# Proprietary and confidential to Progel srl              
 #
 #*************************************************************************
 
 
 # Get the named parameters
-param(
-	[Parameter (Mandatory=$True)] [int]$traceLevel,
-	[Parameter (Mandatory=$true)] [String]$TenantADName,
-	[Parameter (Mandatory=$True)] [String]$AccountId,
-	[Parameter (Mandatory=$true)] [String]$Username,
-	[Parameter (Mandatory=$true)] [String]$Password,
-	[Parameter (Mandatory=$false)] [String]$Proxyurl, #nyi
+param([int]$traceLevel=2,
+[Parameter (Mandatory=$true)][string]$clientId,
+[Parameter (Mandatory=$true)][string]$SubscriptionId,
+[string]$Proxy,
+[Parameter (Mandatory=$true)][string]$AuthBaseAddress,
+[Parameter (Mandatory=$true)][string]$ResourceBaseAddress,
+[Parameter (Mandatory=$true)][string]$ADUserName,
+[Parameter (Mandatory=$true)][string]$ADPassword,
+[Parameter (Mandatory=$true)][string]$resourceURI,
+[string]$APIVersion='2015-10-31',
+[Parameter (Mandatory=$false)][int]$Heartbeat=1,
+[Parameter (Mandatory=$false)] [int]$timeoutSeconds=300,
+
+    [Parameter (Mandatory=$false)] [double]$tolerance=0.5,
+    [Parameter (Mandatory=$false)] [int]$onlySJWH=1,
+    [Parameter (Mandatory=$false)] [int]$lookbackDays=-45,
 	[Parameter (Mandatory=$false)] [int]$LastnJobs=5,
 	[Parameter (Mandatory=$false)] [int]$MaxFailures=0,
-	[Parameter (Mandatory=$false)] [String]$FailureCondition='^[4|9]$',
+	[Parameter (Mandatory=$false)] [String]$FailureCondition='^[failed]$',
 	[Parameter (Mandatory=$false)] [int]$MaxAge=-1,
 	[Parameter (Mandatory=$false)] [int]$MaxRuntime=-1,
-	[Parameter (Mandatory=$false)] [String]$RunbookId,
 	[Parameter (Mandatory=$false)] [int]$WebHookExpirationDays=-1,
-	[Parameter (Mandatory=$false)] [int]$WebHookExpirationSilence=30,
-	[Parameter (Mandatory=$false)] [String]$RunMode='Data'
+	[Parameter (Mandatory=$false)] [int]$WebHookExpirationSilence=30
+
+
 )
 
+ 
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
-	[Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
+    [Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
 
-#region Constants
+#region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "Get-AutomationRunbookStatus"
-$SCRIPT_ARGS = 15
-$SCRIPT_STARTED			= 831
-$PROPERTYBAG_CREATED	= 832
-$SCRIPT_ENDED			= 835
+$SCRIPT_NAME			= "Get-OMSRunbookStatus"
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -692,23 +279,59 @@ $FAILURE_EVENT_ID = 4000		#errore generico nello script
 $SUCCESS_EVENT_ID = 1101
 $START_EVENT_ID = 1102
 $STOP_EVENT_ID = 1103
-$INFO_EVENT_ID = 1104
 
 #TypedPropertyBag
 $AlertDataType = 0
 $EventDataType	= 2
 $PerformanceDataType = 2
 $StateDataType       = 3
+
+$EventSource = 'Progel Script'
+$EventLog= 'Operations Manager'
 #endregion
 
-#region Helper Functions
+#region Logging
+
+if ([System.Diagnostics.EventLog]::SourceExists($EventSource) -eq $false) {
+    [System.Diagnostics.EventLog]::CreateEventSource($EventSource, $eventlog)
+}
+
 function Log-Params
 {
-	param($Invocation)
-	$line=''
-	foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
+    param($Invocation)
+    $line=''
+    foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
 	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. Invocation Name:$($Invocation.InvocationName)`n Parameters`n $line") $TRACE_INFO
 }
+
+function Create-Event
+  {
+    param(
+    [int] $eventID, 
+    [int] $eventType,
+    [string] $msg,
+    [string[]] $parameters)
+
+    switch ($eventType) {
+        $EVENT_TYPE_SUCCESS {$nativeType=[System.Diagnostics.EventLogEntryType]::Information}
+        $EVENT_TYPE_ERROR {$nativeType=[System.Diagnostics.EventLogEntryType]::Error}
+        $EVENT_TYPE_WARNING {$nativeType=[System.Diagnostics.EventLogEntryType]::Warning}
+        $EVENT_TYPE_INFORMATION {$nativeType=[System.Diagnostics.EventLogEntryType]::Information}
+        $EVENT_TYPE_AUDITSUCCESS {$nativeType=[System.Diagnostics.EventLogEntryType]::AuditSuccess}
+        $EVENT_TYPE_AUDITFAILURE {$nativeType=[System.Diagnostics.EventLogEntryType]::AuditFailure}
+        default {
+            Write-Verbose 'match?'
+            $nativeType=[System.Diagnostics.EventLogEntryType]::Information
+        }
+    }
+    $event = New-Object System.Diagnostics.EventInstance($eventID,1,$nativeType)
+
+    $evtObject = New-Object System.Diagnostics.EventLog;
+    $evtObject.Log = $EventLog;
+    $evtObject.Source = $EventSource;
+    $parameters = @($msg) + $parameters
+    $evtObject.WriteEvent($event, $parameters)
+  }
 
 
 function Log-Event
@@ -719,10 +342,13 @@ function Log-Event
 	if($level -le $P_TraceLevel)
 	{
 		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
-		$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
+        Create-Event -eventID $eventID -eventType $eventType -msg ($msg + "`n" + "Version :" + $SCRIPT_VERSION) -parameters @($SCRIPT_NAME,$SCRIPT_VERSION)
+		#$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
 	}
 }
+#endregion
 
+#region Discovery Helpers
 Function Throw-EmptyDiscovery
 {
 	param($SourceId, $ManagedEntityId)
@@ -751,18 +377,89 @@ param($SourceId, $ManagedEntityId)
 		$g_API.Return($oDiscoveryData)
 	}
 }
+
 #endregion
 
-Function Throw-StatusBagError
+Function Format-Time
 {
-	$bag = $g_api.CreatePropertyBag()
-	$bag.AddValue("QNDType","Status")
-	$bag.AddValue("Status","Error")
-	$bag.AddValue("Description","$Error")
-	$bag	
+	[OutputType([String])]
+	param($utcTime)
+
+
+	$fTime=$utcTime.ToString('yyyy-MM-dd hh:mm:ss tt')
+	#don't know why tt doens't work
+	#quick fix without reverting to -net framework formatting
+	if($fTime.IndexOf('M') -eq -1) {
+		if ($utcTime.Hour -lt 13) {$fTime+= 'AM'} else {$fTime += 'PM'}
+	}
+	return $fTime
 }
 
-$automationURI='https://s2.automation.ext.azure.com/api/Orchestrator'
+Function Get-AutomationItems
+{
+param(
+	$uris, $connection
+)
+
+	$items=@()
+	foreach($uri in $uris) {
+		$nextLink=$null
+		Log-Event $SUCCESS_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting items $uri") $TRACE_VERBOSE
+		do {
+			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken $connection -nextLink $nextLink -TimeoutSeconds $timeoutSeconds
+			$nextLink = $result.NextLink
+			if($result.gotValue) {$items+=$result.Values}
+            #hacking some unwanted chars
+            if($nextLink) {$nextLink=$nextLink.Replace('+','%2B')}
+		} while ($nextLink)
+	}
+	return $items
+}
+
+Function Return-Bag
+{
+    param($object)
+    try {    
+		$bag = $g_api.CreatePropertyBag()
+        foreach($property in $object.Keys) {
+		    $bag.AddValue($property, $object[$property])
+        }
+        $bag
+
+		if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
+		
+
+		Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
+			-msg ('{0} - returned status bag ' `
+				-f $object.runbookName) `
+			-level $TRACE_VERBOSE 
+    }
+    catch {
+		Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_WARNING `
+			-msg ('{0} - error creating status bag {1}' `
+				-f $object.runbookName), $_.Message `
+			-level $TRACE_VERBOSE 
+    }
+}
+
+#region Common
+Function Import-ResourceModule
+{
+	param($moduleName, $ArgumentList=$null)
+	if (Get-Module -Name $moduleName) {return}
+
+	$moduleName = '{0}.psm1' -f $moduleName
+	$ResPath = (get-itemproperty -path 'HKLM:\system\currentcontrolset\services\healthservice\Parameters' -Name 'State Directory').'State Directory' + '\Resources'
+	if(Test-Path $ResPath) {
+		$module = @(get-childitem -path $ResPath -Filter $moduleName -Recurse)[0]
+	}
+	if($module) { $module = $module.FullName}
+	else {$module = "$PSScriptRoot\$moduleName"}
+
+	If (Test-Path $module) {Import-Module -Name $module -ArgumentList $ArgumentList}
+	else {Throw [System.DllNotFoundException] ('{0} not found' -f $module)}
+}
+
 #Start by setting up API object.
 	$P_TraceLevel = $TRACE_VERBOSE
 	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
@@ -772,192 +469,366 @@ $automationURI='https://s2.automation.ext.azure.com/api/Orchestrator'
 	$P_TraceLevel = $traceLevel
 	Log-Params $MyInvocation
 
-#region LoadModules
-try {
-	$ResPath = (get-itemproperty -path 'HKLM:\system\currentcontrolset\services\healthservice\Parameters' -Name 'State Directory').'State Directory' + '\Resources'
-	if(Test-Path $ResPath) {
-		$module = @(get-childitem -path $ResPath -Name OMSSearch.psm1 -Recurse)[0]
+	try {
+		Import-ResourceModule -moduleName QNDAdal -ArgumentList @($false)
+		Import-ResourceModule -moduleName QNDAzure
 	}
-	if($module) { $OMSSearchModule = "$ResPath\$module"}
-	else {$OMSSearchModule = '.\OMSSearch.psm1'}
-    if(! (Get-MOdule -Name OMSSearch)) {
-	    If (Test-Path $OMSSearchModule) {Import-Module $OMSSearchModule}
-	    else {Throw [System.DllNotFoundException] 'OMSSearch.psm1 not found'}
-    }
-
-#now load the AAD client resource. The module I'm using assumes the assembly is in the same directory of the module, but OpsMgr resource deployment uses 2 different folders
-
-	$AssemblyName = 'Microsoft.IdentityModel.Clients.ActiveDirectory'
-	$AssemblyVersion = "2.14.0.0"
-	$AssemblyPublicKey = "31bf3856ad364e35"
-
-	$DLLPath = "$ResPath\"+@(get-childitem -path $ResPath -Name "$($AssemblyName).dll" -Recurse)[0]
-	If (!([AppDomain]::CurrentDomain.GetAssemblies() |Where-Object { $_.FullName -eq "$AssemblyName, Version=$AssemblyVersion, Culture=neutral, PublicKeyToken=$AssemblyPublicKey"}))
-	{
-		Log-Event $INFO_EVENT_ID $EVENT_TYPE_INFO ("Loading Assembly $AssemblyName") $TRACE_VERBOSE
-		Try {
-			[Void][System.Reflection.Assembly]::LoadFrom($DLLPath)
-		} Catch {
-			Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Unable to load $DLLPath. $Error") $TRACE_ERROR
-			exit 1
-		}
+	catch {
+		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot load required powershell modules $Error") $TRACE_ERROR
+		exit 1	
 	}
-
-	if (!(get-command -Module OMSSearch -Name Get-AADToken -ErrorAction SilentlyContinue)) {
-		Log-Event $START_EVENT_ID $EVENT_TYPE_WARNING ("Get-AADToken Commandlet doesn't exist.") $TRACE_WARNING
-		Throw-KeepDiscoveryInfo
-		exit 1
-	}
-	$token = Get-AADToken -TenantADName $TenantADName -Username $Username -Password $Password
-	if (! $token) {Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Get-AADToken canno authenticate user $username " + $Error) $TRACE_ERROR; exit 1;}
-}
-catch {
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Main " + $Error) $TRACE_ERROR
-	exit 1
-}
-
-#endregion
-
 
 try
 {
-
-	#get a list of runbooks to monitor
-	try {
-		if (! ([String]::IsNullOrEmpty($RunbookId))) {
-			$uri='https://management.azure.com{0}?api-version=2015-01-01-preview' -f $RunbookId
-			$runbooks = Invoke-ARMGet -Token $token -Uri $uri
-		}
-		else {
-			$uri='https://management.azure.com{0}/runbooks?api-version=2015-01-01-preview' -f $AccountId
-			$runbooks = (Invoke-ARMGet -Token $token -Uri $uri).Value
-		}
+	if($proxy) {
+		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Proxy is not currently supported {0}" -f $proxy) $TRACE_WARNING
 	}
-	catch {
-		Throw-StatusBagError
-		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ('Error getting runbooks for {0} - {1} - {2}' -f $AcccountId, $RunbookId, $Error[0]) $TRACE_ERROR
-		write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
-		Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+	$pwd = ConvertTo-SecureString $ADPassword -AsPlainText -Force
+	$cred = New-Object System.Management.Automation.PSCredential ($ADUserName, $pwd)
+	$authority = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
+	$connection = $authority.CreateAuthorizationHeader()
+}
+catch {
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
+	Throw-KeepDiscoveryInfo
+	exit 1	
+}
+#endregion
+
+try {
+
+
+
+	$uris =@(('{0}{1}/runbooks?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion))
+	$runBooks = Get-AutomationItems -uris $uris -connection $connection
+
+<#
+#    {
+#      "id": "/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OaaSCSHRWRPZB6GXQVDR3MZN4LZ2ID5KGAHA3HNK26JFKSEGZK7HOMRALQ-West-Europe/providers/
+#Microsoft.Automation/automationAccounts/PreLabsAutoWE/runbooks/Tagetik-InfraAzure",
+#      "location": "West Europe",
+#      "name": "Tagetik-InfraAzure",
+#      "type": "Microsoft.Automation/AutomationAccounts/Runbooks",
+#      "properties": {
+#        "runbookType": "Script",
+#        "state": "Edit",
+#        "logVerbose": false,
+#        "logProgress": false,
+#        "logActivityTrace": 1,
+#        "creationTime": "2015-08-29T15:52:24.5+02:00",
+#        "lastModifiedTime": "2015-09-03T12:01:35.25+02:00"
+#      }
+#    },
+#>
+
+    $uris=@(
+        ('{0}{1}/webhooks?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+    )
+    $webhooks = (Get-AutomationItems -uris $uris -connection $connection) | where {$_.properties.IsEnabled}
+
+
+ <#   {
+ #     "id": "/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OaaSCSHRWRPZB6GXQVDR3MZN4LZ2ID5KGAHA3HNK26JFKSEGZK7HOMRALQ-West-Europe/providers/
+#Microsoft.Automation/automationAccounts/PreLabsAutoWE/webhooks/OMS Alert Remediation d94e6e0c-99e5-48f7-9997-b5855b288a82",
+#      "name": "OMS Alert Remediation d94e6e0c-99e5-48f7-9997-b5855b288a82",
+#      "properties": {
+#        "isEnabled": true,
+#        "expiryTime": "2018-05-25T05:08:56.0134739+02:00",
+#        "runbook": {
+#          "name": "Reset-OMSMS"
+#        },
+#        "lastInvokedTime": null,
+#        "runOn": "PreLabsWorkers",
+#        "parameters": null,
+#        "uri": null,
+#        "creationTime": "2016-05-25T05:08:58.6688419+02:00",
+#        "lastModifiedBy": "",
+#        "lastModifiedTime": "2016-05-25T05:08:58.6688419+02:00"
+#      }
+#    }
+#>
+
+    $uris=@(
+        ('{0}{1}/schedules?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+    )
+    $schedules = (Get-AutomationItems -uris $uris -connection $connection) | where {$_.properties.frequency -ine 'OneTime' -and $_.properties.isEnabled}
+    
+    [array] $validSchedules=@()
+    foreach($s in $schedules) {
+        if ($s.properties.expiryTime.Substring(0,4) -eq '9999') {$validSchedules+=$s.Name; continue}
+        if ([datetime]$s.properties.expiryTime -gt (Get-Date)) {$validSchedules+=$s.Name; continue}
+        $schedules.Remove($s)
+    }
+
+    write-verbose ('Got {0} schedules' -f $schedules.count)
+<#
+Comment text...
+Body:
+{
+  "value": [
+    {
+      "id": "/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OaaSCSHRWRPZB6GXQVDR3MZN4LZ2ID5KGAHA3HNK26JFKSEGZK7HOMRALQ-West-Europe/providers/
+Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/Test Schedule Expired",
+      "name": "Test Schedule Expired",
+      "properties": {
+        "description": "",
+        "startTime": "2016-05-28T19:15:00+02:00",
+        "startTimeOffsetMinutes": 0.0,
+        "expiryTime": "2017-05-28T19:15:00+02:00",
+        "expiryTimeOffsetMinutes": 0.0,
+        "isEnabled": true,
+        "interval": 1,
+        "frequency": "Hour",
+        "creationTime": "2016-05-28T19:08:02.977+02:00",
+        "lastModifiedTime": "2016-05-28T19:08:02.977+02:00",
+        "nextRun": "2016-05-28T20:15:00+02:00",
+        "nextRunOffsetMinutes": 0.0,
+        "timeZone": "UTC"
+      }
+    },
+    {
+      "id": "/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OaaSCSHRWRPZB6GXQVDR3MZN4LZ2ID5KGAHA3HNK26JFKSEGZK7HOMRALQ-West-Europe/providers/
+Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/Test Schedule Monthly",
+      "name": "Test Schedule Monthly",
+      "properties": {
+        "description": "",
+        "startTime": "2016-05-30T19:38:00+02:00",
+        "startTimeOffsetMinutes": 0.0,
+        "expiryTime": "9999-12-31T23:59:59.9999999+01:00",
+        "expiryTimeOffsetMinutes": 0.0,
+        "isEnabled": true,
+        "interval": 1,
+        "frequency": "Month",
+        "creationTime": "2016-05-28T19:09:29.547+02:00",
+        "lastModifiedTime": "2016-05-28T19:09:29.547+02:00",
+        "nextRun": "2016-06-10T19:38:00+02:00",
+        "nextRunOffsetMinutes": 0.0,
+        "timeZone": "UTC"
+      }
+    },
+    {
+      "id": "/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OaaSCSHRWRPZB6GXQVDR3MZN4LZ2ID5KGAHA3HNK26JFKSEGZK7HOMRALQ-West-Europe/providers/
+Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/Test Schedule Once",
+      "name": "Test Schedule Once",
+      "properties": {
+        "description": "",
+        "startTime": "2016-05-31T19:36:00+02:00",
+        "startTimeOffsetMinutes": 0.0,
+        "expiryTime": "2016-05-31T19:36:00+02:00",
+        "expiryTimeOffsetMinutes": 0.0,
+        "isEnabled": true,
+        "interval": null,
+        "frequency": "OneTime",
+        "creationTime": "2016-05-28T19:06:46.13+02:00",
+        "lastModifiedTime": "2016-05-28T19:06:46.13+02:00",
+        "nextRun": "2016-05-31T19:36:00+02:00",
+        "nextRunOffsetMinutes": 0.0,
+        "timeZone": "UTC"
+      }
+    },
+    {
+      "id": "/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OaaSCSHRWRPZB6GXQVDR3MZN4LZ2ID5KGAHA3HNK26JFKSEGZK7HOMRALQ-West-Europe/providers/
+Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/TestSchedule1",
+      "name": "TestSchedule1",
+      "properties": {
+        "description": "",
+        "startTime": "2016-05-28T19:35:00+02:00",
+        "startTimeOffsetMinutes": 0.0,
+        "expiryTime": "9999-12-31T23:59:59.9999999+01:00",
+        "expiryTimeOffsetMinutes": 0.0,
+        "isEnabled": true,
+        "interval": 1,
+        "frequency": "Hour",
+        "creationTime": "2016-05-28T19:05:50.567+02:00",
+        "lastModifiedTime": "2016-05-28T19:05:50.567+02:00",
+        "nextRun": "2016-05-28T19:35:00+02:00",
+        "nextRunOffsetMinutes": 0.0,
+        "timeZone": "UTC"
+      }
+    }
+  ]
+}
+ 
+#>
+
+    $uris=@(
+        ('{0}{1}/jobSchedules?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+    )
+
+
+    #remove OneTime schedules aka keep valid schedules
+    $jobSchedules = (Get-AutomationItems -uris $uris -connection $connection) | where {$_.properties.schedule.name -iin $validSchedules}
+    write-verbose ('Got {0} schedules for jobs' -f $jobSchedules.count)
+
+    $jobSchedules | %{write-verbose $_.properties}
+<#      "id": "/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OaaSCSHRWRPZB6GXQVDR3MZN4LZ2ID5KGAHA3HNK26JFKSEGZK7HOMRALQ-West-Europe/providers/
+#Microsoft.Automation/automationAccounts/PreLabsAutoWE/jobSchedules/db7ab745-cb2e-4c7d-9299-24f42b274cd3",
+#      "properties": {
+#        "jobScheduleId": "db7ab745-cb2e-4c7d-9299-24f42b274cd3",
+#        "runbook": {
+#          "name": "SIDOnline-Step1"
+#        },
+#        "schedule": {
+#          "name": "Test Schedule Expired"
+#        },
+#        "runOn": null,
+#        "parameters": null
+#      }
+#    },
+#>
+
+
+    write-verbose ('About to process {0} runbooks' -f $runbooks.count)
+
+    foreach($rb in $runbooks) {
+        write-verbose ('Processing {0}' -f $rb.name)
+        try {
+        $wh = $webhooks | where {$_.properties.runbook.name -eq $rb.name}
+        $jsch = $jobSchedules | where {$_.properties.runbook.name -ieq $rb.name}
+        if($jsch) {
+            write-verbose 'Runbook has schedules'
+            $sch=@()
+            foreach($js in $jsch) {
+                $sch += $schedules | where {$_.name -eq $js.properties.schedule.name}
+            }
+        }
+        if($onlySJWH -and !$wh -and !$jsch) {continue}
+        write-verbose ('Runbook {0} has webhook or valid schedule' -f $rb.name)
+        [double]$autoAge=24*30 #24 H * 30 days
+        if($jsch) {
+            #we can have multiple schedules so let's try to get the stricter one            
+            foreach($s in $sch) {
+                switch ($s.properties.frequency) {
+                'Hour' {if($autoAge -gt $s.properties.interval) {$autoAge=$s.properties.interval}}
+                'Month' {if($autoAge -gt $s.properties.interval) {$autoAge=$s.properties.interval*30*24}}
+                default {
+                    Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_WARNING `
+				    -msg ('Unknown schedule frequency {0}' `
+					    -f $s.properties.frequency) `
+				    -level $TRACE_WARNING }
+                }
+            }
+            $autoAge=$autoage*(1+$tolerance)
+        }
+        if ($lookbackDays -gt 0) {$from = (Get-Date).ToUniversalTime().AddDays(-$LookbackDays).GetDateTimeFormats('s')[0]}
+        else {$from = (Get-Date).ToUniversalTime().AddHours(-$AutoAge*$LastnJobs).GetDateTimeFormats('s')[0]}
+        $to = (Get-Date).ToUniversalTime().GetDateTimeFormats('s')[0]
+	    
+        write-verbose ('From {0} to {1}' -f $from, $to)
+
+	    $uris=@(
+		    ('{0}{1}/jobs?api-version={2}&$filter=properties/startTime ge {3}%2B00:00 and properties/endTime le {4}%2B00:00 and properties/runbook/name eq ''{5}''' -f $ResourceBaseAddress,$resourceURI,$APIVersion, $from, $to, $rb.name)
+	    )
+        $jobs = Get-AutomationItems -uris $uris -connection $connection | sort-object @{Expression={[datetime]$_.properties.startTime};Descending=$true}
+        $lastJobs = $jobs | Select-Object -First $LastnJobs
+        $failures = ($lastJobs | where {$_.properties.status -imatch $failureCondition}).count
+        $lastCompletedJob=0
+        
+        write-verbose ('Got {0} jobs, selected {1} jobs' -f $jobs.count, $lastJobs.Count)
+        if ($jobs.count -eq 0) {
+            $runtimeMin=0
+            $lastRuntimeMin=0
+            $lastRunAgeHours=-1
+            $activationTimeSec=0
+            $runtimeError=$false
+            $lastJobStatus='unknown'
+            Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_WARNING `
+			-msg ('No jobs returned for {0}' `
+				-f $rb.name) `
+			-level $TRACE_WARNING 
+        }
+        else {
+            $lastRunAgeHours=0
+            write-verbose ('Job Endtime {0}' -f $lastJobs[0].properties.endTime)
+            if(! $lastJobs[0].properties.endTime -or [datetime]$lastJobs[0].properties.endTime -gt (Get-Date)) {$lastCompletedJob=1;write-verbose 'Last job still running'}
+            try {
+                $lastJobStatus=$lastJobs[$lastCompletedJob].properties.status
+                $runtimeMin = ([datetime]$lastJobs[$lastCompletedJob].properties.endTime - [datetime]$lastJobs[$lastCompletedJob].properties.startTime).TotalMinutes
+                if ($lastCompletedJob -ne 0) {
+                    $lastRuntimeMin = ((Get-Date)- [datetime]$lastJobs[$lastCompletedJob].properties.startTime).TotalMinutes
+                    $lastRunAgeHours=0
+                }
+                else {
+                    $lastRuntimeMin=$runtimeMin
+                    $lastRunAgeHours = ((Get-Date) - [datetime]$lastJobs[0].properties.endTime).TotalHours
+                }
+                $activationTimeSec =([datetime] $lastJobs[$lastCompletedJob].properties.startTime - [datetime]$lastJobs[$lastCompletedJob].properties.creationTime).TotalSeconds      
+                $longRunning=0
+                if($MaxRuntime -gt -1) {if ($lastRuntimeMin -gt $MaxRuntime) {$longRunning=1}}       
+            }
+            catch {
+			    Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_WARNING `
+				    -msg ('Error getting execution time for runbook {0}' `
+					    -f $rb.Name) `
+				    -level $TRACE_WARNING             
+            }
+        }
+        $obsolete=0
+        if($jsch) {
+            if ($maxAge -le 0 ) {$maxAge=$autoAge}
+            if($lastRunAgeHours -gt $maxAge) {$obsolete=1}
+            else {$obsolete=0}
+        }
+        $webHookStatus='OK'
+        $daysToExpiration=365
+        if($WebHookExpirationDays -gt -1) {
+            foreach($w in $wh) {
+			    $daysToExpiration = ([datetime]($w.properties.ExpiryTime) - (Get-Date)).TotalDays
+                if ($daysToExpiration -gt (-$WebHookExpirationSilence)) {continue;} #skip old ones
+                if ($daysToExpiration -le 0) {$webHookStatus='EXPIRED';break;}
+			    if($daysToExpiration -le $WebHookExpirationDays) {$WebHookStatus='EXPIRESOON'}            
+            }
+        }
+        $output=@{
+            runbookId=$rb.Id;
+            runbookName=$rb.Name;
+            runbookType=$rb.properties.runbookType;
+            lastJobStatus=$lastJobStatus;
+            jobFailures=$failures;
+            lastCompletedRuntimeMin=$runtimeMin;
+            maxRuntime=$MaxRuntime;
+            lastRuntimeMin=$lastRuntimeMin;
+            lastRunAgeHours=$lastRunAgeHours;
+            lastActivationTimeSec=$activationTimeSec;
+            webHookStatus=$webHookStatus;
+            webHookDaysToExpiration=$daysToExpiration;
+            lastRunObsolete=$obsolete;
+            maxAge=$maxAge;
+            longRunning=$longRunning;
+            autoAge=$autoAge;
+            lastnJobs=$LastnJobs;
+            maxFailures=$MaxFailures
+        }
+        #$output
+        Return-Bag $output
+        }
+        catch {
+            Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Error getting stats for item {0} - {1}' -f $Item.Name, $Error[0]) $TRACE_WARNING	
+            write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+            Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+            continue;
+        }
+    }
+
+    if($heartBeat) {
+    write-verbose 'heartbeat'
+	    Log-Event -eventID $heartBeat -eventType $EVENT_TYPE_INFORMATION -level -1 -msg $SCRIPT_NAME
+    }
+
+	If ($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
+		#it breaks in exception when run insde OpsMgr and POSH IDE	
+		$g_API.ReturnItems() 
 	}
-
-		if ($RunMode -ieq 'Data') {
-			foreach($runbook in $runbooks) {      
-				try {
-					Log-Event -eventID $INFO_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
-						-msg ('Processing {0}' `
-							-f $runbook.Name) `
-						-level $TRACE_VERBOSE   
-					$uri='{0}/JobsByRunbook?compositeIdentifier={1}&runbookId={2}&pageLink=&isFirstPage=true' -f $automationURI, $AccountId, $runbook.Name
-					$jobs = Invoke-ARMGet -Token $token -Uri $uri
-					$lastJobs = @($jobs.Resources | Select-Object -First $lastnJobs)
-					$failures = @($lastJobs | where {$_.status -match $FailureCondition}).Count
-					$bag = $g_api.CreatePropertyBag()
-					$bag.AddValue("QNDType","Data")
-					$bag.AddValue('RunbookId', $runbook.Id)
-					$lastJobStatus=-1; $lastJobDurationMinutes=-1; $lastJobRuntimeMinutes=-1; $lastJobExecutionTime=-1; $lastJobExecutionAge=-1
-					$returnedJobs=-1;$selectedJobs=-1
-					$ageError='False'; $runtimeError='False'
-
-				if ($lastJobs.Count -gt 0) {
-			
-					if ([String]::IsNullOrEmpty($lastJobs[0].EndTime)) {
-						$lastJobDurationMinutes= ((Get-Date) - [datetime]($lastJobs[0].createdTime)).TotalMinutes
-						$lastJobRuntimeMinutes= ((Get-Date) - [datetime]($lastJobs[0].startTime)).TotalMinutes
-						$lastJobExecutionTime = $lastJObs[0].createdTime
-						$lastJobExecutionAge = ((Get-Date)- [datetime]($lastJObs[0].createdTime)).TotalHours
-					}
-					else {
-						$lastJobDurationMinutes= ([datetime]($lastJobs[0].EndTime) - [datetime]($lastJobs[0].createdTime)).TotalMinutes
-						$lastJobRuntimeMinutes= ([datetime]($lastJobs[0].EndTime) - [datetime]($lastJobs[0].startTime)).TotalMinutes
-						$lastJobExecutionTime = $lastJObs[0].endTime
-						$lastJobExecutionAge = ((Get-Date)- [datetime]($lastJObs[0].endTime)).TotalHours
-					}
-					$lastJobStatus = $lastJobs[0].status
-					$returnedJobs=$jobs.Resources.Count
-					$selectedJobs=$lastjobs.Count
-
-					#return calculated status and input parameters
-					$execError=($failures -gt $MaxFailures).ToString()
-					if($MaxAge -eq -1) {$ageError='False'} else {$ageError=($lastJobExecutionAge -gt $MaxAge).ToString()}
-					if($MaxRuntime -eq -1) {$runtimeError='False'} else {$runtimeError=($lastJobRuntimeMinutes -gt $MaxRuntime).ToString()}
-
-				} 
-				#get a list of webhhoks and check if they're about to expire
-				$WebHookStatus='OK'
-				$daysToExpiration=999
-				$WebHookName='none'
-				if ($WebHookExpirationDays -ne -1) {
-					$uri='{0}/WebhooksForRunbook?compositeIdentifier={1}&runbookName={2}' -f $automationURI, $AccountId, $runbook.Name
-					$webhooks = @(Invoke-ARMGet -Token $token -Uri $uri)
-					if ($webhooks.count -gt 0) {
-						foreach($wh in $webhooks) {
-							if ($wh.IsEnabled -ieq 'True') {
-								$daysToExpiration = ([datetime]($wh.expirationTime) - (Get-Date)).TotalDays
-								if($daysToExpiration -le $WebHookExpirationDays -and $daysToExpiration -gt (-$WebHookExpirationSilence)) {$WebHookStatus='EXPIRE'; $WebHookName=$wh.Name;break;}
-							}
-						}
-					}
-				}		
-
-					$bag.AddValue('JobsReturned', $returnedJobs)
-					$bag.AddValue('JobsSelected', $selectedJobs)
-					$bag.AddValue('Failures', $failures)
-					$bag.AddValue('LastJobDurationMinutes', $lastJobDurationMinutes)
-					$bag.AddValue('LastJobRuntimeMinutes', $lastJobRuntimeMinutes)
-					$bag.AddValue('LastJobStatus', $lastJobStatus)
-					$bag.AddValue('LastJobExecutionTime', $lastJobExecutionTime)
-					$bag.AddValue('LastJobExecutionAgeHours', $lastJobExecutionAge)
-
-					$bag.AddValue('ExecError', $execError)
-					$bag.AddValue('AgeError', $ageError)
-					$bag.AddValue('RuntimeError', $runtimeError)
-
-					$bag.AddValue('MaxFailures', $MaxFailures)
-					$bag.AddValue('MaxAge', $maxAge)
-					$bag.AddValue('MaxRuntime', $maxRuntime)		
-
-					$bag.AddValue('WebHookStatus', $WebHookStatus)
-					$bag.AddValue('DaysToExpiration', $daysToExpiration)
-					$bag.AddValue('WebHookName', $WebHookName)
-
-					if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
-					$bag
-
-					Log-Event -eventID $INFO_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
-						-msg ('{0} - retunred jobs {1} selected jobs {2} failures {3} last job status {4} job duration {5} job run time {6} last Execution {7} age {8}' `
-							-f $runbook.Name, $jobs.resources.Count, $lastJobs.Count, $failures, $lastjobStatus, $lastJobDurationMinutes, $lastJobRuntimeMinutes, $lastJobExecutionTime, $lastJobExecutionAge) `
-						-level $TRACE_VERBOSE              
-					}
-				catch {
-					Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Error getting stats for runbook {0} - {1}' -f $runbook.Name, $Error[0]) $TRACE_WARNING	
-					write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
-					Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
-					continue;
-				}
-			}
-		}
-		else {
-			$bag = $g_api.CreatePropertyBag()
-			$bag.AddValue("QNDType","Status")
-			$bag.AddValue("Status","OK")
-			$bag.AddValue("Description","Connection OK")
-			$bag
-		}
-
-		If ($traceLevel -eq $TRACE_DEBUG)
-		{
-			#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
-			#it breaks in exception when run insde OpsMgr and POSH IDE	
-			$g_API.ReturnItems() 
-		}
-		Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
-	Throw-StatusBagError
 	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
 }
+
 ]]>
                 </ScriptBody>
                 <Parameters>
@@ -966,27 +837,64 @@ Catch [Exception] {
                     <Value>$Config/TraceLevel$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>TenantADName</Name>
-                    <Value>$Config/TenantADName$</Value>
+                    <Name>clientId</Name>
+                    <Value>$Config/ClientId$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>AccountId</Name>
-                    <Value>$Config/AccountId$</Value>
+                    <Name>SubscriptionId</Name>
+                    <Value>$Config/SubscriptionId$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>Username</Name>
+                    <Name>Proxy</Name>
+                    <Value>$Config/Proxy$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>AuthBaseAddress</Name>
+                    <Value>$Config/AuthBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceBaseAddress</Name>
+                    <Value>$Config/ResourceBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADUsername</Name>
                     <Value>$Config/AADUserName$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>Password</Name>
+                    <Name>ADPassword</Name>
                     <Value>$Config/AADPassword$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>ProxyUrl</Name>
-                    <Value></Value>
+                    <Name>resourceURI</Name>
+                    <Value>$Config/ResourceURI$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>LastnJobs</Name>
+                    <Name>APIVersion</Name>
+                    <Value>$Config/APIVersion$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Heartbeat</Name>
+                    <Value>$Config/Heartbeat$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <!-- this would need a separate parameter-->
+                    <Name>TimeoutSeconds</Name>
+                    <Value>$Config/TimeoutSeconds$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Tolerance</Name>
+                    <Value>$Config/Tolerance$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>onlySJWH</Name>
+                    <Value>$Config/OnlySJWH$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>LookbackDays</Name>
+                    <Value>$Config/LookbackDays$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>LastNJobs</Name>
                     <Value>$Config/LastNJobs$</Value>
                   </Parameter>
                   <Parameter>
@@ -1006,20 +914,12 @@ Catch [Exception] {
                     <Value>$Config/MaxRuntimeMinutes$</Value>
                   </Parameter>
                   <Parameter>
-                    <Name>RunbookId</Name>
-                    <Value>$Config/RunbookId$</Value>
-                  </Parameter>
-                  <Parameter>
                     <Name>WebHookExpirationDays</Name>
                     <Value>$Config/WebHookExpirationDays$</Value>
                   </Parameter>
                   <Parameter>
                     <Name>WebHookExpirationSilence</Name>
                     <Value>$Config/WebHookExpirationSilence$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>RunMode</Name>
-                    <Value>$Config/RunMode$</Value>
                   </Parameter>
                 </Parameters>
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
@@ -1037,298 +937,50 @@ Catch [Exception] {
       </ProbeActionModuleType>
     </ModuleTypes>
     <MonitorTypes>
-      <UnitMonitorType ID="QND.OMS.Automation.RunbookStatusGenericCooked.MT" Accessibility="Public">
+      <UnitMonitorType ID="QND.OMS.Automation.RunbookStatus2StateCooked.MT" Accessibility="Public">
         <MonitorTypeStates>
-          <MonitorTypeState ID="Healthy" />
-          <MonitorTypeState ID="UnHealthy" />
+          <MonitorTypeState ID="Greater" />
+          <MonitorTypeState ID="LessEqual" />
         </MonitorTypeStates>
         <Configuration>
           <xsd:element name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <!-- I'm lazy and don't want to copy and paste the same monitor type so let's do some redundancy at the parameter level -->
           <xsd:element name="Property" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxThreshold" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MaxThreshold" type="xsd:double" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="RunbookId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="AccountId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="RunbookId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ClientId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SubscriptionId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Proxy" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="LastNJobs" type="xsd:int" default="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxFailures" type="xsd:int" default="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="FailureCondition" type="xsd:string" default="^[4|9]$" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxAgeHours" type="xsd:int" default="-1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxRuntimeMinutes" type="xsd:int" default="-1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceURI" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="APIVersion" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Heartbeat" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Tolerance" type="xsd:double" minOccurs="0" maxOccurs="1" default="0.5" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="OnlySJWH" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="LookbackDays" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="LastNJobs" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MaxFailures" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="FailureCondition" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MaxAgeHours" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MaxRuntimeMinutes" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WebHookExpirationDays" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WebHookExpirationSilence" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="MaxThreshold" Selector="$Config/MaxThreshold$" ParameterType="int" />
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$" />
-          <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$" />
-          <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$" />
-          <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$" />
-          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$" />
-          <OverrideableParameter ID="MaxRuntimeMinutes" ParameterType="int" Selector="$Config/MaxRuntimeMinutes$" />
-        </OverrideableParameters>
-        <MonitorImplementation>
-          <MemberModules>
-            <DataSource ID="DS" TypeID="QND.OMS.Automation.RunbookStatus.DS">
-              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
-              <SyncTime>$Config/SyncTime$</SyncTime>
-              <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
-              <TraceLevel>$Config/TraceLevel$</TraceLevel>
-              <TenantADName>$Config/TenantADName$</TenantADName>
-              <AccountId>$Config/AccountId$</AccountId>
-              <!-- RunbookId is not used in this monitor -->
-              <RunbookId></RunbookId>
-              <AADUserName>$Config/AADUserName$</AADUserName>
-              <AADPassword>$Config/AADPassword$</AADPassword>
-              <LastNJobs>$Config/LastNJobs$</LastNJobs>
-              <MaxFailures>$Config/MaxFailures$</MaxFailures>
-              <FailureCondition>$Config/FailureCondition$</FailureCondition>
-              <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
-              <MaxRuntimeMinutes>$Config/MaxRuntimeMinutes$</MaxRuntimeMinutes>
-              <WebHookExpirationDays>-1</WebHookExpirationDays>
-              <WebHookExpirationSilence>-1</WebHookExpirationSilence>
-              <RunMode>Data</RunMode>
-            </DataSource>
-            <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Equal</Operator>
-                  <ValueExpression>
-                    <Value Type="String">Data</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
-            <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='RunbookId']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Equal</Operator>
-                  <ValueExpression>
-                    <Value Type="String">$Config/RunbookId$</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
-            <ConditionDetection ID="HealthyCD" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>LessEqual</Operator>
-                  <ValueExpression>
-                    <Value Type="Double">$Config/MaxThreshold$</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
-            <ConditionDetection ID="UnHealthyCD" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Greater</Operator>
-                  <ValueExpression>
-                    <Value Type="Double">$Config/MaxThreshold$</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
-          </MemberModules>
-          <RegularDetections>
-            <RegularDetection MonitorTypeStateID="Healthy">
-              <Node ID="HealthyCD">
-                <Node ID="Filter">
-                  <Node ID="DataFilter">
-                    <Node ID="DS" />
-                  </Node>
-                </Node>
-              </Node>
-            </RegularDetection>
-            <RegularDetection MonitorTypeStateID="UnHealthy">
-              <Node ID="UnHealthyCD">
-                <Node ID="Filter">
-                  <Node ID="DataFilter">
-                    <Node ID="DS"></Node>
-                  </Node>
-                </Node>
-              </Node>
-            </RegularDetection>
-          </RegularDetections>
-        </MonitorImplementation>
-      </UnitMonitorType>
-      <UnitMonitorType ID="QND.OMS.Automation.RunbookStatusGenericNotCooked.MT" Accessibility="Public">
-        <MonitorTypeStates>
-          <MonitorTypeState ID="Healthy" />
-          <MonitorTypeState ID="UnHealthy" />
-        </MonitorTypeStates>
-        <Configuration>
-          <xsd:element name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <!-- I'm lazy and don't want to copy and paste the same monitor type so let's do some redundancy at the parameter level -->
-          <xsd:element name="Property" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxThreshold" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="AccountId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="RunbookId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="LastNJobs" type="xsd:int" default="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxFailures" type="xsd:int" default="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="FailureCondition" type="xsd:string" default="^[4|9]$" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxAgeHours" type="xsd:int" default="-1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxRuntimeMinutes" type="xsd:int" default="-1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-        </Configuration>
-        <OverrideableParameters>
-          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
-          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$" />
-          <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$" />
-          <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$" />
-          <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$" />
-          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$" />
-          <OverrideableParameter ID="MaxRuntimeMinutes" ParameterType="int" Selector="$Config/MaxRuntimeMinutes$" />
-        </OverrideableParameters>
-        <MonitorImplementation>
-          <MemberModules>
-            <DataSource ID="DS" TypeID="QND.OMS.Automation.RunbookStatus.DS">
-              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
-              <SyncTime>$Config/SyncTime$</SyncTime>
-              <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
-              <TraceLevel>$Config/TraceLevel$</TraceLevel>
-              <TenantADName>$Config/TenantADName$</TenantADName>
-              <AccountId>$Config/AccountId$</AccountId>
-              <RunbookId>$Config/RunbookId$</RunbookId>
-              <AADUserName>$Config/AADUserName$</AADUserName>
-              <AADPassword>$Config/AADPassword$</AADPassword>
-              <LastNJobs>$Config/LastNJobs$</LastNJobs>
-              <MaxFailures>$Config/MaxFailures$</MaxFailures>
-              <FailureCondition>$Config/FailureCondition$</FailureCondition>
-              <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
-              <MaxRuntimeMinutes>$Config/MaxRuntimeMinutes$</MaxRuntimeMinutes>
-              <WebHookExpirationDays>-1</WebHookExpirationDays>
-              <WebHookExpirationSilence>-1</WebHookExpirationSilence>
-              <RunMode>Data</RunMode>
-            </DataSource>
-            <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Equal</Operator>
-                  <ValueExpression>
-                    <Value Type="String">Data</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
-            <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='RunbookId']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Equal</Operator>
-                  <ValueExpression>
-                    <Value Type="String">$Config/RunbookId$</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
-            <ConditionDetection ID="HealthyCD" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>LessEqual</Operator>
-                  <ValueExpression>
-                    <Value Type="Double">$Config/MaxThreshold$</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
-            <ConditionDetection ID="UnHealthyCD" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Greater</Operator>
-                  <ValueExpression>
-                    <Value Type="Double">$Config/MaxThreshold$</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
-          </MemberModules>
-          <RegularDetections>
-            <RegularDetection MonitorTypeStateID="Healthy">
-              <Node ID="HealthyCD">
-                <Node ID="Filter">
-                  <Node ID="DataFilter">
-                    <Node ID="DS" />
-                  </Node>
-                </Node>
-              </Node>
-            </RegularDetection>
-            <RegularDetection MonitorTypeStateID="UnHealthy">
-              <Node ID="UnHealthyCD">
-                <Node ID="Filter">
-                  <Node ID="DataFilter">
-                    <Node ID="DS"></Node>
-                  </Node>
-                </Node>
-              </Node>
-            </RegularDetection>
-          </RegularDetections>
-        </MonitorImplementation>
-      </UnitMonitorType>
-      <UnitMonitorType ID="QND.OMS.Automation.RunbookWebHookExpirationCooked.MT" Accessibility="Public">
-        <MonitorTypeStates>
-          <MonitorTypeState ID="Valid" />
-          <MonitorTypeState ID="AboutToExpire" />
-          <MonitorTypeState ID="Expired" />
-        </MonitorTypeStates>
-        <Configuration>
-          <xsd:element name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="AccountId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="RunbookId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="LastNJobs" type="xsd:int" default="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxFailures" type="xsd:int" default="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="FailureCondition" type="xsd:string" default="^[4|9]$" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxAgeHours" type="xsd:int" default="-1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="MaxRuntimeMinutes" type="xsd:int" default="-1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="WebHookExpirationDays" type="xsd:int" default="-1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="WebHookExpirationSilence" type="xsd:int" default="-1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-        </Configuration>
-        <OverrideableParameters>
-          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
-          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$" />
+          <OverrideableParameter ID="Tolerance" ParameterType="double" Selector="$Config/Tolerance$" />
+          <OverrideableParameter ID="OnlySJWH" ParameterType="int" Selector="$Config/OnlySJWH$" />
+          <OverrideableParameter ID="LookbackDays" ParameterType="int" Selector="$Config/LookbackDays$" />
           <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$" />
           <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$" />
           <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$" />
@@ -1344,12 +996,19 @@ Catch [Exception] {
               <SyncTime>$Config/SyncTime$</SyncTime>
               <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
               <TraceLevel>$Config/TraceLevel$</TraceLevel>
-              <TenantADName>$Config/TenantADName$</TenantADName>
-              <AccountId>$Config/AccountId$</AccountId>
-              <!-- RunbookId is not used in this monitor -->
-              <RunbookId></RunbookId>
+              <ClientId>$Config/ClientId$</ClientId>
+              <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+              <Proxy>$Config/Proxy$</Proxy>
+              <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+              <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
               <AADUserName>$Config/AADUserName$</AADUserName>
               <AADPassword>$Config/AADPassword$</AADPassword>
+              <ResourceURI>$Config/ResourceURI$</ResourceURI>
+              <APIVersion>$Config/APIVersion$</APIVersion>
+              <Heartbeat>$Config/Heartbeat$</Heartbeat>
+              <Tolerance>$Config/Tolerance$</Tolerance>
+              <OnlySJWH>$Config/OnlySJWH$</OnlySJWH>
+              <LookbackDays>$Config/LookbackDays$</LookbackDays>
               <LastNJobs>$Config/LastNJobs$</LastNJobs>
               <MaxFailures>$Config/MaxFailures$</MaxFailures>
               <FailureCondition>$Config/FailureCondition$</FailureCondition>
@@ -1357,21 +1016,7 @@ Catch [Exception] {
               <MaxRuntimeMinutes>$Config/MaxRuntimeMinutes$</MaxRuntimeMinutes>
               <WebHookExpirationDays>$Config/WebHookExpirationDays$</WebHookExpirationDays>
               <WebHookExpirationSilence>$Config/WebHookExpirationSilence$</WebHookExpirationSilence>
-              <RunMode>Data</RunMode>
             </DataSource>
-            <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Equal</Operator>
-                  <ValueExpression>
-                    <Value Type="String">Data</Value>
-                  </ValueExpression>
-                </SimpleExpression>
-              </Expression>
-            </ConditionDetection>
             <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
               <Expression>
                 <SimpleExpression>
@@ -1385,112 +1030,104 @@ Catch [Exception] {
                 </SimpleExpression>
               </Expression>
             </ConditionDetection>
-            <ConditionDetection ID="ValidCD" TypeID="System!System.ExpressionFilter">
+            <ConditionDetection ID="LessEqualCD" TypeID="System!System.ExpressionFilter">
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="Double">Property[@Name='DaysToExpiration']</XPathQuery>
+                    <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
                   </ValueExpression>
-                  <Operator>Greater</Operator>
+                  <Operator>LessEqual</Operator>
                   <ValueExpression>
-                    <Value Type="Double">$Config/WebHookExpirationDays$</Value>
+                    <Value Type="Double">$Config/MaxThreshold$</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
             </ConditionDetection>
-            <ConditionDetection ID="AboutToExpireCD" TypeID="System!System.ExpressionFilter">
-              <Expression>
-                <And>
-                  <Expression>
-                    <SimpleExpression>
-                      <ValueExpression>
-                        <XPathQuery Type="Double">Property[@Name='DaysToExpiration']</XPathQuery>
-                      </ValueExpression>
-                      <Operator>LessEqual</Operator>
-                      <ValueExpression>
-                        <Value Type="Double">$Config/WebHookExpirationDays$</Value>
-                      </ValueExpression>
-                    </SimpleExpression>
-                  </Expression>
-                  <Expression>
-                    <SimpleExpression>
-                      <ValueExpression>
-                        <XPathQuery Type="Double">Property[@Name='DaysToExpiration']</XPathQuery>
-                      </ValueExpression>
-                      <Operator>Greater</Operator>
-                      <ValueExpression>
-                        <Value Type="Double">0</Value>
-                      </ValueExpression>
-                    </SimpleExpression>
-                  </Expression>
-                </And>
-              </Expression>
-            </ConditionDetection>
-            <ConditionDetection ID="ExpiredCD" TypeID="System!System.ExpressionFilter">
+            <ConditionDetection ID="GreaterCD" TypeID="System!System.ExpressionFilter">
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="Double">Property[@Name='DaysToExpiration']</XPathQuery>
+                    <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
                   </ValueExpression>
-                  <Operator>Less</Operator>
+                  <Operator>Greater</Operator>
                   <ValueExpression>
-                    <Value Type="Double">0</Value>
+                    <Value Type="Double">$Config/MaxThreshold$</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
             </ConditionDetection>
           </MemberModules>
           <RegularDetections>
-            <RegularDetection MonitorTypeStateID="Valid">
-              <Node ID="ValidCD">
+            <RegularDetection MonitorTypeStateID="Greater">
+              <Node ID="GreaterCD">
                 <Node ID="Filter">
-                  <Node ID="DataFilter">
-                    <Node ID="DS" />
-                  </Node>
+                  <Node ID="DS" />
                 </Node>
               </Node>
             </RegularDetection>
-            <RegularDetection MonitorTypeStateID="AboutToExpire">
-              <Node ID="AboutToExpireCD">
+            <RegularDetection MonitorTypeStateID="LessEqual">
+              <Node ID="LessEqualCD">
                 <Node ID="Filter">
-                  <Node ID="DataFilter">
-                    <Node ID="DS"></Node>
-                  </Node>
-                </Node>
-              </Node>
-            </RegularDetection>
-            <RegularDetection MonitorTypeStateID="Expired">
-              <Node ID="ExpiredCD">
-                <Node ID="Filter">
-                  <Node ID="DataFilter">
-                    <Node ID="DS"></Node>
-                  </Node>
+                  <Node ID="DS"></Node>
                 </Node>
               </Node>
             </RegularDetection>
           </RegularDetections>
         </MonitorImplementation>
       </UnitMonitorType>
-      <UnitMonitorType ID="QND.OMS.Automation.Connectivity.MT" Accessibility="Public">
+      <UnitMonitorType ID="QND.OMS.Automation.RunbookStatus3StateCooked.MT" Accessibility="Public">
         <MonitorTypeStates>
-          <MonitorTypeState ID="Healthy" />
-          <MonitorTypeState ID="UnReachable" />
+          <MonitorTypeState ID="Greater" />
+          <MonitorTypeState ID="InBetween" />
+          <MonitorTypeState ID="Less" />
         </MonitorTypeStates>
         <Configuration>
           <xsd:element name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Property" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdHigh" type="xsd:double" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdLow" type="xsd:double" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="RunbookId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="TenantADName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="AccountId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ClientId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SubscriptionId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Proxy" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="AADUserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="AADPassword" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ResourceURI" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="APIVersion" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Heartbeat" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Tolerance" type="xsd:double" minOccurs="0" maxOccurs="1" default="0.5" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="OnlySJWH" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="LookbackDays" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="LastNJobs" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MaxFailures" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="FailureCondition" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MaxAgeHours" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MaxRuntimeMinutes" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WebHookExpirationDays" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WebHookExpirationSilence" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="ThresholdLow" Selector="$Config/ThresholdLow$" ParameterType="double" />
+          <OverrideableParameter ID="ThresholdHigh" Selector="$Config/ThresholdHigh$" ParameterType="double" />
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$" />
+          <OverrideableParameter ID="Tolerance" ParameterType="double" Selector="$Config/Tolerance$" />
+          <OverrideableParameter ID="OnlySJWH" ParameterType="int" Selector="$Config/OnlySJWH$" />
+          <OverrideableParameter ID="LookbackDays" ParameterType="int" Selector="$Config/LookbackDays$" />
+          <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$" />
+          <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$" />
+          <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$" />
+          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$" />
+          <OverrideableParameter ID="MaxRuntimeMinutes" ParameterType="int" Selector="$Config/MaxRuntimeMinutes$" />
+          <OverrideableParameter ID="WebHookExpirationDays" ParameterType="int" Selector="$Config/WebHookExpirationDays$" />
+          <OverrideableParameter ID="WebHookExpirationSilence" ParameterType="int" Selector="$Config/WebHookExpirationSilence$" />
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
@@ -1499,70 +1136,112 @@ Catch [Exception] {
               <SyncTime>$Config/SyncTime$</SyncTime>
               <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
               <TraceLevel>$Config/TraceLevel$</TraceLevel>
-              <TenantADName>$Config/TenantADName$</TenantADName>
-              <AccountId>$Config/AccountId$</AccountId>
-              <RunbookId></RunbookId>
+              <ClientId>$Config/ClientId$</ClientId>
+              <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+              <Proxy>$Config/Proxy$</Proxy>
+              <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+              <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
               <AADUserName>$Config/AADUserName$</AADUserName>
               <AADPassword>$Config/AADPassword$</AADPassword>
-              <LastNJobs>1</LastNJobs>
-              <MaxFailures>0</MaxFailures>
-              <FailureCondition>^[4|9]$</FailureCondition>
-              <MaxAgeHours>-1</MaxAgeHours>
-              <MaxRuntimeMinutes>-1</MaxRuntimeMinutes>
-              <WebHookExpirationDays>-1</WebHookExpirationDays>
-              <WebHookExpirationSilence>-1</WebHookExpirationSilence>
-              <RunMode>Status</RunMode>
+              <ResourceURI>$Config/ResourceURI$</ResourceURI>
+              <APIVersion>$Config/APIVersion$</APIVersion>
+              <Heartbeat>$Config/Heartbeat$</Heartbeat>
+              <Tolerance>$Config/Tolerance$</Tolerance>
+              <OnlySJWH>$Config/OnlySJWH$</OnlySJWH>
+              <LookbackDays>$Config/LookbackDays$</LookbackDays>
+              <LastNJobs>$Config/LastNJobs$</LastNJobs>
+              <MaxFailures>$Config/MaxFailures$</MaxFailures>
+              <FailureCondition>$Config/FailureCondition$</FailureCondition>
+              <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
+              <MaxRuntimeMinutes>$Config/MaxRuntimeMinutes$</MaxRuntimeMinutes>
+              <WebHookExpirationDays>$Config/WebHookExpirationDays$</WebHookExpirationDays>
+              <WebHookExpirationSilence>$Config/WebHookExpirationSilence$</WebHookExpirationSilence>
             </DataSource>
             <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
+                    <XPathQuery Type="String">Property[@Name='RunbookId']</XPathQuery>
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="String">Status</Value>
+                    <Value Type="String">$Config/RunbookId$</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
             </ConditionDetection>
-            <ConditionDetection ID="ConnectOKCD" TypeID="System!System.ExpressionFilter">
+            <ConditionDetection ID="GreaterCD" TypeID="System!System.ExpressionFilter">
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='Status']</XPathQuery>
+                    <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
                   </ValueExpression>
-                  <Operator>Equal</Operator>
+                  <Operator>Greater</Operator>
                   <ValueExpression>
-                    <Value Type="String">OK</Value>
+                    <Value Type="Double">$Config/ThresholdHigh$</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
             </ConditionDetection>
-            <ConditionDetection ID="ConnectKOCD" TypeID="System!System.ExpressionFilter">
+            <ConditionDetection ID="InBetweenCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <And>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>LessEqual</Operator>
+                      <ValueExpression>
+                        <Value Type="Double">$Config/ThresholdHigh$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Greater</Operator>
+                      <ValueExpression>
+                        <Value Type="Double">$Config/ThresholdLow$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                </And>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="LessCD" TypeID="System!System.ExpressionFilter">
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="Double">Property[@Name='Status']</XPathQuery>
+                    <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
                   </ValueExpression>
-                  <Operator>Equal</Operator>
+                  <Operator>Less</Operator>
                   <ValueExpression>
-                    <Value Type="String">Error</Value>
+                    <Value Type="Double">$Config/ThresholdLow$</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
             </ConditionDetection>
           </MemberModules>
           <RegularDetections>
-            <RegularDetection MonitorTypeStateID="Healthy">
-              <Node ID="ConnectOKCD">
+            <RegularDetection MonitorTypeStateID="Greater">
+              <Node ID="GreaterCD">
                 <Node ID="Filter">
                   <Node ID="DS" />
                 </Node>
               </Node>
             </RegularDetection>
-            <RegularDetection MonitorTypeStateID="UnReachable">
-              <Node ID="ConnectKOCD">
+            <RegularDetection MonitorTypeStateID="InBetween">
+              <Node ID="InBetweenCD">
+                <Node ID="Filter">
+                  <Node ID="DS"></Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="Less">
+              <Node ID="LessCD">
                 <Node ID="Filter">
                   <Node ID="DS"></Node>
                 </Node>
@@ -1575,22 +1254,29 @@ Catch [Exception] {
   </TypeDefinitions>
   <Monitoring>
     <Discoveries>
-      <Discovery ID="QND.OMS.Automation.Account.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="OMS!QND.OMS.Azure.Subscription">
+      <Discovery ID="QND.OMS.Automation.Account.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService">
         <Category>Discovery</Category>
         <DiscoveryTypes>
           <DiscoveryClass TypeID="QND.OMS.Automation.Account" />
-          <DiscoveryClass TypeID="QND.OMS.Automation.Runbook" />
         </DiscoveryTypes>
-        <DataSource ID="DS" TypeID="QND.OMS.Automation.Discovery.DS">
-          <TraceLevel>2</TraceLevel>
-          <IntervalSeconds>28800</IntervalSeconds>
+        <DataSource ID="DS" TypeID="QNDA!QND.OMS.ArmService.SeedDiscoverywApi.DS">
+          <IntervalSeconds>14987</IntervalSeconds>
           <SyncTime></SyncTime>
-          <TimeoutSeconds>900</TimeoutSeconds>
-          <TenantADName>$Target/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
-          <SubscriptionId>$Target/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Id$</SubscriptionId>
-          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
-          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
-          <ExcludedAccountsList>Workspace</ExcludedAccountsList>
+          <ApiVersion>2015-10-31</ApiVersion>
+          <AzureType>Microsoft.Automation/automationAccounts</AzureType>
+          <ClassId>$MPElement[Name='QND.OMS.Automation.Account']$</ClassId>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.Automation.Runbook.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmResource">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.Automation.RunbookGen" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QNDA!QND.OMS.ArmResource.SeedDiscovery.DS">
+          <IntervalSeconds>7217</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <AzureType>Microsoft.Automation/AutomationAccounts/Runbooks</AzureType>
+          <ClassId>$MPElement[Name='QND.OMS.Automation.RunbookGen']$</ClassId>
         </DataSource>
       </Discovery>
     </Discoveries>
@@ -1599,33 +1285,115 @@ Catch [Exception] {
         <Category>AvailabilityHealth</Category>
         <Algorithm>WorstOf</Algorithm>
       </AggregateMonitor>
-      <UnitMonitor ID="QND.OMS.Automation.Account.Connectivity.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Account" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.Connectivity.MT" ConfirmDelivery="false">
+      <UnitMonitor ID="QND.OMS.Automation.Account.Connectivity.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Account" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows!Microsoft.Windows.MissingEventLogSingleEventLog2StateMonitorType" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.Automation.Account.Connectivity.Monitor.AlertMessage">
           <AlertOnState>Error</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
-          <AlertParameters>
-            <AlertParameter2>$Data/Context/Property[@Name="Description"]$</AlertParameter2>
-          </AlertParameters>
+          <AlertParameters></AlertParameters>
         </AlertSettings>
         <OperationalStates>
-          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
-          <OperationalState ID="UnHealthy" MonitorTypeStateID="UnReachable" HealthState="Error" />
+          <OperationalState ID="Healthy" MonitorTypeStateID="EventRaised" HealthState="Success" />
+          <OperationalState ID="UnHealthy" MonitorTypeStateID="MissingEventRaised" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>3611</IntervalSeconds>
-          <SyncTime></SyncTime>
-          <TimeoutSeconds>900</TimeoutSeconds>
-          <TraceLevel>2</TraceLevel>
-          <TenantADName>$Target/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
-          <AccountId>$Target/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
-          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
-          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
+          <ComputerName>.</ComputerName>
+          <LogName>Operations Manager</LogName>
+          <Expression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">11</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Progel Script</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[1]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Get-OMSRunbookStatus</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </Expression>
+          <MissingComputerName>.</MissingComputerName>
+          <MissingLogName>Operations Manager</MissingLogName>
+          <MissingExpression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">11</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Progel Script</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[1]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Get-OMSRunbookStatus</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </MissingExpression>
+          <Consolidator>
+            <ConsolidationProperties />
+            <TimeControl>
+              <GenericSchedule>
+                <SimpleReccuringSchedule>
+                  <Interval Unit="Minutes">240</Interval>
+                </SimpleReccuringSchedule>
+                <ExcludeDates />
+              </GenericSchedule>
+            </TimeControl>
+            <CountingCondition>
+              <CountMode>OnNewItemNOP_OnTimerOutputRestart</CountMode>
+            </CountingCondition>
+          </Consolidator>
         </Configuration>
       </UnitMonitor>
-      <UnitMonitor ID="QND.OMS.Automation.Runbook.ExecStatus.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Runbook" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatusGenericCooked.MT" ConfirmDelivery="false">
+      <UnitMonitor ID="QND.OMS.Automation.Runbook.ExecStatus.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.RunbookGen" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatus2StateCooked.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.Automation.Runbook.ExecStatus.Monitor.AlertMessage">
           <AlertOnState>Error</AlertOnState>
@@ -1633,71 +1401,97 @@ Catch [Exception] {
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
           <AlertParameters>
-            <AlertParameter1>$Data/Context/Property[@Name="Failures"]$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Property[@Name="MaxFailures"]$</AlertParameter2>
-            <AlertParameter3>$Data/Context/Property[@Name="JobsSelected"]$</AlertParameter3>
+            <AlertParameter1>$Data/Context/Property[@Name="jobFailures"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="lastnJobs"]$</AlertParameter2>
+            <AlertParameter3>$Data/Context/Property[@Name="maxFailures"]$</AlertParameter3>
+            <AlertParameter4>$Data/Context/Property[@Name="lastjobStatus"]$</AlertParameter4>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
-          <OperationalState ID="Successful" MonitorTypeStateID="Healthy" HealthState="Success" />
-          <OperationalState ID="Failed" MonitorTypeStateID="UnHealthy" HealthState="Error" />
+          <OperationalState ID="Successful" MonitorTypeStateID="LessEqual" HealthState="Success" />
+          <OperationalState ID="Failed" MonitorTypeStateID="Greater" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>3601</IntervalSeconds>
+          <IntervalSeconds>3611</IntervalSeconds>
           <SyncTime></SyncTime>
-          <Property>Failures</Property>
-          <MaxThreshold>0</MaxThreshold>
+          <Property>jobFailures</Property>
+          <MaxThreshold>2</MaxThreshold>
+          <RunbookId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</RunbookId>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <TenantADName>$Target/Host/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
-          <AccountId>$Target/Host/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
-          <RunbookId>$Target/Property[Type="QND.OMS.Automation.Runbook"]/Id$</RunbookId>
-          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
-          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
-          <LastNJobs>1</LastNJobs>
-          <MaxFailures>0</MaxFailures>
-          <FailureCondition>^[4|9]$</FailureCondition>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <Heartbeat>11</Heartbeat>
+          <Tolerance>0.5</Tolerance>
+          <OnlySJWH>1</OnlySJWH>
+          <LookbackDays>-1</LookbackDays>
+          <LastNJobs>5</LastNJobs>
+          <MaxFailures>2</MaxFailures>
+          <!--.net regex doesn't parse ^(?!Completed).*$ -->
+          <FailureCondition>Failed</FailureCondition>
           <MaxAgeHours>-1</MaxAgeHours>
-          <MaxRuntimeMinutes>-1</MaxRuntimeMinutes>
+          <MaxRuntimeMinutes>180</MaxRuntimeMinutes>
+          <WebHookExpirationDays>15</WebHookExpirationDays>
+          <WebHookExpirationSilence>20</WebHookExpirationSilence>
         </Configuration>
       </UnitMonitor>
-      <UnitMonitor ID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Runbook" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookWebHookExpirationCooked.MT" ConfirmDelivery="false">
+      <UnitMonitor ID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.RunbookGen" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatus3StateCooked.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor.AlertMessage">
-          <AlertOnState>Warning</AlertOnState>
+          <AlertOnState>Error</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
           <AlertParameters>
-            <AlertParameter1>$Data/Context/Property[@Name="DaysToExpiration"]$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Property[@Name="WebHookName"]$</AlertParameter2>
+            <AlertParameter1>$Data/Context/Property[@Name="webHookDaysToExpiration"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="webHookStatus"]$</AlertParameter2>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
-          <OperationalState ID="Valid" MonitorTypeStateID="Valid" HealthState="Success" />
-          <OperationalState ID="AboutToExpire" MonitorTypeStateID="AboutToExpire" HealthState="Warning" />
-          <OperationalState ID="Expired" MonitorTypeStateID="Expired" HealthState="Error" />
+          <OperationalState ID="Valid" MonitorTypeStateID="Greater" HealthState="Success" />
+          <OperationalState ID="AboutToExpire" MonitorTypeStateID="InBetween" HealthState="Warning" />
+          <OperationalState ID="Expired" MonitorTypeStateID="Less" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>86400</IntervalSeconds>
+          <IntervalSeconds>3611</IntervalSeconds>
           <SyncTime></SyncTime>
+          <Property>webHookDaysToExpiration</Property>
+          <ThresholdHigh>1</ThresholdHigh>
+          <ThresholdLow>15</ThresholdLow>
+          <RunbookId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</RunbookId>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <TenantADName>$Target/Host/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
-          <AccountId>$Target/Host/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
-          <RunbookId>$Target/Property[Type="QND.OMS.Automation.Runbook"]/Id$</RunbookId>
-          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
-          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
-          <LastNJobs>1</LastNJobs>
-          <MaxFailures>0</MaxFailures>
-          <FailureCondition>^[4|9]$</FailureCondition>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <Heartbeat>11</Heartbeat>
+          <Tolerance>0.5</Tolerance>
+          <OnlySJWH>1</OnlySJWH>
+          <LookbackDays>-1</LookbackDays>
+          <LastNJobs>5</LastNJobs>
+          <MaxFailures>2</MaxFailures>
+          <!--.net regex doesn't parse ^(?!Completed).*$ -->
+          <FailureCondition>Failed</FailureCondition>
           <MaxAgeHours>-1</MaxAgeHours>
-          <MaxRuntimeMinutes>-1</MaxRuntimeMinutes>
-          <WebHookExpirationDays>30</WebHookExpirationDays>
-          <WebHookExpirationSilence>30</WebHookExpirationSilence>
+          <MaxRuntimeMinutes>180</MaxRuntimeMinutes>
+          <WebHookExpirationDays>15</WebHookExpirationDays>
+          <WebHookExpirationSilence>20</WebHookExpirationSilence>
         </Configuration>
       </UnitMonitor>
-      <UnitMonitor ID="QND.OMS.Automation.Runbook.RunAge.Monitor" Accessibility="Public" Enabled="false" Target="QND.OMS.Automation.Runbook" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatusGenericNotCooked.MT" ConfirmDelivery="false">
+      <UnitMonitor ID="QND.OMS.Automation.Runbook.RunAge.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.RunbookGen" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatus2StateCooked.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.Automation.Runbook.RunAge.Monitor.AlertMessage">
           <AlertOnState>Error</AlertOnState>
@@ -1705,91 +1499,115 @@ Catch [Exception] {
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
           <AlertParameters>
-            <AlertParameter1>$Data/Context/Property[@Name="LastJobExecutionTime"]$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Property[@Name="LastJobExecutionAgeHours"]$</AlertParameter2>
-            <AlertParameter3>$Data/Context/Property[@Name="MaxAge"]$</AlertParameter3>
+            <AlertParameter1>$Data/Context/Property[@Name="lastRunAgeHours"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="maxAge"]$</AlertParameter2>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
-          <OperationalState ID="Successful" MonitorTypeStateID="Healthy" HealthState="Success" />
-          <OperationalState ID="Failed" MonitorTypeStateID="UnHealthy" HealthState="Error" />
+          <OperationalState ID="Successful" MonitorTypeStateID="LessEqual" HealthState="Success" />
+          <OperationalState ID="Failed" MonitorTypeStateID="Greater" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>3617</IntervalSeconds>
+          <IntervalSeconds>3611</IntervalSeconds>
           <SyncTime></SyncTime>
-          <Property>LastJobExecutionAgeHours</Property>
-          <MaxThreshold>24</MaxThreshold>
+          <Property>lastRunObsolete</Property>
+          <MaxThreshold>0</MaxThreshold>
+          <RunbookId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</RunbookId>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <TenantADName>$Target/Host/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
-          <AccountId>$Target/Host/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
-          <RunbookId>$Target/Property[Type="QND.OMS.Automation.Runbook"]/Id$</RunbookId>
-          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
-          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
-          <LastNJobs>1</LastNJobs>
-          <MaxFailures>0</MaxFailures>
-          <FailureCondition>^[4|9]$</FailureCondition>
-          <MaxAgeHours>24</MaxAgeHours>
-          <MaxRuntimeMinutes>-1</MaxRuntimeMinutes>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <Heartbeat>11</Heartbeat>
+          <Tolerance>0.5</Tolerance>
+          <OnlySJWH>1</OnlySJWH>
+          <LookbackDays>-1</LookbackDays>
+          <LastNJobs>5</LastNJobs>
+          <MaxFailures>2</MaxFailures>
+          <!--.net regex doesn't parse ^(?!Completed).*$ -->
+          <FailureCondition>Failed</FailureCondition>
+          <MaxAgeHours>-1</MaxAgeHours>
+          <MaxRuntimeMinutes>180</MaxRuntimeMinutes>
+          <WebHookExpirationDays>15</WebHookExpirationDays>
+          <WebHookExpirationSilence>20</WebHookExpirationSilence>
         </Configuration>
       </UnitMonitor>
-      <UnitMonitor ID="QND.OMS.Automation.Runbook.LongRunning.Monitor" Accessibility="Public" Enabled="false" Target="QND.OMS.Automation.Runbook" ParentMonitorID="Health!System.Health.PerformanceState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatusGenericNotCooked.MT" ConfirmDelivery="false">
-        <Category>PerformanceHealth</Category>
+      <UnitMonitor ID="QND.OMS.Automation.Runbook.LongRunning.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.RunbookGen" ParentMonitorID="Health!System.Health.PerformanceState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Automation.RunbookStatus2StateCooked.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.Automation.Runbook.LongRunning.Monitor.AlertMessage">
           <AlertOnState>Error</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
           <AlertParameters>
-            <AlertParameter1>$Data/Context/Property[@Name="LastJobRuntimeMinutes"]$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Property[@Name="MaxRuntime"]$</AlertParameter2>
+            <AlertParameter1>$Data/Context/Property[@Name="lastRuntimeMin"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="maxRuntime"]$</AlertParameter2>
+            <AlertParameter3>$Data/Context/Property[@Name="lastCompletedRuntimeMin"]$</AlertParameter3>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
-          <OperationalState ID="Successful" MonitorTypeStateID="Healthy" HealthState="Success" />
-          <OperationalState ID="Failed" MonitorTypeStateID="UnHealthy" HealthState="Error" />
+          <OperationalState ID="Successful" MonitorTypeStateID="LessEqual" HealthState="Success" />
+          <OperationalState ID="Failed" MonitorTypeStateID="Greater" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>3737</IntervalSeconds>
+          <IntervalSeconds>3611</IntervalSeconds>
           <SyncTime></SyncTime>
-          <Property>LastJobRuntimeMinutes</Property>
-          <MaxThreshold>30</MaxThreshold>
+          <Property>longRunning</Property>
+          <MaxThreshold>0</MaxThreshold>
+          <RunbookId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</RunbookId>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <TenantADName>$Target/Host/Host/Property[Type="OMS!QND.OMS.Azure.Subscription"]/Tenant$</TenantADName>
-          <AccountId>$Target/Host/Property[Type="QND.OMS.Automation.Account"]/Id$</AccountId>
-          <RunbookId>$Target/Property[Type="QND.OMS.Automation.Runbook"]/Id$</RunbookId>
-          <AADUserName>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/UserName$</AADUserName>
-          <AADPassword>$RunAs[Name="OMS!QND.OMS.AAD.Account.SR"]/Password$</AADPassword>
-          <LastNJobs>1</LastNJobs>
-          <MaxFailures>0</MaxFailures>
-          <FailureCondition>^[4|9]$</FailureCondition>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <Heartbeat>11</Heartbeat>
+          <Tolerance>0.5</Tolerance>
+          <OnlySJWH>1</OnlySJWH>
+          <LookbackDays>-1</LookbackDays>
+          <LastNJobs>5</LastNJobs>
+          <MaxFailures>2</MaxFailures>
+          <!--.net regex doesn't parse ^(?!Completed).*$ -->
+          <FailureCondition>Failed</FailureCondition>
           <MaxAgeHours>-1</MaxAgeHours>
-          <MaxRuntimeMinutes>30</MaxRuntimeMinutes>
+          <MaxRuntimeMinutes>180</MaxRuntimeMinutes>
+          <WebHookExpirationDays>15</WebHookExpirationDays>
+          <WebHookExpirationSilence>20</WebHookExpirationSilence>
         </Configuration>
       </UnitMonitor>
-      <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookExecStatus.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.ExecStatus.Monitor" ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountContainsRunbook" Remotable="true" Target="QND.OMS.Automation.Account">
+      <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookExecStatus.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.ExecStatus.Monitor" ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountHostsRunbook" Remotable="true" Target="QND.OMS.Automation.Account">
         <Category>AvailabilityHealth</Category>
         <Algorithm>Percentage</Algorithm>
         <AlgorithmParameter>30</AlgorithmParameter>
         <MemberInMaintenance>Success</MemberInMaintenance>
         <MemberUnAvailable>Warning</MemberUnAvailable>
       </DependencyMonitor>
-      <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookRunAge.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.RunAge.Monitor" ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountContainsRunbook" Remotable="true" Target="QND.OMS.Automation.Account">
+      <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookRunAge.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.RunAge.Monitor" ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountHostsRunbook" Remotable="true" Target="QND.OMS.Automation.Account">
         <Category>AvailabilityHealth</Category>
         <Algorithm>Percentage</Algorithm>
         <AlgorithmParameter>30</AlgorithmParameter>
         <MemberInMaintenance>Success</MemberInMaintenance>
         <MemberUnAvailable>Warning</MemberUnAvailable>
       </DependencyMonitor>
-      <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookWebHookExpiration.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor" ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountContainsRunbook" Remotable="true" Target="QND.OMS.Automation.Account">
+      <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookWebHookExpiration.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor" ParentMonitorID="QND.OMS.Automation.Account.RunbookAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountHostsRunbook" Remotable="true" Target="QND.OMS.Automation.Account">
         <Category>AvailabilityHealth</Category>
         <Algorithm>Percentage</Algorithm>
         <AlgorithmParameter>30</AlgorithmParameter>
         <MemberInMaintenance>Success</MemberInMaintenance>
         <MemberUnAvailable>Warning</MemberUnAvailable>
       </DependencyMonitor>
-      <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookLongRunning.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.LongRunning.Monitor" ParentMonitorID="Health!System.Health.PerformanceState" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountContainsRunbook" Remotable="true" Target="QND.OMS.Automation.Account">
+      <DependencyMonitor ID="QND.OMS.Automation.AccountToRunbookLongRunning.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Automation.Runbook.LongRunning.Monitor" ParentMonitorID="Health!System.Health.PerformanceState" Priority="Normal" RelationshipType="QND.OMS.Automation.AccountHostsRunbook" Remotable="true" Target="QND.OMS.Automation.Account">
         <Category>AvailabilityHealth</Category>
         <Algorithm>Percentage</Algorithm>
         <AlgorithmParameter>30</AlgorithmParameter>
@@ -1829,13 +1647,13 @@ Catch [Exception] {
         </Presentation>
         <Target />
       </View>
-      <View ID="QND.OMS.Automation.RunbookState.View" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.Runbook" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+      <View ID="QND.OMS.Automation.RunbookState.View" Accessibility="Public" Enabled="true" Target="QND.OMS.Automation.RunbookGen" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
         <Category>Operations</Category>
         <Criteria></Criteria>
         <Presentation>
           <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
             <Name>State</Name>
-            <Id>QND.OMS.Automation.Runbook</Id>
+            <Id>QND.OMS.Automation.RunbookGen</Id>
           </ColumnInfo>
           <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
             <Name>Maintenance Mode</Name>
@@ -1858,7 +1676,7 @@ Catch [Exception] {
       </View>
     </Views>
     <Folders>
-      <Folder ID="QND.OMS.Automation.Folder" ParentFolder="OMS!QND.OMS.Folders" Accessibility="Public" />
+      <Folder ID="QND.OMS.Automation.Folder" ParentFolder="QNDA!QND.OMS.Folders" Accessibility="Public" />
     </Folders>
     <FolderItems>
       <FolderItem ID="QND.OMS.Automation.AccountState.FldrItem" ElementID="QND.OMS.Automation.AccountState.View" Folder="QND.OMS.Automation.Folder" />
@@ -1879,8 +1697,8 @@ Catch [Exception] {
           <Name>Execution Status</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Account.Connectivity.Monitor.AlertMessage">
-          <Name>QND - Azure Automation Account Unreachable</Name>
-          <Description>The account is unreachable. Error:{0}</Description>
+          <Name>QND - OMS Azure Automation Account monitor not running</Name>
+          <Description>The monitoriong for the automation account is uneffective. The automation account is unreachable or the agent is stalled.</Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Account.Connectivity.Monitor">
           <Name>Connectivity</Name>
@@ -1898,63 +1716,19 @@ Catch [Exception] {
           <Name>Runbooks</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Account">
-          <Name>Azure Automation Account</Name>
+          <Name>QND - OMS Automation Account</Name>
           <Description></Description>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Account" SubElementID="Id">
-          <Name>Id</Name>
+        <DisplayString ElementID="QND.OMS.Automation.RunbookGen">
+          <Name>QND - OMS Automation Runbook</Name>
           <Description></Description>
         </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Account" SubElementID="Name">
-          <Name>Name</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Account" SubElementID="ResourceGroup">
-          <Name>Resource Group</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Account" SubElementID="Subscription">
-          <Name>Subscription Id</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Account" SubElementID="Location">
-          <Name>Azure Datacenter</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Account" SubElementID="Type">
-          <Name>Azure Type</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Account" SubElementID="Sku">
-          <Name>Sku Type</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Runbook">
-          <Name>Azure Automation Runbook</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Runbook" SubElementID="Id">
-          <Name>Id</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Runbook" SubElementID="Name">
-          <Name>Name</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Runbook" SubElementID="Location">
-          <Name>Azure Datacenter</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Runbook" SubElementID="Type">
-          <Name>Azure Type</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Automation.Runbook" SubElementID="RunbookType">
+        <DisplayString ElementID="QND.OMS.Automation.RunbookGen" SubElementID="RunbookType">
           <Name>Runbook Type</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation">
-          <Name>QND - Azure OMS Automation Monitoring</Name>
+          <Name>QND - Azure OMS Automation</Name>
           <Description>Community based monitoring for Azure OMS Automation</Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Folder">
@@ -1974,7 +1748,7 @@ Catch [Exception] {
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.ExecStatus.Monitor.AlertMessage">
           <Name>QND - Azure Automation Runbook execution failed</Name>
-          <Description>The runbook failures count {0} is over the threshold set {1} over the last {2} runs.
+          <Description>The runbook failures count {0} is over the threshold set {1} over the last {2} runs. Last run status is {3}.
               More details in the alert context
           </Description>
         </DisplayString>
@@ -1983,7 +1757,7 @@ Catch [Exception] {
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.RunAge.Monitor.AlertMessage">
           <Name>QND - Azure Automation Runbook last execution too old</Name>
-          <Description>The runbook last run is dated {0} the age in hours {1} is over the threshold set at {2} hours.
+          <Description>The runbook last run is {0} hours old which is over the threshold set at {1} hours.
               More details in the alert context
           </Description>
         </DisplayString>
@@ -1993,7 +1767,7 @@ Catch [Exception] {
         <DisplayString ElementID="QND.OMS.Automation.Runbook.LongRunning.Monitor.AlertMessage">
           <Name>QND - Azure Automation Runbook execution is taking too long</Name>
           <Description>
-            The last runbook execution took {0} minutes which is over the set threshold of {1}.
+            The last runbook execution took {0} minutes which is over the set threshold of {1}. The last completed job took {2} minutes.
             More details in the alert context
           </Description>
         </DisplayString>
@@ -2003,195 +1777,12 @@ Catch [Exception] {
         <DisplayString ElementID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor.AlertMessage">
           <Name>QND - Azure Automation Runbook webhook expired or near expiration</Name>
           <Description>
-            One or more web hooks are expired or about to expire. Days to expiration {0} sample web hook name {1}.
+            One or more web hooks are expired or about to expire. Days to expiration {0}.
             More details in the alert context
           </Description>
         </DisplayString>
       </DisplayStrings>
       <KnowledgeArticles>
-        <KnowledgeArticle ElementID="QND.OMS.Automation.Account.Connectivity.Monitor">
-          <MamlContent>
-            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
-              <maml:title>Summary</maml:title>
-              <maml:para>The monitor check for ARM API reachability for a specific automation account. It executes a simple query using the defined credentials for the tenant the workspace is in. Possibile states</maml:para>
-              <maml:list>
-                <maml:listItem>
-                  <maml:para>Healthy: the connection is available.</maml:para>
-                </maml:listItem>
-                <maml:listItem>
-                  <maml:para>Error: resource pool servers cannot erach the search api for the workspace.</maml:para>
-                </maml:listItem>
-              </maml:list>
-              <maml:para>For more info see <maml:navigationLink><maml:linkText>GitHub Wiki</maml:linkText><maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Automation-Connectivity-Monitor" /></maml:navigationLink></maml:para>
-            </maml:section>
-            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
-              <maml:title>Configuration</maml:title>
-              <maml:para>The following options can be configured on this monitor:</maml:para>
-              <maml:table>
-                <maml:row>
-                  <maml:entry>
-                    <maml:para>Option</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>Definition</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>Default</maml:para>
-                  </maml:entry>
-                </maml:row>
-                <maml:row>
-                  <maml:entry>
-                    <maml:para>IntervalSeconds</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>Amount of time in seconds between checks of the connectivity status</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>3611 seconds</maml:para>
-                  </maml:entry>
-                </maml:row>
-                <maml:row>
-                  <maml:entry>
-                    <maml:para>Sync Time</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>Optional time wihtin the hour to sync the check exectuion to</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para></maml:para>
-                  </maml:entry>
-                </maml:row>
-                <maml:row>
-                  <maml:entry>
-                    <maml:para>TimeoutSeconds</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>Amount of time in seconds to wait for script execution and hance for API Search response</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>30 seconds</maml:para>
-                  </maml:entry>
-                </maml:row>
-                <maml:row>
-                  <maml:entry>
-                    <maml:para>TraceLevel</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>Debugging level (0-5) anything above 2 will log clear text password in eventlog</maml:para>
-                  </maml:entry>
-                  <maml:entry>
-                    <maml:para>2</maml:para>
-                  </maml:entry>
-                </maml:row>
-              </maml:table>
-            </maml:section>
-            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
-              <maml:title>Causes</maml:title>
-              <maml:para>There three known causes of errors</maml:para>
-              <maml:list>
-                <maml:listItem>
-                  <maml:para>OMS service has issues</maml:para>
-                </maml:listItem>
-                <maml:listItem>
-                  <maml:para>Your proxy /connectivity infrastructure to the cloud has issue</maml:para>
-                </maml:listItem>
-                <maml:listItem>
-                  <maml:para>The runas account used to connect to the workspace is no longer valid / has an expired password</maml:para>
-                </maml:listItem>
-              </maml:list>
-              <maml:para>The alert context tries to give a specific cause for any issue</maml:para>
-            </maml:section>
-            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
-              <maml:title>Resolutions</maml:title>
-              <maml:para>Check the three known causes and fix any issue</maml:para>
-            </maml:section>
-          </MamlContent>
-        </KnowledgeArticle>
-        <KnowledgeArticle ElementID="QND.OMS.Automation.Runbook.ExecStatus.Monitor">
-          <MamlContent>
-            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
-              <maml:title>Summary</maml:title>
-              <maml:para>The monitor checks the execution status of a runbook. The monitor can be tailored and configured to fit most needs and runbook types. 
-              Possibile states</maml:para>
-              <maml:list>
-                <maml:listItem>
-                  <maml:para>Successfrul / Healthy: the runbook exectuion status is successful.</maml:para>
-                </maml:listItem>
-                <maml:listItem>
-                  <maml:para>Failed / error: the runbook is failing not performing its intended job</maml:para>
-                </maml:listItem>
-              </maml:list>
-              <maml:para>
-                For more info see <maml:navigationLink><maml:linkText>GitHub Wiki</maml:linkText><maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Automation-Runbook-Exec-Status-Monitor" /></maml:navigationLink></maml:para>
-            </maml:section>
-          </MamlContent>
-        </KnowledgeArticle>
-        <KnowledgeArticle ElementID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor">
-          <MamlContent>
-            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
-              <maml:title>Summary</maml:title>
-              <maml:para>
-                The monitor checks the webhooks expiration date and alerts when it gets within the specified number of days.
-                Possibile states
-              </maml:para>
-              <maml:list>
-                <maml:listItem>
-                  <maml:para>Valid / Healthy: the webhook is not expiring soon</maml:para>
-                </maml:listItem>
-                <maml:listItem>
-                  <maml:para>AboutToExpire / warning: the webhook is close to expire, but it hasn't yet</maml:para>
-                </maml:listItem>
-                <maml:listItem>
-                  <maml:para>Expired / error: the webhook is expired and connot be used anymore</maml:para>
-                </maml:listItem>
-              </maml:list>
-              <maml:para>
-                For more info see <maml:navigationLink><maml:linkText>GitHub Wiki</maml:linkText><maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Automation-Runbook-Webhook-Expiration-Monitor" /></maml:navigationLink></maml:para>
-            </maml:section>
-          </MamlContent>
-        </KnowledgeArticle>
-        <KnowledgeArticle ElementID="QND.OMS.Automation.Runbook.RunAge.Monitor">
-          <MamlContent>
-            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
-              <maml:title>Summary</maml:title>
-              <maml:para>
-                The monitor, disabled by default, checks is it's too long since the last runbook execution.
-                Possibile states
-              </maml:para>
-              <maml:list>
-                <maml:listItem>
-                  <maml:para>Successful / Healthy: the runbook has been exectuted within the threshold set</maml:para>
-                </maml:listItem>
-                <maml:listItem>
-                  <maml:para>Failed / error: the runbook has not been executed within the threshold set</maml:para>
-                </maml:listItem>
-              </maml:list>
-              <maml:para>
-                For more info see <maml:navigationLink><maml:linkText>GitHub Wiki</maml:linkText><maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Automation-Runbook-Run-Age-Monitor" /></maml:navigationLink></maml:para>
-            </maml:section>
-          </MamlContent>
-        </KnowledgeArticle>
-        <KnowledgeArticle ElementID="QND.OMS.Automation.Runbook.LongRunning.Monitor">
-          <MamlContent>
-            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
-              <maml:title>Summary</maml:title>
-              <maml:para>
-                The monitor, disabled by default, checks for long running runbooks. A long running runbook is a runbook which execution time takes more than the threshold set.
-                Possibile states
-              </maml:para>
-              <maml:list>
-                <maml:listItem>
-                  <maml:para>Successful / Healthy: the runbook execution time is within the threshold set</maml:para>
-                </maml:listItem>
-                <maml:listItem>
-                  <maml:para>Failed / error: the runbook exectuion time is over the threshold set</maml:para>
-                </maml:listItem>
-              </maml:list>
-              <maml:para>
-                For more info see <maml:navigationLink><maml:linkText>GitHub Wiki</maml:linkText><maml:uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Automation-Runbook-Longrunning-Monitor" /></maml:navigationLink></maml:para>
-            </maml:section>
-          </MamlContent>
-        </KnowledgeArticle>
         <KnowledgeArticle ElementID="QND.OMS.Automation">
           <MamlContent>
             <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">

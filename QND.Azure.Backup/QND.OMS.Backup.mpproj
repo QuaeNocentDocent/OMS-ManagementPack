@@ -6,7 +6,7 @@
     <RootNamespace>QND.OMS.Backup</RootNamespace>
     <Name>QND.OMS.Backup</Name>
     <ManagementPackName>QND.OMS.Backup</ManagementPackName>
-    <Version>1.0.0.0</Version>
+    <Version>2.0.0.0</Version>
     <MpFrameworkVersion>v7.0</MpFrameworkVersion>
     <MpFrameworkProfile>OM</MpFrameworkProfile>
     <ProductVersion>1.1.0.0</ProductVersion>
@@ -30,13 +30,29 @@
     <AssemblyOriginatorKeyFile />
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ContainerItemClass.mpx">
+    <Compile Include="ARMContainerItemClass.mpx">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="KBArticles.mpx">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SMContainerItemClass.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SMItemMonitors.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SMModules.mpx">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="VaultAndContainerMonitors.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SMViews.mptg.mpx">
+      <SubType>Code</SubType>
+      <DependentUpon>SMViews.mptg</DependentUpon>
+    </Compile>
+    <Compile Include="SMVaultAndContainerMonitors.mpx">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BackupVaultClass.mpx">
@@ -97,7 +113,7 @@
     <ManagementPackReference Include="QND.AzureMPIntegration">
       <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\AzureMPIntegration\bin\Debug\QND.AzureMPIntegration.mpb</HintPath>
       <Alias>QNDA</Alias>
-      <MinVersion>2.0.0.21</MinVersion>
+      <MinVersion>2.0.0.37</MinVersion>
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="System.AdminItem.Library">
@@ -141,11 +157,20 @@
     <Folder Include="Scripts" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Scripts\Get-OMSBackupContainer.ps1" />
+    <EmbeddedResource Include="Scripts\Get-OMSBackupItem.ps1" />
+    <EmbeddedResource Include="Scripts\Get-OMSBackupItemStatus.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSRecoveryContainer.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSRecoveryItemStatus.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSRecoveryItems.ps1" />
     <EmbeddedResource Include="Scripts\OBPolicyDiscovery.ps1" />
     <EmbeddedResource Include="Scripts\WABStatus.ps1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="SMViews.mptg">
+      <SubType>Content</SubType>
+      <Generator>FragmentGenerator</Generator>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>
