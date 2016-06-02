@@ -3,7 +3,7 @@
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
         <DisplayString ElementID="QND.OMS.Backup">
-          <Name>QND - Azure OMS Backup</Name>
+          <Name>QND - OMS Backup</Name>
           <Description>Community based Azure OMS Backup monitoring</Description>
         </DisplayString>
       </DisplayStrings>

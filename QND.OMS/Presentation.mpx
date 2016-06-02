@@ -4,4 +4,13 @@
       <Folder ID="QND.OMS.LogAnalytics.Fldr" Accessibility="Internal" ParentFolder="QNDA!QND.OMS.Folders"/>
     </Folders>
   </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="QND.OMS.LogAnalytics.Fldr">
+          <Name>Log Analytics</Name>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
 </ManagementPackFragment>

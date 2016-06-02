@@ -3,7 +3,7 @@
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
         <DisplayString ElementID="QND.OMS.Automation">
-          <Name>QND - Azure OMS Automation</Name>
+          <Name>QND - OMS Automation</Name>
           <Description>Community based monitoring for Azure OMS Automation</Description>
         </DisplayString>
       </DisplayStrings>
