@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>QND.OMS.Automation</ID>
-      <Version>2.0.0.38</Version>
+      <Version>2.0.0.41</Version>
     </Identity>
     <Name>QND.OMS.Automation</Name>
     <References>
@@ -799,7 +799,7 @@ Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/TestSchedule1",
             lastnJobs=$LastnJobs;
             maxFailures=$MaxFailures
         }
-        #$output
+        #ConvertTo-Json $output
         Return-Bag $output
         }
         catch {
@@ -1021,7 +1021,7 @@ Catch [Exception] {
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='RunbookId']</XPathQuery>
+                    <XPathQuery Type="String">Property[@Name='runbookId']</XPathQuery>
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
@@ -1161,7 +1161,7 @@ Catch [Exception] {
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='RunbookId']</XPathQuery>
+                    <XPathQuery Type="String">Property[@Name='runbookId']</XPathQuery>
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
@@ -1202,7 +1202,7 @@ Catch [Exception] {
                       <ValueExpression>
                         <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
                       </ValueExpression>
-                      <Operator>Greater</Operator>
+                      <Operator>GreaterEqual</Operator>
                       <ValueExpression>
                         <Value Type="Double">$Config/ThresholdLow$</Value>
                       </ValueExpression>
@@ -1325,7 +1325,7 @@ Catch [Exception] {
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
-              <Expression>
+              <!-- <Expression>
                 <SimpleExpression>
                   <ValueExpression>
                     <XPathQuery Type="String">Params/Param[1]</XPathQuery>
@@ -1335,7 +1335,7 @@ Catch [Exception] {
                     <Value Type="String">Get-OMSRunbookStatus</Value>
                   </ValueExpression>
                 </SimpleExpression>
-              </Expression>
+              </Expression> -->
             </And>
           </Expression>
           <MissingComputerName>.</MissingComputerName>
@@ -1364,7 +1364,7 @@ Catch [Exception] {
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
-              <Expression>
+              <!-- <Expression>
                 <SimpleExpression>
                   <ValueExpression>
                     <XPathQuery Type="String">Params/Param[1]</XPathQuery>
@@ -1374,7 +1374,7 @@ Catch [Exception] {
                     <Value Type="String">Get-OMSRunbookStatus</Value>
                   </ValueExpression>
                 </SimpleExpression>
-              </Expression>
+              </Expression> -->
             </And>
           </MissingExpression>
           <Consolidator>
@@ -1404,7 +1404,7 @@ Catch [Exception] {
             <AlertParameter1>$Data/Context/Property[@Name="jobFailures"]$</AlertParameter1>
             <AlertParameter2>$Data/Context/Property[@Name="lastnJobs"]$</AlertParameter2>
             <AlertParameter3>$Data/Context/Property[@Name="maxFailures"]$</AlertParameter3>
-            <AlertParameter4>$Data/Context/Property[@Name="lastjobStatus"]$</AlertParameter4>
+            <AlertParameter4>$Data/Context/Property[@Name="lastJobStatus"]$</AlertParameter4>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -1728,7 +1728,7 @@ Catch [Exception] {
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation">
-          <Name>QND - Azure OMS Automation</Name>
+          <Name>QND - OMS Automation</Name>
           <Description>Community based monitoring for Azure OMS Automation</Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Folder">
@@ -1747,8 +1747,8 @@ Catch [Exception] {
           <Name>Execution Result</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.ExecStatus.Monitor.AlertMessage">
-          <Name>QND - Azure Automation Runbook execution failed</Name>
-          <Description>The runbook failures count {0} is over the threshold set {1} over the last {2} runs. Last run status is {3}.
+          <Name>QND - OMS Automation Runbook execution failed</Name>
+          <Description>The runbook failures count {0} is over the threshold set {2} over the last {1} runs. Last run status is {3}.
               More details in the alert context
           </Description>
         </DisplayString>
@@ -1756,7 +1756,7 @@ Catch [Exception] {
           <Name>Last Run Age</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.RunAge.Monitor.AlertMessage">
-          <Name>QND - Azure Automation Runbook last execution too old</Name>
+          <Name>QND - OMS Automation Runbook last execution too old</Name>
           <Description>The runbook last run is {0} hours old which is over the threshold set at {1} hours.
               More details in the alert context
           </Description>
@@ -1765,7 +1765,7 @@ Catch [Exception] {
           <Name>Execution time</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.LongRunning.Monitor.AlertMessage">
-          <Name>QND - Azure Automation Runbook execution is taking too long</Name>
+          <Name>QND - OMS Automation Runbook execution is taking too long</Name>
           <Description>
             The last runbook execution took {0} minutes which is over the set threshold of {1}. The last completed job took {2} minutes.
             More details in the alert context
@@ -1775,7 +1775,7 @@ Catch [Exception] {
           <Name>WebHook Validity</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor.AlertMessage">
-          <Name>QND - Azure Automation Runbook webhook expired or near expiration</Name>
+          <Name>QND - OMS Automation Runbook webhook expired or near expiration</Name>
           <Description>
             One or more web hooks are expired or about to expire. Days to expiration {0}.
             More details in the alert context

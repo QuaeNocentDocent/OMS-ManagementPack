@@ -13,7 +13,7 @@
             <AlertParameter1>$Data/Context/Property[@Name="jobFailures"]$</AlertParameter1>
             <AlertParameter2>$Data/Context/Property[@Name="lastnJobs"]$</AlertParameter2>
             <AlertParameter3>$Data/Context/Property[@Name="maxFailures"]$</AlertParameter3>
-            <AlertParameter4>$Data/Context/Property[@Name="lastjobStatus"]$</AlertParameter4>
+            <AlertParameter4>$Data/Context/Property[@Name="lastJobStatus"]$</AlertParameter4>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -223,8 +223,8 @@
           <Name>Execution Result</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.ExecStatus.Monitor.AlertMessage">
-          <Name>QND - Azure Automation Runbook execution failed</Name>
-          <Description>The runbook failures count {0} is over the threshold set {1} over the last {2} runs. Last run status is {3}.
+          <Name>QND - OMS Automation Runbook execution failed</Name>
+          <Description>The runbook failures count {0} is over the threshold set {2} over the last {1} runs. Last run status is {3}.
               More details in the alert context
           </Description>
         </DisplayString>
@@ -233,7 +233,7 @@
           <Name>Last Run Age</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.RunAge.Monitor.AlertMessage">
-          <Name>QND - Azure Automation Runbook last execution too old</Name>
+          <Name>QND - OMS Automation Runbook last execution too old</Name>
           <Description>The runbook last run is {0} hours old which is over the threshold set at {1} hours.
               More details in the alert context
           </Description>
@@ -243,7 +243,7 @@
           <Name>Execution time</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.LongRunning.Monitor.AlertMessage">
-          <Name>QND - Azure Automation Runbook execution is taking too long</Name>
+          <Name>QND - OMS Automation Runbook execution is taking too long</Name>
           <Description>
             The last runbook execution took {0} minutes which is over the set threshold of {1}. The last completed job took {2} minutes.
             More details in the alert context
@@ -254,7 +254,7 @@
           <Name>WebHook Validity</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.WebHookExpiration.Monitor.AlertMessage">
-          <Name>QND - Azure Automation Runbook webhook expired or near expiration</Name>
+          <Name>QND - OMS Automation Runbook webhook expired or near expiration</Name>
           <Description>
             One or more web hooks are expired or about to expire. Days to expiration {0}.
             More details in the alert context

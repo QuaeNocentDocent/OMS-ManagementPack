@@ -335,7 +335,7 @@
               <Expression>
                     <SimpleExpression>
                       <ValueExpression>
-                        <XPathQuery Type="String">Property[@Name='RunbookId']</XPathQuery>
+                        <XPathQuery Type="String">Property[@Name='runbookId']</XPathQuery>
                       </ValueExpression>
                       <Operator>Equal</Operator>
                       <ValueExpression>
@@ -480,7 +480,7 @@
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="String">Property[@Name='RunbookId']</XPathQuery>
+                    <XPathQuery Type="String">Property[@Name='runbookId']</XPathQuery>
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
@@ -521,7 +521,7 @@
                       <ValueExpression>
                         <XPathQuery Type="Double">Property[@Name='$Config/Property$']</XPathQuery>
                       </ValueExpression>
-                      <Operator>Greater</Operator>
+                      <Operator>GreaterEqual</Operator>
                       <ValueExpression>
                         <Value Type="Double">$Config/ThresholdLow$</Value>
                       </ValueExpression>

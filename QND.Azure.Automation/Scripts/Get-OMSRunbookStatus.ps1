@@ -613,7 +613,7 @@ Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/TestSchedule1",
             lastnJobs=$LastnJobs;
             maxFailures=$MaxFailures
         }
-        #$output
+        #ConvertTo-Json $output
         Return-Bag $output
         }
         catch {

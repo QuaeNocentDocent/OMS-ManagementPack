@@ -113,7 +113,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tests" />
-    <Folder Include="SquaredUp" />
     <Folder Include="Scripts" />
   </ItemGroup>
   <ItemGroup>
@@ -126,7 +125,6 @@
     <EmbeddedResource Include="Scripts\Get-OMSManagedSystemLastData.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSManagedSystems.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSManagedSystemsData.ps1" />
-    <EmbeddedResource Include="SquaredUp\OMS-Overview.xml" />
     <None Include="Tests\PScript1.ps1" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
