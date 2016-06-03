@@ -50,17 +50,17 @@
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
-              <!-- <Expression>
+              <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="String">Params/Param[1]</XPathQuery>
+                    <XPathQuery Type="String">Params/Param[2]</XPathQuery>
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
                     <Value Type="String">Get-OMSRunbookStatus</Value>
                   </ValueExpression>
                 </SimpleExpression>
-              </Expression> -->
+              </Expression>
             </And>
           </Expression>
           <MissingComputerName>.</MissingComputerName>
@@ -89,17 +89,17 @@
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
-              <!-- <Expression>
+              <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="String">Params/Param[1]</XPathQuery>
+                    <XPathQuery Type="String">Params/Param[2]</XPathQuery>
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
                     <Value Type="String">Get-OMSRunbookStatus</Value>
                   </ValueExpression>
                 </SimpleExpression>
-              </Expression> -->
+              </Expression>
             </And>            
           </MissingExpression>
           <Consolidator>

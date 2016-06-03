@@ -142,7 +142,7 @@ function Log-Event
 	$P_TraceLevel = $traceLevel
 	Log-Params $MyInvocation
 	
-	Create-Event -eventID $eventID -eventType $EVENT_TYPE_INFORMATION -msg $message -parameters @($Key)
+	Create-Event -eventID $eventID -eventType $EVENT_TYPE_INFORMATION -msg ('{0} - {1}' -f $message, $key) -parameters @($Key)
 
 	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 
