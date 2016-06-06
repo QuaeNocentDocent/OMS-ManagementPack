@@ -51,7 +51,6 @@ param([int]$traceLevel=2,
 [Parameter (Mandatory=$true)][string]$resourceURI,
 [string]$OMSAPIVersion='2015-03-20'
 )
- 
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
     [Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
 
@@ -263,13 +262,17 @@ try {
 
 $timeout=300
     $uri = '{0}{1}/savedSearches?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
-	$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
+    write-verbose ('Query: {0}' -f $uri)
+	#$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
+    $nextLink = $null
 	$savedSearches=@()
 	do {
 		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
 		$nextLink = $result.NextLink
 		$savedSearches += $result.values	
 	} while ($nextLink)
+
+write-verbose ('Got {0} saved searches' -f $savedSearches.count)
 
 	foreach($search in $savedSearches) {
 		$uri = '{0}{1}/schedules?api-version={2}' -f $ResourceBaseAddress,$search.Id,$OMSAPIVersion

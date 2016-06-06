@@ -514,7 +514,9 @@ Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/TestSchedule1",
             foreach($s in $sch) {
                 switch ($s.properties.frequency) {
                 'Hour' {if($autoAge -gt $s.properties.interval) {$autoAge=$s.properties.interval}}
-                'Month' {if($autoAge -gt $s.properties.interval) {$autoAge=$s.properties.interval*30*24}}
+				'Day' {if($autoAge -gt $s.properties.interval*24) {$autoAge=$s.properties.interval*24}}
+				'Week' {if($autoAge -gt $s.properties.interval*7*24) {$autoAge=$s.properties.interval*7*24}}
+                'Month' {if($autoAge -gt $s.properties.interval*30*24) {$autoAge=$s.properties.interval*30*24}}
                 default {
                     Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_WARNING `
 				    -msg ('Unknown schedule frequency {0}' `
@@ -578,9 +580,10 @@ Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/TestSchedule1",
             }
         }
         $obsolete=0
+		$calcMaxAge=$MaxAge
         if($jsch) {
-            if ($maxAge -le 0 ) {$maxAge=$autoAge}
-            if($lastRunAgeHours -gt $maxAge) {$obsolete=1}
+            if ($calcMaxAge -le 0 ) {$calcMaxAge=$autoAge}
+            if($lastRunAgeHours -gt $calcMaxAge) {$obsolete=1}
             else {$obsolete=0}
         }
         $webHookStatus='OK'
@@ -607,7 +610,7 @@ Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/TestSchedule1",
             webHookStatus=$webHookStatus;
             webHookDaysToExpiration=$daysToExpiration;
             lastRunObsolete=$obsolete;
-            maxAge=$maxAge;
+            maxAge=$calcMaxAge;
             longRunning=$longRunning;
             autoAge=$autoAge;
             lastnJobs=$LastnJobs;
@@ -626,7 +629,7 @@ Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/TestSchedule1",
 
     if($heartBeat) {
     write-verbose 'heartbeat'
-	    Log-Event -eventID $heartBeat -eventType $EVENT_TYPE_INFORMATION -level -1 -msg $SCRIPT_NAME
+	    Create-Event -eventID $heartBeat -eventType $EVENT_TYPE_INFORMATION -level -1 -msg $SCRIPT_NAME -parameters @($resourceURI)
     }
 
 	If ($traceLevel -eq $TRACE_DEBUG)

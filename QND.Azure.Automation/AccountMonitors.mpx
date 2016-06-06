@@ -53,7 +53,7 @@
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                    <XPathQuery Type="String">Params/Param[1]</XPathQuery>
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
@@ -61,6 +61,17 @@
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>              
             </And>
           </Expression>
           <MissingComputerName>.</MissingComputerName>
@@ -92,7 +103,7 @@
               <Expression>
                 <SimpleExpression>
                   <ValueExpression>
-                    <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                    <XPathQuery Type="String">Params/Param[1]</XPathQuery>
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
@@ -100,6 +111,17 @@
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>               
             </And>            
           </MissingExpression>
           <Consolidator>
