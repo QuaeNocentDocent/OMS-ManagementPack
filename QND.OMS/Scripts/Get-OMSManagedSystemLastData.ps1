@@ -237,7 +237,8 @@ try {
 			$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer'
 		}
 		else {
-			$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer | where lastdata < NOW-{0}HOURS' -f $maxAgeHours
+			#due to the fact that we can have spurious entries I cannot optimize this query (see commented out portion of the query)
+			$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer' # | where lastdata < NOW-{0}HOURS' -f $maxAgeHours
 		}
 
     $QueryArray = @{Query=$Query}
@@ -255,10 +256,29 @@ try {
 		$nextLink = $result.NextLink		
 		if($result.gotValue) {$systems += $result.values}
 	} while ($nextLink)
+	#sometimes some spurious systems are returned, we need to normalize and clean up
+	#if we are summarizing $allInstances=0 let's discrd any system that doesn't have a domain, otherwise let's keep no domain systems only if no other system with a domain has the same name
 
-	if ($allInstances -gt 0) {
+	#in this version just remove no fwdn systems
+	$nofqdnSys=@()
+	$systems| %{If(! $_.Computer.contains('.')){$nofqdnSys+=$_}}
+
+	foreach($nofqdn in $nofqdnSys) {
 		foreach($sys in $systems) {
-			if(! [String]::IsNullOrEmpty($sys.Computer) ) {
+			if($sys.Computer -imatch "$($nofqdn.Computer).") {
+				$systems[$systems.IndexOf($nofqdn)]=$null
+			}
+		}
+	}
+
+	#in the end let's just keep not null elements
+	$cleanSys = @()
+	$systems | %{if($_) {$cleanSys+=$_}}
+	
+	write-verbose ('Return systems {0} clean systems {1}' -f $systems.count, $cleanSys.Count)
+	if ($allInstances -gt 0) {
+		foreach($sys in $cleanSys) {
+			if(! [String]::IsNullOrEmpty($sys.Computer) ) {				
 				$bag = $g_api.CreatePropertyBag()
 				$bag.AddValue("QNDType","Data")
 				$bag.AddValue('Computer', $sys.Computer.ToLower())
@@ -271,15 +291,15 @@ try {
 		}
 	}
 	else {
-			$bag = $g_api.CreatePropertyBag()
-			$bag.AddValue("QNDType","Summary")
-			$bag.AddValue('ObsoleteDataSystems', $systems.count)
-			$bag.AddValue('AgeHours', $maxAgeHours)
-			if($systems.count -gt 0) {$sampleSys = [System.String]::Join(',',($systems | select -first 10))}
-			else {$sampleSys=''}
-			$bag.AddValue('First10', $sampleSys)
-			if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
-			$bag
+		$bag = $g_api.CreatePropertyBag()
+		$bag.AddValue("QNDType","Summary")
+		$bag.AddValue('ObsoleteDataSystems', $cleanSys.count)
+		$bag.AddValue('AgeHours', $maxAgeHours)
+		if($cleanSys.count -gt 0) {$sampleSys = [System.String]::Join(',',($cleanSys | select -first 10))}
+		else {$sampleSys=''}
+		$bag.AddValue('First10', $sampleSys)
+		if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
+		$bag
 	}
 
 
