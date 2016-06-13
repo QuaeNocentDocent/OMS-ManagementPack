@@ -291,11 +291,14 @@ try {
 		}
 	}
 	else {
+		$obsolete = @()
+		$cleanSys | %{if(([DateTime]::Now - [DateTime]($_.lastdata)).TotalHours -ge $MaxAgeHours) {$obsolete+=$_}}
+		write-verbose ('Obsolete systems {0}' -f $obsolete.count)
 		$bag = $g_api.CreatePropertyBag()
 		$bag.AddValue("QNDType","Summary")
-		$bag.AddValue('ObsoleteDataSystems', $cleanSys.count)
+		$bag.AddValue('ObsoleteDataSystems', $obsolete.count)
 		$bag.AddValue('AgeHours', $maxAgeHours)
-		if($cleanSys.count -gt 0) {$sampleSys = [System.String]::Join(',',($cleanSys | select -first 10))}
+		if($obsolete.count -gt 0) {$sampleSys = [System.String]::Join(',',($obsolete | select -first 10))}
 		else {$sampleSys=''}
 		$bag.AddValue('First10', $sampleSys)
 		if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
