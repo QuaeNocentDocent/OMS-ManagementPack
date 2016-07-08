@@ -91,6 +91,7 @@
           <OMSAPIVersion>2015-03-20</OMSAPIVersion>
           <MaxAgeHours>1</MaxAgeHours>
           <LookbackHours>240</LookbackHours>
+          <ExcludePattern></ExcludePattern>
         </Configuration>
       </UnitMonitor>
 

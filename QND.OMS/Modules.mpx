@@ -177,6 +177,7 @@
           <xsd:element name="MaxAgeHours" type="xsd:int" />
           <xsd:element name="LookbackHours" type="xsd:int" />
           <xsd:element name="AllInstances" type="xsd:int" />
+          <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
@@ -184,6 +185,7 @@
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
           <OverrideableParameter ID="LookbackHours" ParameterType="int" Selector="$Config/LookbackHours$"/>
+          <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>
         </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
@@ -207,6 +209,7 @@
                 <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
                 <LookbackHours>$Config/LookbackHours$</LookbackHours>                
                 <AllInstances>$Config/AllInstances$</AllInstances>
+                <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>
               </ProbeAction>
             </MemberModules>
             <Composition>
@@ -574,11 +577,13 @@
           <xsd:element name="MaxAgeHours" type="xsd:int" />
           <xsd:element name="LookbackHours" type="xsd:int" />
           <xsd:element name="AllInstances" type="xsd:int" />
+          <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>          
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
           <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
+          <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>          
         </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
@@ -640,6 +645,10 @@
                   <Parameter>
                     <Name>allInstances</Name>
                     <Value>$Config/AllInstances$</Value>
+                  </Parameter>                  
+                  <Parameter>
+                    <Name>ExcludePattern</Name>
+                    <Value>$Config/ExcludePattern$</Value>
                   </Parameter>                  
                 </Parameters>
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
@@ -770,6 +779,7 @@
           <xsd:element name="OMSAPIVersion" type="xsd:string" />
           <xsd:element name="MaxAgeHours" type="xsd:int" />
           <xsd:element name="LookbackHours" type="xsd:int" />
+          <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
@@ -779,6 +789,7 @@
           <OverrideableParameter ID="MaxAgeHours" Selector="$Config/MaxAgeHours$" ParameterType="int" />
           <OverrideableParameter ID="DelayLateHours" Selector="$Config/DelayLateHours$" ParameterType="int" />
           <OverrideableParameter ID="LookbackHours" Selector="$Config/LookbackHours$" ParameterType="int" />
+          <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
@@ -799,7 +810,8 @@
               <OMSAPIVersion>$Config/OMSAPIVersion$</OMSAPIVersion>
               <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
               <LookbackHours>$Config/LookbackHours$</LookbackHours>
-              <AllInstances>1</AllInstances>            
+              <AllInstances>1</AllInstances>
+              <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>
             </DataSource>
             <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
               <Expression>
@@ -936,6 +948,7 @@
           <xsd:element name="OMSAPIVersion" type="xsd:string" />
           <xsd:element name="MaxAgeHours" type="xsd:int" />
           <xsd:element name="LookbackHours" type="xsd:int" />
+          <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
@@ -944,6 +957,7 @@
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
           <OverrideableParameter ID="MaxAgeHours" Selector="$Config/MaxAgeHours$" ParameterType="int" />
           <OverrideableParameter ID="LookbackHours" Selector="$Config/LookbackHours$" ParameterType="int" />
+          <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
@@ -965,6 +979,7 @@
               <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
               <LookbackHours>$Config/LookbackHours$</LookbackHours>
               <AllInstances>0</AllInstances>
+              <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>
             </DataSource>
             <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
               <Expression>

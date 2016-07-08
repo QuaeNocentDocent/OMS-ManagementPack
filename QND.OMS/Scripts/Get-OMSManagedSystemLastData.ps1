@@ -45,7 +45,8 @@ param([int]$traceLevel=2,
 [string]$OMSAPIVersion='2015-03-20',
 [int] $MaxAgeHours=2,
 [int] $LookBackHours=24*7,
-[int] $allInstances=0 #issues managing boolean values from OpsMgr
+[int] $allInstances=0, #issues managing boolean values from OpsMgr
+[string] $excludePattern
 )
  
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
@@ -179,6 +180,36 @@ param($SourceId, $ManagedEntityId)
 #endregion
 
 
+Function Return-Bag
+{
+    param($object, $key)
+    try {    
+		$bag = $g_api.CreatePropertyBag()
+        foreach($property in $object.Keys) {
+		    $bag.AddValue($property, $object[$property])
+        }
+        $bag
+
+		if($traceLevel -eq $TRACE_DEBUG) {
+			$g_API.AddItem($bag)
+			$object.Keys | %{write-verbose ('{0}={1}' -f $_,$object[$_]) -Verbose}
+		}
+		
+
+		Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
+			-msg ('{0} - returned status bag ' `
+				-f $object[$key]) `
+			-level $TRACE_VERBOSE 
+    }
+    catch {
+		Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_WARNING `
+			-msg ('{0} - error creating status bag {1}' `
+				-f $object[$key]), $_.Message `
+			-level $TRACE_VERBOSE 
+    }
+}
+
+
 Function Import-ResourceModule
 {
 	param($moduleName, $ArgumentList=$null)
@@ -271,6 +302,16 @@ try {
 		}
 	}
 
+	#exluded systems
+	If(! [String]::IsNullOrEmpty($excludePattern)) {
+		foreach($sys in $systems) {
+			if($sys.Computer -imatch $excludePattern) {
+				$systems[$systems.IndexOf($sys)]=$null
+			}
+		}
+	
+	}
+
 	#in the end let's just keep not null elements
 	$cleanSys = @()
 	$systems | %{if($_) {$cleanSys+=$_}}
@@ -278,15 +319,16 @@ try {
 	write-verbose ('Return systems {0} clean systems {1}' -f $systems.count, $cleanSys.Count)
 	if ($allInstances -gt 0) {
 		foreach($sys in $cleanSys) {
-			if(! [String]::IsNullOrEmpty($sys.Computer) ) {				
-				$bag = $g_api.CreatePropertyBag()
-				$bag.AddValue("QNDType","Data")
-				$bag.AddValue('Computer', $sys.Computer.ToLower())
-				$bag.AddValue('LastData', $sys.lastdata)
+			if(! [String]::IsNullOrEmpty($sys.Computer) ) {	
 				$diff = [DateTime]::Now - [DateTime]($sys.lastdata)
-				$bag.AddValue('AgeHours', $diff.TotalHours)
-				if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
-				$bag
+				$hash=@{
+				'QNDType' ="Data"
+				'Computer'= $sys.Computer.ToLower()
+				'LastData'= $sys.lastdata
+				'AgeHours'= $diff.TotalHours
+				}			
+				Return-Bag -object $hash -key Computer
+
 			}
 		}
 	}
@@ -294,15 +336,16 @@ try {
 		$obsolete = @()
 		$cleanSys | %{if(([DateTime]::Now - [DateTime]($_.lastdata)).TotalHours -ge $MaxAgeHours) {$obsolete+=$_}}
 		write-verbose ('Obsolete systems {0}' -f $obsolete.count)
-		$bag = $g_api.CreatePropertyBag()
-		$bag.AddValue("QNDType","Summary")
-		$bag.AddValue('ObsoleteDataSystems', $obsolete.count)
-		$bag.AddValue('AgeHours', $maxAgeHours)
 		if($obsolete.count -gt 0) {$sampleSys = [System.String]::Join(',',($obsolete | select -first 10))}
 		else {$sampleSys=''}
-		$bag.AddValue('First10', $sampleSys)
-		if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
-		$bag
+
+		$hash=@{
+			'QNDType' ="Summary"
+			'ObsoleteDataSystems'= $obsolete.count
+			'AgeHours'= $maxAgeHours
+			'First10'= $sampleSys
+		}			
+		Return-Bag -object $hash -key QNDType
 	}
 
 

@@ -220,6 +220,35 @@ param(
 	return $items
 }
 
+Function Return-Bag
+{
+    param($object, $key)
+    try {    
+		$bag = $g_api.CreatePropertyBag()
+        foreach($property in $object.Keys) {
+		    $bag.AddValue($property, $object[$property])
+        }
+        $bag
+
+		if($traceLevel -eq $TRACE_DEBUG) {
+			$g_API.AddItem($bag)
+			$object.Keys | %{write-verbose ('{0}={1}' -f $_,$object[$_]) -Verbose}
+		}
+		
+
+		Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
+			-msg ('{0} - returned status bag ' `
+				-f $object[$key]) `
+			-level $TRACE_VERBOSE 
+    }
+    catch {
+		Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_WARNING `
+			-msg ('{0} - error creating status bag {1}' `
+				-f $object[$key]), $_.Message `
+			-level $TRACE_VERBOSE 
+    }
+}
+
 #region Common
 Function Import-ResourceModule
 {
@@ -407,6 +436,27 @@ try {
 							}
 						}
 				}
+
+				$execError=($failures -gt $MaxFailures).ToString()
+
+				$returnValue=@{
+					'ItemId' = $item.Id
+					'JobsReturned'=$itemJobs.Count
+					'JobsSelected'= $selectedJobs.Count
+					'Failures'= $failures
+					'LastJobDurationHours'= $lastjobDurationHours
+					'LastJobSizeGB'= $lastJobSizeGB
+					'LastJobStatus'= $lastJobStatus
+					'LastRecoveryPointDate'= $lastRecPointDate
+					'LastRecoveryPointAge'= $lastRecoveryPointAgeHours
+					'ExecError'= $execError
+					'AgeError'= $ageError
+					'MaxFailures'= $MaxFailures
+					'MaxAgeHours'= $specificAge
+				}
+
+				Return-Bag -object $returnValue -key ItemId
+				<#
 				$bag = $g_api.CreatePropertyBag()
 				$bag.AddValue('ItemId', $item.Id)
 				#return calculated status and input parameters
@@ -430,9 +480,10 @@ try {
 
 				if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
 				$bag
+				#>
 
 				Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
-					-msg ('{0} - retunred jobs {1} selected jobs {2} failures {3} last job status {4} last job duration {5} last recovery point {6} last recovery point age {7}' `
+					-msg ('{0} - returned jobs {1} selected jobs {2} failures {3} last job status {4} last job duration {5} last recovery point {6} last recovery point age {7}' `
 						-f $item.Id, $itemJobs.Count, $selectedJobs.Count, $failures, $lastJobStatus, $lastjobDurationHours, $lastRecPointDate, $lastRecoveryPointAgeHours) `
 					-level $TRACE_VERBOSE              
 				}

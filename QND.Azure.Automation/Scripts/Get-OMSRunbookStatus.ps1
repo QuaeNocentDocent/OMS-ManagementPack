@@ -232,7 +232,7 @@ param(
 
 Function Return-Bag
 {
-    param($object)
+    param($object, $key)
     try {    
 		$bag = $g_api.CreatePropertyBag()
         foreach($property in $object.Keys) {
@@ -240,21 +240,25 @@ Function Return-Bag
         }
         $bag
 
-		if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
+		if($traceLevel -eq $TRACE_DEBUG) {
+			$g_API.AddItem($bag)
+			$object.Keys | %{write-verbose ('{0}={1}' -f $_,$object[$_]) -Verbose}
+		}
 		
 
 		Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
 			-msg ('{0} - returned status bag ' `
-				-f $object.runbookName) `
+				-f $object[$key]) `
 			-level $TRACE_VERBOSE 
     }
     catch {
 		Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_WARNING `
 			-msg ('{0} - error creating status bag {1}' `
-				-f $object.runbookName), $_.Message `
+				-f $object[$key]), $_.Message `
 			-level $TRACE_VERBOSE 
     }
 }
+
 
 #region Common
 Function Import-ResourceModule
@@ -371,10 +375,10 @@ try {
     foreach($s in $schedules) {
         if ($s.properties.expiryTime.Substring(0,4) -eq '9999') {$validSchedules+=$s.Name; continue}
         if ([datetime]$s.properties.expiryTime -gt (Get-Date)) {$validSchedules+=$s.Name; continue}
-        $schedules.Remove($s)
+        #$schedules.Remove($s)
     }
 
-    write-verbose ('Got {0} schedules' -f $schedules.count)
+    write-verbose ('Got {0} schedules, valid {1}' -f $schedules.count, $validSchedules.Count)
 <#
 Comment text...
 Body:
@@ -509,14 +513,79 @@ Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/TestSchedule1",
         if($onlySJWH -and !$wh -and !$jsch) {continue}
         write-verbose ('Runbook {0} has webhook or valid schedule' -f $rb.name)
         [double]$autoAge=24*30 #24 H * 30 days
+<#
+Request body for weekly: 
+{
+“name”: “ScheduleName”
+“properties”: {
+“description”: “”,
+“startTime”: “2016-05-17T02:01:49.755565Z”,
+“interval”: 1,
+“frequency”: “Week”,
+“timeZone”: “UTC”,
+“advancedSchedule”: {
+“weekDays”:[“Tuesday”]
+}
+}
+}
+Month days: 
+{
+“name”: “ScheduleName”
+“properties”: {
+“description”: “”,
+“startTime”: “2016-05-17T02:01:49.755565Z”,
+“interval”: 1,
+“frequency”: “Month”,
+“timeZone”: “UTC”,
+“advancedSchedule”: {
+“monthDays”:[1, 2, 4]
+}
+}
+}
+Month week day occurrence: 
+{
+“name”: “ScheduleName”
+“properties”: {
+“description”: “”,
+“startTime”: “2016-05-17T02:01:49.755565Z”,
+“interval”: 1,
+“frequency”: “Month”,
+“timeZone”: “UTC”,
+“advancedSchedule”: {
+“monthlyOccurences”:[
+{
+“occurrence”: 2, 
+“day”: “Friday”
+}
+]
+}
+}
+}
+
+#>
         if($jsch) {
             #we can have multiple schedules so let's try to get the stricter one            
             foreach($s in $sch) {
                 switch ($s.properties.frequency) {
                 'Hour' {if($autoAge -gt $s.properties.interval) {$autoAge=$s.properties.interval}}
 				'Day' {if($autoAge -gt $s.properties.interval*24) {$autoAge=$s.properties.interval*24}}
-				'Week' {if($autoAge -gt $s.properties.interval*7*24) {$autoAge=$s.properties.interval*7*24}}
-                'Month' {if($autoAge -gt $s.properties.interval*30*24) {$autoAge=$s.properties.interval*30*24}}
+				'Week' {
+					$worstCase = 7
+					if($s.properties.advancedSchedule.weekDays) {
+						$worstCase = 8 - $s.properties.advancedSchedule.weekDays.Count
+					}
+					if($autoAge -gt $s.properties.interval*$worstCase*24) {$autoAge=$s.properties.interval*$worstCase*24}
+				}
+                'Month' {
+					$worstCase=30
+					if($s.properties.advancedSchedule.monthDays) {
+						$worstCase = 31 - $s.properties.advancedSchedule.monthDays.Count
+					}
+					if($s.properties.advancedSchedule.monthlyOccurences) {
+						$worstCase = 31 - $s.properties.advancedSchedule.monthlyOccurences.Count
+					}
+					if($autoAge -gt $s.properties.interval*$worstCase*24) {$autoAge=$s.properties.interval*$worstCase*24}
+				}
                 default {
                     Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_WARNING `
 				    -msg ('Unknown schedule frequency {0}' `
@@ -617,7 +686,7 @@ Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/TestSchedule1",
             maxFailures=$MaxFailures
         }
         #ConvertTo-Json $output
-        Return-Bag $output
+        Return-Bag -object $output -key runbookName
         }
         catch {
             Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Error getting stats for item {0} - {1}' -f $Item.Name, $Error[0]) $TRACE_WARNING	
