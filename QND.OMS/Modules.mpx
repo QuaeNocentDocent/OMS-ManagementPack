@@ -184,6 +184,7 @@
           <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
           <OverrideableParameter ID="LookbackHours" ParameterType="int" Selector="$Config/LookbackHours$"/>
           <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>
         </OverrideableParameters>
@@ -221,6 +222,71 @@
         </ModuleImplementation>
         <OutputType>System!System.PropertyBagData</OutputType>
       </DataSourceModuleType>
+      <DataSourceModuleType ID="QND.OMS.SysHeartbeat.DS" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="600" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" default="2"/>
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="OMSAPIVersion" type="xsd:string" />
+          <xsd:element name="MaxAgeMinutes" type="xsd:int" />
+          <xsd:element name="LookbackHours" type="xsd:int" />
+          <xsd:element name="AllInstances" type="xsd:int" />
+          <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="MaxAgeMinutes" ParameterType="int" Selector="$Config/MaxAgeMinutes$"/>
+          <OverrideableParameter ID="LookbackHours" ParameterType="int" Selector="$Config/LookbackHours$"/>
+          <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+              </DataSource>
+              <ProbeAction ID="Probe" TypeID="QND.OMS.SysHeartbeat.PT">
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <TraceLevel>$Config/TraceLevel$</TraceLevel>
+                <ClientId>$Config/ClientId$</ClientId>
+                <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+                <Proxy>$Config/Proxy$</Proxy>
+                <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+                <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
+                <AADUserName>$Config/AADUserName$</AADUserName>
+                <AADPassword>$Config/AADPassword$</AADPassword>
+                <ResourceURI>$Config/ResourceURI$</ResourceURI>
+                <OMSAPIVersion>$Config/OMSAPIVersion$</OMSAPIVersion>
+                <MaxAgeMinutes>$Config/MaxAgeMinutes$</MaxAgeMinutes>
+                <LookbackHours>$Config/LookbackHours$</LookbackHours>
+                <AllInstances>$Config/AllInstances$</AllInstances>
+                <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID ="Probe">
+                <Node ID="Scheduler"></Node>
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>      
       <DataSourceModuleType ID="QND.OMS.AlertRuleState.DS" Accessibility="Public" Batching="false">
         <Configuration>
           <xsd:element name="IntervalSeconds" type="xsd:int" />
@@ -352,11 +418,13 @@
           <xsd:element name="AADPassword" type="xsd:string" />
           <xsd:element name="ResourceURI" type="xsd:string" />
           <xsd:element name="OMSAPIVersion" type="xsd:string" />
+          <xsd:element name="Exclusions" type="xsd:string" minOccurs="0"/>
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="OMSAPIVersion" Selector="$Config/OMSAPIVersion$" ParameterType="string" />
+          <OverrideableParameter ID="Exclusions" Selector="$Config/Exclusions$" ParameterType="string" />
         </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
@@ -470,6 +538,10 @@
                   <Parameter>
                     <Name>OMSAPIVersion</Name>
                     <Value>$Config/OMSAPIVersion$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Exclusions</Name>
+                    <Value>$Config/Exclusions$</Value>
                   </Parameter>
                 </Parameters>
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
@@ -664,6 +736,110 @@
         <OutputType>System!System.PropertyBagData</OutputType>
         <InputType>System!System.BaseData</InputType>
       </ProbeActionModuleType>
+      <ProbeActionModuleType ID="QND.OMS.SysHeartbeat.PT" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="OMSAPIVersion" type="xsd:string" />
+          <xsd:element name="MaxAgeMinutes" type="xsd:int" />
+          <xsd:element name="LookbackHours" type="xsd:int" />
+          <xsd:element name="AllInstances" type="xsd:int" />
+          <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="MaxAgeMinutes" ParameterType="int" Selector="$Config/MaxAgeMinutes$"/>
+          <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <ProbeAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+                <ScriptName>Get-OMSManagedSystemLastData.ps1</ScriptName>
+                <ScriptBody>
+                  $IncludeFileContent/Scripts/Get-OMSManagedSystemLastData.ps1$
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>clientId</Name>
+                    <Value>$Config/ClientId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Subscription</Name>
+                    <Value>$Config/SubscriptionId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Proxy</Name>
+                    <Value>$Config/Proxy$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>AuthBaseAddress</Name>
+                    <Value>$Config/AuthBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceBaseAddress</Name>
+                    <Value>$Config/ResourceBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADUsername</Name>
+                    <Value>$Config/AADUserName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADPassword</Name>
+                    <Value>$Config/AADPassword$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>resourceURI</Name>
+                    <Value>$Config/ResourceURI$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>OMSAPIVersion</Name>
+                    <Value>$Config/OMSAPIVersion$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>MaxAgeMinutes</Name>
+                    <Value>$Config/MaxAgeMinutes$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>LookbackHours</Name>
+                    <Value>$Config/LookbackHours$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>allInstances</Name>
+                    <Value>$Config/AllInstances$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ExcludePattern</Name>
+                    <Value>$Config/ExcludePattern$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+                <!-- true only for Tasks -->
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="POSH" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </ProbeActionModuleType>      
       <ProbeActionModuleType ID="QND.OMS.GetAlertRuleState.PT" Accessibility="Public" Batching="false">
         <Configuration>
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
@@ -977,6 +1153,292 @@
               <ResourceURI>$Config/ResourceURI$</ResourceURI>
               <OMSAPIVersion>$Config/OMSAPIVersion$</OMSAPIVersion>
               <MaxAgeHours>$Config/MaxAgeHours$</MaxAgeHours>
+              <LookbackHours>$Config/LookbackHours$</LookbackHours>
+              <AllInstances>0</AllInstances>
+              <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>
+            </DataSource>
+            <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Summary</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="ObsoleteDataCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">Property[@Name='ObsoleteDataSystems']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Greater</Operator>
+                  <ValueExpression>
+                    <Value Type="Integer">0</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="OntimeCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">Property[@Name='ObsoleteDataSystems']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="Integer">0</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="Healthy">
+              <Node ID="OntimeCD">
+                  <Node ID="DataFilter">
+                    <Node ID="DS" />
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="Obsolete">
+              <Node ID="ObsoleteDataCD">
+                  <Node ID="DataFilter">
+                    <Node ID="DS" />
+                </Node>
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+            <UnitMonitorType ID="QND.OMS.SysHeartbeat.MT" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="Healthy"/>
+          <MonitorTypeState ID="Late"/>
+          <MonitorTypeState ID="Obsolete"/>
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />          
+          <xsd:element name="Computer" type="xsd:string" />
+          <xsd:element name="DelayLateMinutes" type="xsd:int" />
+
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="OMSAPIVersion" type="xsd:string" />
+          <xsd:element name="MaxAgeMinutes" type="xsd:int" />
+          <xsd:element name="LookbackHours" type="xsd:int" />
+          <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="MaxAgeMinutes" Selector="$Config/MaxAgeMinutes$" ParameterType="int" />
+          <OverrideableParameter ID="DelayLateMinutes" Selector="$Config/DelayLateMinutes$" ParameterType="int" />
+          <OverrideableParameter ID="LookbackHours" Selector="$Config/LookbackHours$" ParameterType="int" />
+          <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="QND.OMS.SysHeartbeat.DS">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+
+              <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <ClientId>$Config/ClientId$</ClientId>
+              <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+              <Proxy>$Config/Proxy$</Proxy>
+              <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+              <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
+              <AADUserName>$Config/AADUserName$</AADUserName>
+              <AADPassword>$Config/AADPassword$</AADPassword>
+              <ResourceURI>$Config/ResourceURI$</ResourceURI>
+              <OMSAPIVersion>$Config/OMSAPIVersion$</OMSAPIVersion>
+              <MaxAgeMinutes>$Config/MaxAgeMinutes$</MaxAgeMinutes>
+              <LookbackHours>$Config/LookbackHours$</LookbackHours>
+              <AllInstances>1</AllInstances>
+              <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>
+            </DataSource>
+            <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='QNDType']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Data</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="String">Property[@Name='Computer']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value Type="String">$Config/Computer$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+              </Expression>
+            </ConditionDetection>            
+            <ConditionDetection ID="LateDataCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <And>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Double">Property[@Name='AgeMinutes']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>LessEqual</Operator>
+                      <ValueExpression>
+                        <Value Type="Double">$Config/MaxAgeMinutes$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Double">Property[@Name='AgeMinutes']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Greater</Operator>
+                      <ValueExpression>
+                        <Value Type="Double">$Config/DelayLateMinutes$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                </And>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="ObsoleteDataCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">Property[@Name='AgeMinutes']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Greater</Operator>
+                  <ValueExpression>
+                    <Value Type="Double">$Config/MaxAgeMinutes$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="OntimeCD" TypeID="System!System.ExpressionFilter">
+                 <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Double">Property[@Name='AgeMinutes']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>LessEqual</Operator>
+                      <ValueExpression>
+                        <Value Type="Double">$Config/DelayLateMinutes$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="Healthy">
+              <Node ID="OntimeCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                <Node ID="DS" />
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="Late">
+              <Node ID="LateDataCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                    <Node ID="DS"></Node>
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="Obsolete">
+              <Node ID="ObsoleteDataCD">
+                <Node ID="Filter">
+                  <Node ID="DataFilter">
+                    <Node ID="DS" />
+                  </Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+      <UnitMonitorType ID="QND.OMS.Workspace.SysHeartbeat.MT" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="Healthy"/>
+          <MonitorTypeState ID="Obsolete"/>
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="OMSAPIVersion" type="xsd:string" />
+          <xsd:element name="MaxAgeMinutes" type="xsd:int" />
+          <xsd:element name="LookbackHours" type="xsd:int" />
+          <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="MaxAgeMinutes" Selector="$Config/MaxAgeMinutes$" ParameterType="int" />
+          <OverrideableParameter ID="LookbackHours" Selector="$Config/LookbackHours$" ParameterType="int" />
+          <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="QND.OMS.SysHeartbeat.DS">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+
+              <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <ClientId>$Config/ClientId$</ClientId>
+              <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+              <Proxy>$Config/Proxy$</Proxy>
+              <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+              <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
+              <AADUserName>$Config/AADUserName$</AADUserName>
+              <AADPassword>$Config/AADPassword$</AADPassword>
+              <ResourceURI>$Config/ResourceURI$</ResourceURI>
+              <OMSAPIVersion>$Config/OMSAPIVersion$</OMSAPIVersion>
+              <MaxAgeMinutes>$Config/MaxAgeMinutes$</MaxAgeMinutes>
               <LookbackHours>$Config/LookbackHours$</LookbackHours>
               <AllInstances>0</AllInstances>
               <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>

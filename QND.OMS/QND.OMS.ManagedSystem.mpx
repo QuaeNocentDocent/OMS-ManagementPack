@@ -92,11 +92,52 @@
           <LookbackHours>240</LookbackHours>
         </Configuration>
       </UnitMonitor>
+      <UnitMonitor ID="QND.OMS.SysHeartbeat.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.ManagedSystem"
+                        ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.SysHeartbeat.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.SysHeartbeat.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Target/Property[Type="QND.OMS.ManagedSystem"]/Computer$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="AgeMinutes"]$</AlertParameter2>
+            <AlertParameter3>$Data/Context/Property[@Name="Url"]$</AlertParameter3>            
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="Late" MonitorTypeStateID="Late" HealthState="Warning" />
+          <OperationalState ID="Obsolete" MonitorTypeStateID="Obsolete" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>3611</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <Computer>$Target/Property[Type="QND.OMS.ManagedSystem"]/Computer$</Computer>
+          <DelayLateMinutes>2</DelayLateMinutes>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <!-- <ResourceGroupId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService"]/ResourceGroup$</ResourceGroupId> -->
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <OMSAPIVersion>2015-03-20</OMSAPIVersion>
+          <MaxAgeMinutes>30</MaxAgeMinutes>
+          <LookbackHours>120</LookbackHours>
+        </Configuration>
+      </UnitMonitor>      
     </Monitors>
   </Monitoring>
     <Presentation>
     <StringResources>
       <StringResource ID="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage"/>
+      <StringResource ID="QND.OMS.SysHeartbeat.Monitor.AlertMessage"/>
     </StringResources>
   </Presentation>
   <LanguagePacks>
@@ -132,6 +173,13 @@
         <DisplayString ElementID="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage">
           <Name> QND - OMS System Data obsolete</Name>
           <Description>{0} data is obsolete. Last data point received {1} hours ago</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.SysHeartbeat.Monitor">
+          <Name>Heartbeat</Name>
+        </DisplayString>        
+        <DisplayString ElementID="QND.OMS.SysHeartbeat.Monitor.AlertMessage">
+          <Name> QND - OMS Agent not heartbeating</Name>
+          <Description>{0} data is obsolete. Last data point received {1} minutes ago. Ivestigate at {2}</Description>
         </DisplayString>
       </DisplayStrings>
     </LanguagePack>

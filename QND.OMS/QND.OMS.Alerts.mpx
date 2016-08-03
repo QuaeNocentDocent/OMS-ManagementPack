@@ -39,6 +39,7 @@
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
           <OMSAPIVersion>$Target/Property[Type="QND.OMS.Workspace"]/OMSAPIVersion$</OMSAPIVersion>
+          <Exclusions></Exclusions>
         </DataSource>
       </Discovery>    
     </Discoveries>
@@ -72,6 +73,8 @@
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
           <AlertParameters>
             <AlertParameter1>$Data/Context/Property[@Name="LastAlert"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="Url"]$</AlertParameter2>
+            <AlertParameter3>$Data/Context/Property[@Name="First5"]$</AlertParameter3>            
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -134,7 +137,10 @@
         </DisplayString>
         <DisplayString ElementID="QND.OMS.AlertRule.Monitor.AlertMessage">
           <Name> QND - OMS Alert is active</Name>
-          <Description>Last alert occurrence: {0}.</Description>
+          <Description>Last alert occurrence: {0}.
+          Get more Info:{1}.
+          First 5 hits: {2}.
+          </Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.AlertRule.DiscoveryTrigger.Rule">
           <Name>QND - OMS Alert Rule discovery trigger rule</Name>

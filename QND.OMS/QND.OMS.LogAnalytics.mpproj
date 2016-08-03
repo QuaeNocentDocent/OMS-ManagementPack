@@ -122,6 +122,7 @@
     </Content>
     <EmbeddedResource Include="Scripts\Get-OMSAlertRules.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSAlertRuleState.ps1" />
+    <EmbeddedResource Include="Scripts\Get-OMSSysHeartbeat.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSManagedSystemLastData.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSManagedSystems.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSManagedSystemsData.ps1" />

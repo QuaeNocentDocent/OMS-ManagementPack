@@ -1,9 +1,4 @@
-﻿## This discovery needs to be splitted 'cause potentially can discover a huge number of entities, the disocvery rule is disabled by default
-## Gorup memeberhsip must be changed and split in diffrent rules using the properties we're setting
-
-#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
-#SET ErrorLevel to 5 so show discovery info
-#https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
+﻿
 #*************************************************************************
 # Script Name - 
 # Author	  -  Daniele Grandini - QND
@@ -38,11 +33,9 @@
 
 # Get the named parameters
 param([int]$traceLevel=2,
-[Parameter (Mandatory=$true)] [string]$sourceID,
-[Parameter (Mandatory=$true)] [string]$ManagedEntityId,
+
 [Parameter (Mandatory=$true)][string]$clientId,
 [Parameter (Mandatory=$true)][string]$SubscriptionId,
-[Parameter (Mandatory=$true)][string]$ResourceGroupId,
 [string]$Proxy,
 [Parameter (Mandatory=$true)][string]$AuthBaseAddress,
 [Parameter (Mandatory=$true)][string]$ResourceBaseAddress,
@@ -50,14 +43,18 @@ param([int]$traceLevel=2,
 [Parameter (Mandatory=$true)][string]$ADPassword,
 [Parameter (Mandatory=$true)][string]$resourceURI,
 [string]$OMSAPIVersion='2015-03-20',
-[string]$Exclusions=$null
+[int] $MaxAgeMinutes=30,
+[int] $LookBackHours=24*7,
+[int] $allInstances=0, #issues managing boolean values from OpsMgr
+[string] $excludePattern
 )
+ 
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
     [Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
 
 #region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "QND.OMS.GetAlertRule"
+$SCRIPT_NAME			= "Get-OMSSysHeartbeat"
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -77,10 +74,10 @@ $EVENT_TYPE_AUDITSUCCESS = 8
 $EVENT_TYPE_AUDITFAILURE = 16
 
 #Standard Event IDs
-$FAILURE_EVENT_ID = 4000		#errore generico nello script
-$SUCCESS_EVENT_ID = 1101
-$START_EVENT_ID = 1102
-$STOP_EVENT_ID = 1103
+$EVENT_ID_FAILURE = 4000		#errore generico nello script
+$EVENT_ID_SUCCESS = 1101
+$EVENT_ID_START = 1102
+$EVENT_ID_STOP = 1103
 
 #TypedPropertyBag
 $AlertDataType = 0
@@ -102,8 +99,8 @@ function Log-Params
 {
     param($Invocation)
     $line=''
-    foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
-	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. Invocation Name:$($Invocation.InvocationName)`n Parameters`n $line") $TRACE_INFO
+    foreach($key in $Invocation.BoundParameters.Keys) {$line += ('-{0} {1} ' -f $key, $Invocation.BoundParameters[$key])}
+	Log-Event -eventID $EVENT_ID_START -eventType $EVENT_TYPE_INFORMATION -msg ("Starting script [{0}]. Invocation Name:{1}`n Parameters`n{2}" -f $SCRIPT_NAME, $Invocation.InvocationName, $line) -level $TRACE_INFO
 }
 
 function Create-Event
@@ -138,12 +135,13 @@ function Create-Event
 
 function Log-Event
 {
-	param($eventID, $eventType, $msg, $level)
+	param($eventID, $eventType, $msg, $level, [switch] $includeName=$true)
 	
 	Write-Verbose ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
 	if($level -le $P_TraceLevel)
 	{
 		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
+		if ($includeName) {$msg='[{0}] {1}' -f $SCRIPT_NAME, $msg}
         Create-Event -eventID $eventID -eventType $eventType -msg ($msg + "`n" + "Version :" + $SCRIPT_VERSION) -parameters @($SCRIPT_NAME,$SCRIPT_VERSION)
 		#$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
 	}
@@ -156,7 +154,7 @@ Function Throw-EmptyDiscovery
 	param($SourceId, $ManagedEntityId)
 
 	$oDiscoveryData = $g_API.CreateDiscoveryData(0, $SourceId, $ManagedEntityId)
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
+	Log-Event $EVENT_ID_FAILURE $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
 	$oDiscoveryData
 	If($traceLevel -eq $TRACE_DEBUG)
 	{
@@ -171,7 +169,7 @@ param($SourceId, $ManagedEntityId)
 	$oDiscoveryData = $g_API.CreateDiscoveryData(0,$SourceId,$ManagedEntityId)
 	#Instead of Snapshot discovery, submit Incremental discovery data
 	$oDiscoveryData.IsSnapshot = $false
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
+	Log-Event $EVENT_ID_FAILURE $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
 	$oDiscoveryData    
 	If($traceLevel -eq $TRACE_DEBUG)
 	{
@@ -182,6 +180,38 @@ param($SourceId, $ManagedEntityId)
 
 #endregion
 
+#region Property Bags
+Function Return-Bag
+{
+    param($object, $key)
+    try {    
+		$bag = $g_api.CreatePropertyBag()
+        foreach($property in $object.Keys) {
+		    $bag.AddValue($property, $object[$property])
+        }
+        $bag
+
+		if($traceLevel -eq $TRACE_DEBUG) {
+			$g_API.AddItem($bag)
+			$object.Keys | %{write-verbose ('{0}={1}' -f $_,$object[$_]) -Verbose}
+		}
+		
+
+		Log-Event -eventID $EVENT_ID_SUCCESS -eventType $EVENT_TYPE_INFORMATION `
+			-msg ('{0} - returned status bag ' `
+				-f $object[$key]) `
+			-level $TRACE_VERBOSE 
+    }
+    catch {
+		Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_WARNING `
+			-msg ('{0} - error creating status bag {1}' `
+				-f $object[$key]), $_.Message `
+			-level $TRACE_VERBOSE 
+    }
+}
+#endregion
+
+#region common utilities
 Function Import-ResourceModule
 {
 	param($moduleName, $ArgumentList=$null)
@@ -199,29 +229,9 @@ Function Import-ResourceModule
 	else {Throw [System.DllNotFoundException] ('{0} not found' -f $module)}
 }
 
-Function Discover-AlertRule
-{
-	param($Id, $Interval, $AlertName)
+#endregion
 
-	try {
-		$serviceName = $resourceURI.Split('/')
-		$serviceName=$serviceName[$serviceName.Count-1]
-		}
-	catch {
-		$serviceName='unknown'
-	}
-		$displayName=('{0} ({1})' -f $AlertName, $serviceName)
 
-		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.AlertRule']$")	
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric']/ServiceId$", $resourceURI)				
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/ScheduleId$", $Id)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/Interval$", $Interval)	
-		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/AlertName$", $AlertName)	
-		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $DisplayName)	
-		$discoveryData.AddInstance($objInstance)	
-}
 #Start by setting up API object.
 	$P_TraceLevel = $TRACE_VERBOSE
 	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
@@ -236,76 +246,107 @@ Function Discover-AlertRule
 		Import-ResourceModule -moduleName QNDAzure
 	}
 	catch {
-		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot load required powershell modules $Error") $TRACE_ERROR
+		Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ('Cannot load reuired powershell modules {0}' -f $Error[0]) -level $TRACE_ERROR
 		exit 1	
 	}
 
 try
 {
 	if($proxy) {
-		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Proxy is not currently supported {0}" -f $proxy) $TRACE_WARNING
+		Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_WARNING -msg ('CProxy is not currently supported {0}' -f $proxy) -level $TRACE_WARNING
 	}
 	$pwd = ConvertTo-SecureString $ADPassword -AsPlainText -Force
 	$cred = New-Object System.Management.Automation.PSCredential ($ADUserName, $pwd)
-	$authority = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
-	$connection = $authority.CreateAuthorizationHeader()
+	$connection = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
 }
 catch {
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
-	Throw-KeepDiscoveryInfo
+	Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ('Cannot get Azure AD connection aborting {0}' -f $Error[0]) -level $TRACE_ERROR
 	exit 1	
 }
 
 try {
-	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
+	$timeout=300
+#get the orkspaceid useful for link
+	$uri = '{0}{1}?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
+	[array]$result = (invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection.CreateAuthorizationHeader()) -TimeoutSeconds $timeout).Values
+	if ($result.Count -eq 1) {
+		$workspaceId=$result[0].properties.customerId
+	}
+	else {
+		Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_WARNING -msg ('Cannot get workspaceid for {0}' -f $uri) -level $TRACE_WARNING
+		$workspaceId='error'
+	}
+	#prepare query body
+	    $uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
+		$query='Type:Heartbeat | dedup Computer'
 
-	$rules=@()
+    $QueryArray = @{Query=$Query}
 
-$timeout=300
-    $uri = '{0}{1}/savedSearches?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
-    write-verbose ('Query: {0}' -f $uri)
-	#$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
-    $nextLink = $null
-	$savedSearches=@()
+	$startDate=(Get-Date).AddHours(-$LookBackHours)
+	$endDate=Get-Date
+    $QueryArray+= @{start=('{0}Z' -f $startDate.GetDateTimeFormats('s'))}
+    $QueryArray+= @{end=('{0}Z' -f $endDate.GetDateTimeFormats('s'))}
+    $body = ConvertTo-Json -InputObject $QueryArray
+
+	$nextLink=$null
+	$systems=@()
 	do {
-		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
-		$nextLink = $result.NextLink
-		$savedSearches += $result.values	
+		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb POST -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -data $body -TimeoutSeconds $timeout
+		$nextLink = $result.NextLink		
+		if($result.gotValue) {$systems += $result.values}
 	} while ($nextLink)
+	#sometimes some spurious systems are returned, we need to normalize and clean up
+	#if we are summarizing $allInstances=0 let's discrd any system that doesn't have a domain, otherwise let's keep no domain systems only if no other system with a domain has the same name
 
-write-verbose ('Got {0} saved searches' -f $savedSearches.count)
-if( [String]::IsNullOrEmpty($Exclusions) ) {$Exclusions='_____'} #let's say this pattern never matches any rule
-	foreach($search in $savedSearches) {
-		$uri = '{0}{1}/schedules?api-version={2}' -f $ResourceBaseAddress,$search.Id,$OMSAPIVersion
-		$nextLink=$null
-		$schedule = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $extLink -data $null -TimeoutSeconds $timeout -ErrorAction SilentlyContinue
-		if($schedule.values) {
-			#take into account just the first schedule for the search maybe this needs to be changed in future
-			if ($schedule.Values[0].properties.Enabled -ieq 'True') {
-			   $uri = '{0}{1}/actions?api-version={2}' -f $ResourceBaseAddress,$schedule.values.id,$OMSAPIVersion
-			   $nextLink=$null
-			   $actions = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout #-ErrorAction SilentlyContinue
-			   if ($actions.Values) {
-					if ($actions.Values[0].properties.Type -ieq 'Alert') {
-						if ($actions.Values[0].properties.Name -inotmatch $Exclusions)	{
-							Discover-AlertRule -Id $schedule.Values[0].id -Interval $schedule.Values[0].properties.Interval -AlertName $actions.Values[0].properties.Name
-							Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('{0}, Interval={1}, Name={2}' -f $schedule.Values[0].id, $schedule.Values[0].properties.Interval, $actions.Values[0].properties.Name ) $TRACE_VERBOSE
-						}
-						else {Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('Alert={0} excluded from discovery' -f $actions.Values[0].properties.Name ) $TRACE_INFO}
-					}
-			   }
-			}
+	#exluded systems
+	$cleanSys = @()
+	If(! [String]::IsNullOrEmpty($excludePattern)) {
+		$systems | %{if($_.Computer -inotmatch $excludePattern){$cleanSys+=$_}}	
+	}
+
+	$link=('https://{0}.portal.mms.microsoft.com/#Workspace/search/index?q=Type%3AHeartbeat%20%7C%20dedup%20Computer' -f $workspaceId)
+	write-verbose ('Return systems {0} clean systems {1}' -f $systems.count, $cleanSys.Count)
+	if ($allInstances -gt 0) {
+		foreach($sys in $cleanSys) {
+				$diff = [DateTime]::Now - [DateTime]($sys.TimeGenerated)
+				$hash=@{
+				'QNDType' ="Data"
+				'Computer'= $sys.Computer.ToLower()
+				'LastData'= $sys.TimeGenerated	
+				'AgeMinutes'= $diff.TotalMinutes
+				'Url'=$link
+				}	
+				Return-Bag -object $hash -key Computer
 		}
 	}
-	$discoveryData
+	else {
+		$obsolete = @()
+		$cleanSys | %{if(([DateTime]::Now - [DateTime]($_.TimeGenerated)).TotalMinutes -ge $MaxAgeMinutes) {$obsolete+=$_}}
+		write-verbose ('Obsolete systems {0}' -f $obsolete.count)
+		if($obsolete.count -gt 0) {$sampleSys = ($obsolete | select -first 5 | ConvertTo-Json)}
+		else {$sampleSys=''}
+
+		$hash=@{
+			'QNDType' ="Summary"
+			'ObsoleteDataSystems'= $obsolete.count
+			'AgeMinutes'= $maxAgeMinutes
+			'First5'= $sampleSys
+			'Url'=$link
+		}			
+		Return-Bag -object $hash -key QNDType
+	}
+
+
+
 	If ($traceLevel -eq $TRACE_DEBUG)
 	{
 		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
 		#it breaks in exception when run insde OpsMgr and POSH IDE	
-		$g_API.Return($discoveryData)
+		$g_API.ReturnItems() 
 	}
+
 	
-	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
 	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	

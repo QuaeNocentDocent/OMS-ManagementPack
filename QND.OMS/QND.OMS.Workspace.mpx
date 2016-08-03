@@ -94,6 +94,44 @@
           <ExcludePattern></ExcludePattern>
         </Configuration>
       </UnitMonitor>
+      <UnitMonitor ID="QND.OMS.Workspace.SysHeartbeat.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Workspace"
+                   ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Workspace.SysHeartbeat.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Workspace.SysHeartbeat.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="ObsoleteDataSystems"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="AgeMinutes"]$</AlertParameter2>
+            <AlertParameter3>$Data/Context/Property[@Name="Url"]$</AlertParameter3>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="Obsolete" MonitorTypeStateID="Obsolete" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>3611</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <!-- <ResourceGroupId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService"]/ResourceGroup$</ResourceGroupId> -->
+          <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <OMSAPIVersion>2015-03-20</OMSAPIVersion>
+          <MaxAgeMinutes>30</MaxAgeMinutes>
+          <LookbackHours>120</LookbackHours>
+          <ExcludePattern></ExcludePattern>
+        </Configuration>
+      </UnitMonitor>
 
       <DependencyMonitor ID="QND.OMS.WorkspaceToSystem.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.ManagedSystemLastData.Monitor" ParentMonitorID="Health!System.Health.AvailabilityState" Priority="Normal"
                          RelationshipType="QND.OMS.WorkspaceContainsSystem" Remotable="true" Target="QND.OMS.Workspace">
@@ -109,6 +147,7 @@
   <Presentation>
     <StringResources>
       <StringResource ID="QND.OMS.WorkspaceLastData.Monitor.AlertMessage"/>
+      <StringResource ID="QND.OMS.Workspace.SysHeartbeat.Monitor.AlertMessage"/>
     </StringResources>
   </Presentation>
   <LanguagePacks>
@@ -137,7 +176,14 @@
         <DisplayString ElementID="QND.OMS.WorkspaceLastData.Monitor.AlertMessage">
           <Name> QND - OMS Workspace has systems with obsolete data</Name>
           <Description>{0} systems with obsolete data. Current threshold {1} hour(s).</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace.SysHeartbeat.Monitor">
+          <Name>Agent heartbeats</Name>
         </DisplayString>        
+        <DisplayString ElementID="QND.OMS.Workspace.SysHeartbeat.Monitor.AlertMessage">
+          <Name> QND - OMS Workspace has systems not heartbeating</Name>
+          <Description>{0} systems with obsolete data. Current threshold {1} minutes. More info at {2}</Description>
+        </DisplayString>          
       </DisplayStrings>
     </LanguagePack>
   </LanguagePacks>

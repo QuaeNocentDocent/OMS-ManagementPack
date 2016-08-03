@@ -13,6 +13,8 @@ Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.AzureMPIntegration", ".
 EndProject
 Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.Backup.Server", "..\QND.OMS.Backup.Server\QND.OMS.Backup.Server.mpproj", "{A80179AC-7B16-4800-A43C-8D25F871A435}"
 EndProject
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.Azure.StorageAccount", "..\QND.Azure.StorageAccount\QND.Azure.StorageAccount.mpproj", "{DB0120B9-00CF-4E43-B9E3-9C12970A39AF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -39,6 +41,10 @@ Global
 		{A80179AC-7B16-4800-A43C-8D25F871A435}.Debug|x86.Build.0 = Debug|x86
 		{A80179AC-7B16-4800-A43C-8D25F871A435}.Release|x86.ActiveCfg = Release|x86
 		{A80179AC-7B16-4800-A43C-8D25F871A435}.Release|x86.Build.0 = Release|x86
+		{DB0120B9-00CF-4E43-B9E3-9C12970A39AF}.Debug|x86.ActiveCfg = Debug|x86
+		{DB0120B9-00CF-4E43-B9E3-9C12970A39AF}.Debug|x86.Build.0 = Debug|x86
+		{DB0120B9-00CF-4E43-B9E3-9C12970A39AF}.Release|x86.ActiveCfg = Release|x86
+		{DB0120B9-00CF-4E43-B9E3-9C12970A39AF}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
