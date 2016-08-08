@@ -767,7 +767,7 @@
               <ProbeAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
                 <ScriptName>Get-OMSManagedSystemLastData.ps1</ScriptName>
                 <ScriptBody>
-                  $IncludeFileContent/Scripts/Get-OMSManagedSystemLastData.ps1$
+                  $IncludeFileContent/Scripts/Get-OMSSysHeartbeat.ps1$
                 </ScriptBody>
                 <Parameters>
                   <Parameter>
