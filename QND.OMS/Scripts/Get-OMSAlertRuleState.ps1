@@ -304,6 +304,7 @@ $timeout=300
 						$rules.Add($actions.Values[0].properties.Name, @{
 							"ScheduleId"=$schedule.Values[0].id;
 							"Interval"=$schedule.Values[0].properties.Interval;
+                            'Throttling'= $actions.Values.properties.throttling.DurationInMinutes
 							"Status"='Inactive';
 							"LastAlert"='';
 							"AgeMinutes"=0;
@@ -338,7 +339,7 @@ $timeout=300
 
 					#if it's active let's populate some more info and get the query result
 					$rules.Item($alert.AlertName).Link=$alert.LinkToSearchResults
-					$details = Get-QueryResults -query $alert.Query -startDate ([datetime] $alert.QueryExecutionStartTime) -endDate ([datetime] $alert.QueryExecutionEndTime) `
+					$details = Get-QueryResults -query $alert.Query -startDate ([datetime] $alert.QueryExecutionStartTime).ToUniversalTime() -endDate ([datetime] $alert.QueryExecutionEndTime).ToUniversalTime() `
 						-timeout $timeout -authToken $connection -ResourceBaseAddress $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion
 					$first5 = $details | select-object -First 5 | ConvertTo-Json
 					$rules.Item($alert.AlertName).First5Results=$first5

@@ -1,0 +1,456 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <ModuleTypes>
+            <DataSourceModuleType ID="QND.OMS.StorageAccount.Discovery.DS" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="600" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" default="2"/>
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="ResourceGroupId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="APIVersion" type="xsd:string" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="APIVersion" Selector="$Config/APIVersion$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.EventProvider">
+                <ComputerName></ComputerName>
+                <LogName>Operations Manager</LogName>
+                <AllowProxying>false</AllowProxying>
+                <Expression>
+                  <And>
+                    <Expression>
+                      <RegExExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                        </ValueExpression>
+                        <Operator>MatchesRegularExpression</Operator>
+                        <Pattern>1</Pattern>
+                      </RegExExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="Integer">EventLevel</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="Integer">4</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="String">PublisherName</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="String">QND Azure Storage Discovery</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="String">FileStorageAll</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                  </And>
+                </Expression>
+              </DataSource>
+              <ProbeAction ID="Discover" TypeID="Windows!Microsoft.Windows.PowerShellDiscoveryProbe">
+                <ScriptName>Get-OMSManagedSystems.ps1</ScriptName>
+                <ScriptBody>
+                  $IncludeFileContent/Scripts/Get-FileStorage.ps1$
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SourceId</Name>
+                    <Value>$MPElement$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ManagedEntityId</Name>
+                    <Value>$Target/Id$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ClientId</Name>
+                    <Value>$Config/ClientId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SubscriptionId</Name>
+                    <Value>$Config/SubscriptionId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceGroupId</Name>
+                    <Value>$Config/ResourceGroupId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Proxy</Name>
+                    <Value>$Config/Proxy$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>AuthBaseAddress</Name>
+                    <Value>$Config/AuthBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceBaseAddress</Name>
+                    <Value>$Config/ResourceBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADUsername</Name>
+                    <Value>$Config/AADUserName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADPassword</Name>
+                    <Value>$Config/AADPassword$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceURI</Name>
+                    <Value>$Config/ResourceURI$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>APIVersion</Name>
+                    <Value>$Config/APIVersion$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>TimeoutSeconds</Name>
+                    <Value>$Config/TimeoutSeconds$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+              </ProbeAction>
+              <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+                <Expression>
+                  <Or>
+                    <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/Type$</Value>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value Type="String">Microsoft.Storage/storageAccounts</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                    </Expression>
+                    <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/Type$</Value>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value Type="String">Microsoft.ClassicStorage/storageAccounts</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                    </Expression>                    
+                  </Or>
+                </Expression>
+              </ConditionDetection>
+            </MemberModules>
+            <Composition>
+              <Node ID="Discover">
+                <Node ID="Filter">
+                <Node ID="DS" />
+                </Node>
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
+      <DataSourceModuleType ID="QND.Azure.StorageAccount.FileStoragetatus.DS" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:int" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="APIVersion" type="xsd:string" />
+
+          <xsd:element name="QuotaGB" type="xsd:int" />          
+          <xsd:element name="Threshold" type="xsd:double"/>
+
+
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="Threshold" ParameterType="double" Selector="$Config/Threshold$"/>          
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+              </DataSource>
+              <ProbeAction ID="Probe" TypeID="QND.Azure.StorageAccount.FileStorageStatus.PT">
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <TraceLevel>$Config/TraceLevel$</TraceLevel>
+                <ClientId>$Config/ClientId$</ClientId>
+                <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+                <Proxy>$Config/Proxy$</Proxy>
+                <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+                <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
+                <AADUserName>$Config/AADUserName$</AADUserName>
+                <AADPassword>$Config/AADPassword$</AADPassword>
+                <ResourceURI>$Config/ResourceURI$</ResourceURI>
+                <APIVersion>$Config/APIVersion$</APIVersion>
+                <QuotaGB>$Config/QuotaGB$</QuotaGB>
+                <Threshold>$Config/Threshold$</Threshold>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID ="Probe">
+                <Node ID="Scheduler"></Node>
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>
+      <ProbeActionModuleType ID="QND.Azure.StorageAccount.FileStorageStatus.PT" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="APIVersion" type="xsd:string" />
+          
+          <xsd:element name="QuotaGB" type="xsd:int" />          
+          <xsd:element name="Threshold" type="xsd:double"/>
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="Threshold" ParameterType="double" Selector="$Config/Threshold$"/>
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <ProbeAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+                <ScriptName>Get-FileStorageStats.ps1</ScriptName>
+                <ScriptBody>
+                  $IncludeFileContent/Scripts/Get-FileStorageStats.ps1$
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>clientId</Name>
+                    <Value>$Config/ClientId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SubscriptionId</Name>
+                    <Value>$Config/SubscriptionId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Proxy</Name>
+                    <Value>$Config/Proxy$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>AuthBaseAddress</Name>
+                    <Value>$Config/AuthBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceBaseAddress</Name>
+                    <Value>$Config/ResourceBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADUsername</Name>
+                    <Value>$Config/AADUserName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADPassword</Name>
+                    <Value>$Config/AADPassword$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>resourceURI</Name>
+                    <Value>$Config/ResourceURI$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>APIVersion</Name>
+                    <Value>$Config/APIVersion$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>QuotaGB</Name>
+                    <Value>$Config/QuotaGB$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ThresholdP</Name>
+                    <Value>$Config/Threshold$</Value>
+                  </Parameter>
+                  <Parameter> <!-- this would need a separate parameter-->
+                    <Name>TimeoutSeconds</Name>
+                    <Value>$Config/TimeoutSeconds$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+                <!-- true only for Tasks -->
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="POSH" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </ProbeActionModuleType>  
+    </ModuleTypes>
+    <MonitorTypes>
+      <UnitMonitorType ID="QND.Azure.StorageAccount.FileShareStatus.MT" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="OverThreshold"/>
+          <MonitorTypeState ID="UnderThreshold"/>
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="ShareName" type="xsd:string" />
+          <xsd:element name="IntervalSeconds" type="xsd:int" />
+          <xsd:element name="SyncTime" type="xsd:string" />
+
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="ResourceURI" type="xsd:string" />
+          <xsd:element name="APIVersion" type="xsd:string" />
+
+          <xsd:element name="QuotaGB" type="xsd:int" />
+          <xsd:element name="Threshold" type="xsd:double"/>
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+          <OverrideableParameter ID="Threshold" ParameterType="double" Selector="$Config/Threshold$"/>
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="QND.Azure.StorageAccount.FileStoragetatus.DS">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <ClientId>$Config/ClientId$</ClientId>
+              <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+              <Proxy>$Config/Proxy$</Proxy>
+              <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+              <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
+              <AADUserName>$Config/AADUserName$</AADUserName>
+              <AADPassword>$Config/AADPassword$</AADPassword>
+              <ResourceURI>$Config/ResourceURI$</ResourceURI>
+              <APIVersion>$Config/APIVersion$</APIVersion>
+              <QuotaGB>$Config/QuotaGB$</QuotaGB>
+              <Threshold>$Config/Threshold$</Threshold>
+            </DataSource>
+            <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="String">Property[@Name='ShareName']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value Type="String">$Config/ShareName$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="OverCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='Status']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Over</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="UnderCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='Status']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Under</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="OverThreshold">
+              <Node ID="OverCD">
+                <Node ID="Filter">
+                <Node ID="DS" />
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="UnderThreshold">
+              <Node ID="UnderCD">
+                <Node ID="Filter">
+                    <Node ID="DS"></Node>
+                </Node>
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+    </MonitorTypes>
+  </TypeDefinitions>
+  
+</ManagementPackFragment>

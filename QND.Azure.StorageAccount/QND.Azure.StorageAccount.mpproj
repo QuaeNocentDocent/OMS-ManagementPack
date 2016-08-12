@@ -4,7 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <ProjectGuid>{db0120b9-00cf-4e43-b9e3-9c12970a39af}</ProjectGuid>
     <RootNamespace>QND.Azure.StorageAccount</RootNamespace>
-    <Name>QND.Azure.StorageAccount</Name>
+    <Name>QND Azure Storage Account</Name>
     <ManagementPackName>QND.Azure.StorageAccount</ManagementPackName>
     <Version>1.0.0.0</Version>
     <MpFrameworkVersion>v7.0.2</MpFrameworkVersion>
@@ -14,11 +14,11 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\Debug\</OutputPath>
-    <GenerateSealed>false</GenerateSealed>
-    <Company>MyCompany</Company>
-    <Copyright>Copyright (c) MyCompany. All rights reserved.</Copyright>
-    <DelaySigning>false</DelaySigning>
-    <AssemblyOriginatorKeyFile />
+    <GenerateSealed>True</GenerateSealed>
+    <Company>Qaue Nocent Docent</Company>
+    <Copyright>Copyright (c) QND. All rights reserved.</Copyright>
+    <DelaySigning>False</DelaySigning>
+    <AssemblyOriginatorKeyFile>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\Firma\QND1.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugSymbols>false</DebugSymbols>
@@ -34,9 +34,21 @@
       <Alias>SC</Alias>
       <PackageToBundle>false</PackageToBundle>
     </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.MicrosoftAzure">
+      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\Microsoft.SystemCenter.MicrosoftAzure.mpb</HintPath>
+      <Alias>Azure</Alias>
+      <MinVersion>1.3.18.0</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.Windows.Library">
       <Alias>Windows</Alias>
       <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="QND.AzureMPIntegration">
+      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\QND.AzureMPIntegration.mpb</HintPath>
+      <Alias>QNDA</Alias>
+      <MinVersion>2.0.0.41</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="System.Health.Library">
       <Alias>Health</Alias>
@@ -52,9 +64,25 @@
     </ManagementPackReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Fragment1.mpx">
+    <Compile Include="FileStorage.mpx">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="FileStorageMonitors.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ManagementPack.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Modules.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Scripts" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\Get-FileStorage.ps1" />
+    <EmbeddedResource Include="Scripts\Get-FileStorageStats.ps1" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>

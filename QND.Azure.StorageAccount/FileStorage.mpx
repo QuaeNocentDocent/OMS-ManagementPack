@@ -1,0 +1,109 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        
+        <!-- In this section, modify the attributes based on your needs. Ensure the
+             Base attribute matches the application you are modeling.
+             More information can be found in the Management Pack Development Kit: 
+             http://msdn.microsoft.com/en-us/library/ee533867.aspx -->
+        <ClassType ID="QND.Azure.StorageAccount.FileStorage" Base="Windows!Microsoft.Windows.ApplicationComponent" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">        
+        </ClassType>
+        <ClassType ID="QND.Azure.StorageAccount.FileShare" Base="Windows!Microsoft.Windows.ApplicationComponent" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          <Property ID="Name" Key="true" Type="string"/>
+          <Property ID="Quota" Type="int"/>
+        </ClassType>
+
+      </ClassTypes>
+      <RelationshipTypes>
+        <RelationshipType ID="QND.Azure.StorageAccountHostsFileStorage" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
+          <Source ID="SA" Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService"/>
+          <Target ID="FS" Type="QND.Azure.StorageAccount.FileStorage"/>
+        </RelationshipType>
+        <RelationshipType ID="QND.Azure.FileStorageHostsFileShare" Abstract="false" Accessibility="Public" Base="System!System.Hosting">
+          <Source ID="FS" Type="QND.Azure.StorageAccount.FileStorage"/>
+          <Target ID="Share" Type="QND.Azure.StorageAccount.FileShare"/>
+        </RelationshipType>        
+      </RelationshipTypes>
+    </EntityTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <!-- the following disocvery doesn't cookdown it is run once for every storage account, it would be better to have one per subscription but this would need to write the code to disocver the storage account again, taking the easy way-->
+              <Discovery ID="QND.Azure.StorageAccount.FileStorage.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService">
+          <Category>Discovery</Category>
+          <DiscoveryTypes>
+            <DiscoveryClass TypeID="QND.Azure.StorageAccount.FileStorage" />
+            <DiscoveryClass TypeID="QND.Azure.StorageAccount.FileShare" />
+          </DiscoveryTypes>
+          <DataSource ID="DS" TypeID="QND.OMS.StorageAccount.Discovery.DS">
+            <TimeoutSeconds>900</TimeoutSeconds>
+            <TraceLevel>2</TraceLevel>
+            <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+            <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+            <ResourceGroupId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</ResourceGroupId>
+            <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+            <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+            <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+            <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+            <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+            <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+            <APIVersion>2016-01-01</APIVersion>                       
+          </DataSource>
+        </Discovery>
+    </Discoveries>
+    <Rules>
+      <Rule ID="QND.OMS.StorageAccountAll.DiscoveryTrigger.Rule" ConfirmDelivery="false" DiscardLevel="100" Enabled="true" Priority="Normal" Remotable="true" Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription">
+        <Category>Discovery</Category>
+        <DataSources>
+          <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
+            <IntervalSeconds>43200</IntervalSeconds>
+          </DataSource>
+        </DataSources>
+        <WriteActions>
+          <WriteAction ID="WriteEvent" TypeID="QNDA!QND.DiscoveryEvent.WAT">
+            <LogName>Operations Manager</LogName>
+            <SourceName>QND Azure Storage Discovery</SourceName>
+            <EventId>1</EventId>
+            <Message>QND Azure Storage Disocvery for $Target/Property[Type='System!System.Entity']/DisplayName$</Message>
+            <Key>FileStorageAll</Key>
+          </WriteAction>
+        </WriteActions>
+      </Rule>
+    </Rules>
+  </Monitoring>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        
+        <DisplayString ElementID="QND.Azure.StorageAccount.FileStorage">
+          <Name>QND - Azure FileStorage</Name>
+          <Description></Description>
+        </DisplayString>
+
+        <DisplayString ElementID="QND.Azure.StorageAccount.FileShare">
+          <Name>QND - Azure File Storage Share</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.Azure.StorageAccount.FileShare" SubElementID="Name">
+          <Name>Share Name</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.Azure.StorageAccount.FileShare" SubElementID="Quota">
+          <Name>Quota GB</Name>
+          <Description></Description>
+        </DisplayString>
+
+        <DisplayString ElementID="QND.Azure.StorageAccount.FileStorage.Discovery">
+          <Name>QND - Azure File Storage Discovery</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.StorageAccountAll.DiscoveryTrigger.Rule">
+          <Name>QND - Azure FileStorage discovery trigger</Name>
+          <Description></Description>
+        </DisplayString>
+        
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>
