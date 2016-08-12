@@ -21,7 +21,7 @@
         <Configuration>
           <ShareName>$Target/Property[Type="QND.Azure.StorageAccount.FileShare"]/Name$</ShareName>
 
-          <IntervalSeconds>21600</IntervalSeconds>
+          <IntervalSeconds>3600</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
@@ -35,7 +35,7 @@
           <ResourceURI>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
           <APIVersion>2016-01-01</APIVersion>
 
-          <QuotaGB>1</QuotaGB>
+          <QuotaGB>$Target/Property[Type="QND.Azure.StorageAccount.FileShare"]/Quota$</QuotaGB>
           <Threshold>95</Threshold>
         </Configuration>
 

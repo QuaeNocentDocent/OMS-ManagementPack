@@ -1,6 +1,0 @@
-﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  Discover shares
-  - list shares https://msdn.microsoft.com/en-us/library/azure/dn167009.aspx
-  - get usage https://msdn.microsoft.com/en-us/library/azure/mt427367.aspx
-  - get quota https://msdn.microsoft.com/en-us/library/azure/dn689099.aspx
-</ManagementPackFragment>

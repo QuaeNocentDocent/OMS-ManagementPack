@@ -205,12 +205,14 @@ Function Return-Bag
 			$g_API.AddItem($bag)
 			$object.Keys | %{write-verbose ('{0}={1}' -f $_,$object[$_]) -Verbose}
 		}
-		
 
-		Log-Event -eventID $EVENT_ID_SUCCESS -eventType $EVENT_TYPE_INFORMATION `
-			-msg ('{0} - returned status bag ' `
-				-f $object[$key]) `
-			-level $TRACE_VERBOSE 
+		$bag=''
+		$object.Keys | %{$bag+=('{0}={1}///' -f $_,$object[$_])}
+		Log-Event -eventID $EVENT_ID_DETAILS -eventType $EVENT_TYPE_INFORMATION `
+			-msg ('Returned status bag: {0} ' `
+				-f $bag) `
+			-level $TRACE_VERBOSE 		
+
     }
     catch {
 		Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_WARNING `
