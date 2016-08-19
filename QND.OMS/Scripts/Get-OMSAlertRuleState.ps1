@@ -196,50 +196,6 @@ Function Import-ResourceModule
 	else {Throw [System.DllNotFoundException] ('{0} not found' -f $module)}
 }
 
-Function Get-QueryResults
-{
-[CmdletBinding()]
-param(
-[string] $query,
-[datetime] $startDate,
-[datetime] $endDate,
-[int] $timeout,
-[string] $authToken,
-[string]$ResourceBaseAddress,
-[string]$resourceURI,
-[string]$OMSAPIVersion
-)
-	try {
-		$QueryArray = @{query=$Query}
-		$QueryArray+= @{start=('{0}Z' -f $startDate.GetDateTimeFormats('s'))}
-		$QueryArray+= @{end=('{0}Z' -f $endDate.GetDateTimeFormats('s'))}
-		$body = ConvertTo-Json -InputObject $QueryArray
-
-		$uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
-		$nextLink=$null
-		$results=@()
-		do {
-			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb POST -authToken $authToken -nextLink $nextLink -data $body -TimeoutSeconds $timeout
-			$nextLink = $result.NextLink
-			$results += $result.values	
-		} while ($nextLink)
-#we need to check for an empty result, the behavior has changed and in this case it returns a pending status
-        try {
-            if ($results.count -eq 1) {
-                if($results.__metadata.NumberOfDocuments -eq 0) {$results=@()}
-            }
-
-        }
-        catch {
-			Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unexpected error checking for query results {0} on uri {1}. {2}' -f $Error[0], $query, $uri) $TRACE_WARNING
-            $results=@()
-        }
-		return $results
-	}
-	catch {
-			Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Error querying OMS {0} for query {1} and uri {2}" -f $Error[0], $query, $uri) $TRACE_ERROR
-	}
-}
 
 #Start by setting up API object.
 	$P_TraceLevel = $TRACE_VERBOSE
@@ -323,7 +279,7 @@ $timeout=300
 	$query='Type:Alert SourceSystem=OMS | dedup AlertName'
 	$startDate=(Get-Date).AddDays(-24)
 	
-	$result = Get-QueryResults -query $query -startDate $startDate -endDate (Get-Date) -timeout $timeout -authToken $connection `
+	$result = Get-QNDOMSQueryResult -query $query -startDate $startDate -endDate (Get-Date) -timeout $timeout -authToken $connection `
 		-ResourceBaseAddress $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion
 	foreach($alert in $result) {
 		if(! [String]::IsNullOrEmpty($alert.AlertName)) {
@@ -339,7 +295,7 @@ $timeout=300
 
 					#if it's active let's populate some more info and get the query result
 					$rules.Item($alert.AlertName).Link=$alert.LinkToSearchResults
-					$details = Get-QueryResults -query $alert.Query -startDate ([datetime] $alert.QueryExecutionStartTime).ToUniversalTime() -endDate ([datetime] $alert.QueryExecutionEndTime).ToUniversalTime() `
+					$details = Get-QNDOMSQueryResult -query $alert.Query -startDate ([datetime] $alert.QueryExecutionStartTime).ToUniversalTime() -endDate ([datetime] $alert.QueryExecutionEndTime).ToUniversalTime() `
 						-timeout $timeout -authToken $connection -ResourceBaseAddress $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion
 					$first5 = $details | select-object -First 5 | ConvertTo-Json
 					$rules.Item($alert.AlertName).First5Results=$first5

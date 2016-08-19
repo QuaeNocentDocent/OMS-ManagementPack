@@ -94,9 +94,11 @@ param(
             else {$result = Invoke-WebRequest -Method $HTTPVerb -Uri $restUri -Headers $headers -Body $body -TimeoutSec $timeoutSeconds -UseBasicParsing -Proxy $proxy}
         }
         else {
-            $result = Invoke-WebRequest -Method $HTTPVerb -Uri $restUri -Headers $headers -Body $body -TimeoutSec $timeoutSeconds -UseBasicParsing
+            $result = Invoke-WebRequest -Method $HTTPVerb -Uri $restUri -Headers $headers -Body $body -TimeoutSec $timeoutSeconds -UseBasicParsing -ErrorAction SilentlyContinue
         }
         write-verbose $result
+        $statusCode=$result.StatusCode
+        $lastContent=$result.Content
         if($result.StatusCode -ge 200 -and $result.StatusCode -le 399){        
             Write-Verbose "Query successfully executed $($result.StatusCode)."
             if($result.Content -ne $null){
@@ -113,35 +115,30 @@ param(
             }
         }
 		else {
-			$returnValues=$null
+			$returnValues=$result.Content
 			$nl=$null
 		}
         $StatusCode=$result.StatusCode
-      $returnObject = new-object -TypeName PSCustomObject -Property @{
-        'Values' = $returnValues
-        'NextLink' = $nl
-        'StatusCode' = $StatusCode
-		'GotValue' = $gotValue
-        }
     }
     catch {
         Write-Error ('Exception processing query {0}' -f $_.GetType().FullName)
         Write-Verbose $_
         $nl=$null
-        if ($result) {$StatusCode=$result.StatusCode}
+        if ($result) {$StatusCode=$result.StatusCode;$lastContent=$result}
         else {
             $StatusCode=500
             [array]$returnValues = $_.Message
         }
     }
 	finally {
-          $returnObject = new-object -TypeName PSCustomObject -Property @{
-            'Values' = $returnValues
-            'NextLink' = $nl
-            'StatusCode' = $StatusCode
-		    'GotValue' = $gotValue
-        }
-	}
+      $returnObject = new-object -TypeName PSCustomObject -Property @{
+        'Values' = $returnValues
+        'NextLink' = $nl
+        'StatusCode' = $StatusCode
+		'GotValue' = $gotValue
+        'lastContent' = $lastContent
+        }	
+    }
     
   return $returnObject
 }
@@ -265,4 +262,64 @@ function Invoke-QNDAzureStorageRequest
         }
     }
     return $returnObject
+}
+
+
+Function Get-QNDOMSQueryResult
+{
+[CmdletBinding()]
+param(
+[string] $query,
+[datetime] $startDate,
+[datetime] $endDate,
+[int] $timeout,
+[string] $authToken,
+[string]$ResourceBaseAddress,
+[string]$resourceURI,
+[string]$OMSAPIVersion,
+[int] $delay=1
+)
+	try {
+		$QueryArray = @{query=$Query}
+		$QueryArray+= @{start=('{0}Z' -f $startDate.GetDateTimeFormats('s'))}
+		$QueryArray+= @{end=('{0}Z' -f $endDate.GetDateTimeFormats('s'))}
+		$body = ConvertTo-Json -InputObject $QueryArray
+
+		$uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
+		$nextLink=$null
+		$results=@()
+		do {
+            do {
+			    $result = invoke-QNDAzureRestRequest -uri $uri -httpVerb POST -authToken $authToken -nextLink $nextLink -data $body -TimeoutSeconds $timeout
+                $lastResult=(ConvertFrom-Json $result.LastContent)
+                write-verbose $lastResult.__metadata
+                $pending=$false
+                if ($lastResult.__metadata.Status -ieq 'Pending') {
+                    $uri=('{0}{1}?api-version={2}' -f $ResourceBaseAddress, $lastResult.Id, $OMSAPIVersion)
+                    $pending=$true
+                    write-verbose 'Qeury still pedning, waiting'
+                    start-sleep -Seconds $delay
+                }
+
+            } while ($pending)
+
+			$nextLink = $result.NextLink
+            if($result.GotValue) {$results += $result.values}
+		} while ($nextLink)
+#we need to check for an empty result, the behavior has changed and in this case it returns a pending status
+        try {
+            if ($results.count -eq 1) {
+                if($results.__metadata.NumberOfDocuments -eq 0) {$results=@()}
+            }
+
+        }
+        catch {
+			Log-Event $EVENT_ID_FAILURE $EVENT_TYPE_WARNING ('Unexpected error checking for query results {0} on uri {1}. {2}' -f $Error[0], $query, $uri) $TRACE_WARNING
+            $results=@()
+        }
+		return ([array] $results)
+	}
+	catch {
+			Log-Event $EVENT_ID_FAILURE $EVENT_TYPE_ERROR ("Error querying OMS {0} for query {1} and uri {2}" -f $Error[0], $query, $uri) $TRACE_ERROR
+	}
 }

@@ -262,33 +262,19 @@ catch {
 
 try {
 
-	#prepare query body
-	    $uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
-		if ($allInstances -gt 0) {
-			$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer'
-		}
-		else {
-			#due to the fact that we can have spurious entries I cannot optimize this query (see commented out portion of the query)
-			$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer' # | where lastdata < NOW-{0}HOURS' -f $maxAgeHours
-		}
-
-    $QueryArray = @{Query=$Query}
+	if ($allInstances -gt 0) {
+		$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer'
+	}
+	else {
+		#due to the fact that we can have spurious entries I cannot optimize this query (see commented out portion of the query)
+		$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer' # | where lastdata < NOW-{0}HOURS' -f $maxAgeHours
+	}
 
 	$startDate=(Get-Date).AddHours(-$LookBackHours)
 	$endDate=Get-Date
-    $QueryArray+= @{start=('{0}Z' -f $startDate.GetDateTimeFormats('s'))}
-    $QueryArray+= @{end=('{0}Z' -f $endDate.GetDateTimeFormats('s'))}
-    $body = ConvertTo-Json -InputObject $QueryArray
+	$systems=Get-QNDOMSQueryResult -query $query -startDate $startDate -endDate $endDate -authToken ($connection.CreateAuthorizationHeader()) -ResourceBaseAddress  $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion -timeout $timeout
 
-	$nextLink=$null
-	$systems=@()
-	do {
-		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb POST -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -data $body -TimeoutSeconds 300
-		$nextLink = $result.NextLink		
-		if($result.gotValue) {$systems += $result.values}
-	} while ($nextLink)
-	#sometimes some spurious systems are returned, we need to normalize and clean up
-	#if we are summarizing $allInstances=0 let's discrd any system that doesn't have a domain, otherwise let's keep no domain systems only if no other system with a domain has the same name
+
 
 	#in this version just remove no fwdn systems
 	$nofqdnSys=@()

@@ -277,26 +277,12 @@ try {
 		$workspaceId='error'
 	}
 	#prepare query body
-	    $uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
-		$query='Type:Heartbeat | dedup Computer'
 
-    $QueryArray = @{Query=$Query}
-
+	#$uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
+	$query='Type:Heartbeat | dedup Computer'
 	$startDate=(Get-Date).AddHours(-$LookBackHours)
 	$endDate=Get-Date
-    $QueryArray+= @{start=('{0}Z' -f $startDate.GetDateTimeFormats('s'))}
-    $QueryArray+= @{end=('{0}Z' -f $endDate.GetDateTimeFormats('s'))}
-    $body = ConvertTo-Json -InputObject $QueryArray
-
-	$nextLink=$null
-	$systems=@()
-	do {
-		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb POST -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -data $body -TimeoutSeconds $timeout
-		$nextLink = $result.NextLink		
-		if($result.gotValue) {$systems += $result.values}
-	} while ($nextLink)
-	#sometimes some spurious systems are returned, we need to normalize and clean up
-	#if we are summarizing $allInstances=0 let's discrd any system that doesn't have a domain, otherwise let's keep no domain systems only if no other system with a domain has the same name
+	$systems=Get-QNDOMSQueryResult -query $query -startDate $startDate -endDate $endDate -authToken ($connection.CreateAuthorizationHeader()) -ResourceBaseAddress  $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion -timeout $timeout
 
 	#exluded systems
 	$cleanSys = @()

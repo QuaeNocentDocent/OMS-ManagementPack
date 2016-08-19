@@ -15,7 +15,7 @@ param(
 )
 
     $searchDirs=@("$PSScriptRoot","$((Get-Module QNDAdal).ModuleBase)")
-    $SCOMResPath = (get-itemproperty -path 'HKLM:\system\currentcontrolset\services\healthservice\Parameters' -Name 'State Directory').'State Directory' + '\Resources'
+    $SCOMResPath = (get-itemproperty -path 'HKLM:\system\currentcontrolset\services\healthservice\Parameters' -Name 'State Directory' -ErrorAction SilentlyContinue).'State Directory' + '\Resources'
     if ($SCOMResPath) {$searchDirs+=$SCOMResPath}
     if ($searchPath) {$searchDirs+=$searchPath}
 
