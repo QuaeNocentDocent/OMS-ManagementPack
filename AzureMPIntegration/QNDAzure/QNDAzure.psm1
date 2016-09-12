@@ -277,10 +277,12 @@ param(
 [string]$ResourceBaseAddress,
 [string]$resourceURI,
 [string]$OMSAPIVersion,
-[int] $delay=1
+[int] $delay=1,
+[int] $top=99999
 )
 	try {
-		$QueryArray = @{query=$Query}
+        $QueryArray = @{Top=$top}
+		$QueryArray+= @{query=$Query}
 		$QueryArray+= @{start=('{0}Z' -f $startDate.GetDateTimeFormats('s'))}
 		$QueryArray+= @{end=('{0}Z' -f $endDate.GetDateTimeFormats('s'))}
 		$body = ConvertTo-Json -InputObject $QueryArray

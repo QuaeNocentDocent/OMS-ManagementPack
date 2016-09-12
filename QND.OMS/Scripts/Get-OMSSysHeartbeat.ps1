@@ -280,8 +280,8 @@ try {
 
 	#$uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
 	$query='Type:Heartbeat | dedup Computer'
-	$startDate=(Get-Date).AddHours(-$LookBackHours)
-	$endDate=Get-Date
+	$startDate=(Get-Date).ToUniversalTime().AddHours(-$LookBackHours)
+	$endDate=(Get-Date).ToUniversalTime()
 	$systems=Get-QNDOMSQueryResult -query $query -startDate $startDate -endDate $endDate -authToken ($connection.CreateAuthorizationHeader()) -ResourceBaseAddress  $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion -timeout $timeout
 
 	#exluded systems
@@ -289,6 +289,9 @@ try {
 	If(! [String]::IsNullOrEmpty($excludePattern)) {
 		$systems | %{if($_.Computer -inotmatch $excludePattern){$cleanSys+=$_}}	
 	}
+    else {
+        $cleanSys = $systems
+    }
 
 	$link=('https://{0}.portal.mms.microsoft.com/#Workspace/search/index?q=Type%3AHeartbeat%20%7C%20dedup%20Computer' -f $workspaceId)
 	write-verbose ('Return systems {0} clean systems {1}' -f $systems.count, $cleanSys.Count)
