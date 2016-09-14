@@ -201,7 +201,7 @@ Function Import-ResourceModule
 
 Function Discover-AlertRule
 {
-	param($Id, $Interval, $AlertName)
+	param($Id, $Interval, $AlertName, $AlertDescription)
 
 	try {
 		$serviceName = $resourceURI.Split('/')
@@ -219,6 +219,7 @@ Function Discover-AlertRule
 		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/ScheduleId$", $Id)	
 		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/Interval$", $Interval)	
 		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/AlertName$", $AlertName)	
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/Description$", $AlertDescription)	
 		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $DisplayName)	
 		$discoveryData.AddInstance($objInstance)	
 }
@@ -268,7 +269,7 @@ $timeout=300
     $nextLink = $null
 	$savedSearches=@()
 	do {
-		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
+		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout -Verbose:($PSBoundParameters['Verbose'] -eq $true)
 		$nextLink = $result.NextLink
 		$savedSearches += $result.values	
 	} while ($nextLink)
@@ -278,17 +279,18 @@ if( [String]::IsNullOrEmpty($Exclusions) ) {$Exclusions='_____'} #let's say this
 	foreach($search in $savedSearches) {
 		$uri = '{0}{1}/schedules?api-version={2}' -f $ResourceBaseAddress,$search.Id,$OMSAPIVersion
 		$nextLink=$null
-		$schedule = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $extLink -data $null -TimeoutSeconds $timeout -ErrorAction SilentlyContinue
+		$schedule = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $extLink -data $null -TimeoutSeconds $timeout -ErrorAction SilentlyContinue -Verbose:($PSBoundParameters['Verbose'] -eq $true)
 		if($schedule.values) {
 			#take into account just the first schedule for the search maybe this needs to be changed in future
 			if ($schedule.Values[0].properties.Enabled -ieq 'True') {
 			   $uri = '{0}{1}/actions?api-version={2}' -f $ResourceBaseAddress,$schedule.values.id,$OMSAPIVersion
 			   $nextLink=$null
-			   $actions = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout #-ErrorAction SilentlyContinue
+			   $actions = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout -Verbose:($PSBoundParameters['Verbose'] -eq $true)
 			   if ($actions.Values) {
 					if ($actions.Values[0].properties.Type -ieq 'Alert') {
 						if ($actions.Values[0].properties.Name -inotmatch $Exclusions)	{
-							Discover-AlertRule -Id $schedule.Values[0].id -Interval $schedule.Values[0].properties.Interval -AlertName $actions.Values[0].properties.Name
+							if ([String]::IsNullOrEmpty($actions.Values[0].properties.Description)) {$AlertDescription=''} else {$alertDescription=$actions.Values[0].properties.Description}
+							Discover-AlertRule -Id $schedule.Values[0].id -Interval $schedule.Values[0].properties.Interval -AlertName $actions.Values[0].properties.Name -AlertDescription $AlertDescription
 							Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('{0}, Interval={1}, Name={2}' -f $schedule.Values[0].id, $schedule.Values[0].properties.Interval, $actions.Values[0].properties.Name ) $TRACE_VERBOSE
 						}
 						else {Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('Alert={0} excluded from discovery' -f $actions.Values[0].properties.Name ) $TRACE_INFO}

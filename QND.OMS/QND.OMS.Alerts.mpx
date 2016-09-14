@@ -7,6 +7,7 @@
           <Property ID="ScheduleId" Key="true" Type="string" MaxLength="2083"/>
           <Property ID="AlertName" Key="false" Type="string" />
           <Property ID="Interval" Key="false" Type="int" />
+          <Property ID="Description" Key="false" Type="string" MaxLength="1024"/>
         </ClassType>
       
       </ClassTypes>
@@ -74,7 +75,8 @@
           <AlertParameters>
             <AlertParameter1>$Data/Context/Property[@Name="LastAlert"]$</AlertParameter1>
             <AlertParameter2>$Data/Context/Property[@Name="Url"]$</AlertParameter2>
-            <AlertParameter3>$Data/Context/Property[@Name="First5"]$</AlertParameter3>            
+            <AlertParameter3>$Data/Context/Property[@Name="First5"]$</AlertParameter3>
+            <AlertParameter4>$Target/Property[Type="QND.OMS.AlertRule"]/Description$</AlertParameter4>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -125,7 +127,11 @@
         <DisplayString ElementID="QND.OMS.AlertRule" SubElementID="AlertName">
           <Name>ALert Name</Name>
           <Description></Description>
-        </DisplayString>        
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AlertRule" SubElementID="Description">
+          <Name>Description</Name>
+          <Description></Description>
+        </DisplayString>
         <DisplayString ElementID="QND.OMS.WorkspaceContainsAlertRule">
           <Name>QND -OMS Workspace contains alert rule</Name>
         </DisplayString>
@@ -137,7 +143,9 @@
         </DisplayString>
         <DisplayString ElementID="QND.OMS.AlertRule.Monitor.AlertMessage">
           <Name> QND - OMS Alert is active</Name>
-          <Description>Last alert occurrence: {0}.
+          <Description>{3}
+          
+          Last alert occurrence: {0}.
           Get more Info:{1}.
           First 5 hits: {2}.
           </Description>
