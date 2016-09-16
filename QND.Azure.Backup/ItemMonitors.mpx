@@ -166,7 +166,7 @@
           <Name>Recovery Point Age</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Item.RecoveryPointAge.Monitor.AlertMessage">
-          <Name>QND - OMS recovery point is too old</Name>
+          <Name>QND - OMS Backup recovery point is too old</Name>
           <Description>The most receent recovery point is too old. The recovery point date is {1} the age in hours is {0}.
               More details in the alert context
           </Description>
@@ -176,7 +176,7 @@
           <Name>Jobs failure rate</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Item.JobFailureRate.Monitor.AlertMessage">
-          <Name>QND - OMS the jobs failure rate is too high</Name>
+          <Name>QND - OMS Backup the job failure rate is too high</Name>
           <Description>
             The error rate is {1} jobs on {0} runs.
             More details in the alert context
