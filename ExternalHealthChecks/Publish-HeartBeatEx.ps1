@@ -4,8 +4,6 @@
 #
 [CmdletBinding()]
 param(
-    [Parameter (Mandatory=$true)]
-    [string] $AADDomain,
     [Parameter (Mandatory=$false)]
     [string] $ResourcebaseAddress='https://management.azure.com/',
     [Parameter (Mandatory=$true)]
@@ -20,25 +18,35 @@ param(
     <# Azure automation doesn't support parameterset yet 
     [Parameter(ParameterSetName='Secure')] #>
     [PSCredential] $Credentials,
-
+    #[Parameter(ParameterSetName='Rest')]
+    [Parameter (Mandatory=$false)]
+    [string] $AADDomain,
+    #[Parameter(ParameterSetName='Rest')]
+    [Parameter (Mandatory=$false)]
+    [string] $ClientId='1950a258-227b-4e31-a9cf-717495945fc2', # Set well-known client ID for Azure PowerShell
+    #if set we assume we're using a ServicePrincipal
+    [String] $TenantId='7217effd-aa40-4bdd-8114-33c6b6a0116e',
     #[Parameter(ParameterSetName='Unsecure')]
     [string] $UserName,
     #[Parameter(ParameterSetName='Unsecure')]
     [string] $Password,
     #[Parameter(ParameterSetName='Automation')]
-    [string] $AutomationCredentialName,
-    [Parameter (Mandatory=$false)]
-    [string] $ClientId='1950a258-227b-4e31-a9cf-717495945fc2', # Set well-known client ID for Azure PowerShell
+    [string] $AutomationCredentialName='EDSB2C Automation Account',
+    #[Parameter(ParameterSetName='AutomationConnection')]
+    [string] $AutomationConnectionName,
+
     [Parameter (Mandatory=$false)]
     [switch] $crossed=$false,
     [Parameter (Mandatory=$false)]
     [int] $observeDays=1,
     [switch] $RestOnly=$false,
     [Parameter (Mandatory=$false)]
-    [string[]] $excludedTypes=@(),
+    [string[]] $excludedTypes=@('QNDHeartbeatEx_CL','NetworkSecurityGroup'),
     [Parameter (Mandatory=$false)]
     [string] $excludedComputers=''
 )
+
+#$VerbosePreference='Continue'
 
 
 Function Build-Signature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
@@ -108,20 +116,33 @@ while($response.Metadata.Status -eq "Pending" -and ! $response.Error.Type -and $
 return $response
 }
 
-#no dependecy from Azure POSH modules
+#todo aprameter validation
 #todo - add user interaction to select subscription and workspace
-
+if(!([String]::IsnullOrEmpty($AutomationConnectionName))) {
+    $connection=Get-AutomationConnection -Name $AutomationConnectionName
+ "Logging in to Azure..."
+   Add-AzureRmAccount `
+     -ServicePrincipal `
+     -TenantId $connection.TenantId `
+     -ApplicationId $connection.ApplicationId `
+     -CertificateThumbprint $connection.CertificateThumbprint 
+   "Setting context to a specific subscription"  
+   Set-AzureRmContext -SubscriptionId $connection.SubscriptionId  
+    $subscriptionId=$connection.SubscriptionId
+    $ClientId=$connection.ApplicationId
+}
+else {
 #if ($PSCmdlet.ParameterSetName -ieq 'Unsecure') {
 if(!$Credentials) {
     if($AutomationCredentialName) {
-        $credentials= Get-AutomationPSCredential -Name "Lab Reggio Automation Account"
+        $credentials= Get-AutomationPSCredential -Name $AutomationCredentialName
     }
     else {
         $pwd = ConvertTo-SecureString $Password -AsPlainText -Force
         $Credentials = New-Object System.Management.Automation.PSCredential ($Username, $pwd)
     }
 }
-
+}
 if ($RestOnly) {
 if (! (get-module QNDAdal)) {Import-module QNDAdal}
 if (! (Get-Module QNDAzure)) {import-module QNDAzure}
@@ -159,11 +180,25 @@ catch {
 else {
     If(!(Get-Module -Name AzureRM.OperationalInsights)){Import-Module AzureRM.OperationalInsights}
     if(!(get-Module -Name AzureRM.Profile)){Import-Module AzureRM.Profile}
-
-    if($Credentials) {Login-AzureRmAccount -Credential $credentials -SubscriptionId $SubscriptionId | Out-Null}
+    try {
+    if($Credentials) {
+        IF([String]::IsnullOrEmpty($TenantId)) {
+            Add-AzureRmAccount -Credential $credentials -SubscriptionId $SubscriptionId | Out-Null
+        }
+        else {
+            write-verbose 'Using Service Principal Account'
+            Add-AzureRmAccount -ServicePrincipal -TenantId $TenantId -Credential $credentials -SubscriptionId $SubscriptionId -EnvironmentName AzureCloud |Out-NUll
+            #Get-AzureRmSubscription
+        }
+    }
     else {Login-AzureRmAccount}
 
     Select-AzureRmSubscription -SubscriptionId $SubscriptionId | out-NUll
+    }
+    catch {
+        $_
+        throw ('Cannot logon to subscription {0}' -f $Error[1].InnerException)
+    }
     $workspaceId=(Get-AzureRmOperationalInsightsWorkspace -Name $WorkspaceName -ResourceGroupName $ResourceGroup).CustomerId
     $workspaceKey=(Get-AzureRmOperationalInsightsWorkspaceSharedKeys -Name $WorkspaceName -ResourceGroupName $ResourceGroup).PrimarySharedKey
 }        
