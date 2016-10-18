@@ -86,15 +86,17 @@
   <ItemGroup>
     <Folder Include="Scripts" />
     <Folder Include="Samples" />
+    <Folder Include="Scripts\obsolete" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Samples\ARMStatements.ps1" />
     <EmbeddedResource Include="Samples\Get-AutomationRunbookStatusBAD.ps1" />
     <EmbeddedResource Include="Samples\QND.Azure.Test.xml" />
-    <EmbeddedResource Include="Scripts\Discover-AzureAutomation.ps1" />
-    <EmbeddedResource Include="Scripts\Get-AutomationRunbookStatus.ps1" />
-    <EmbeddedResource Include="Scripts\Get-empty.ps1" />
+    <EmbeddedResource Include="Scripts\obsolete\Discover-AzureAutomation.ps1" />
+    <EmbeddedResource Include="Scripts\obsolete\Get-AutomationRunbookStatus.ps1" />
+    <EmbeddedResource Include="Scripts\obsolete\Get-empty.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSRunbookStatus.ps1" />
+    <EmbeddedResource Include="Scripts\DiscoverRunbookDetails.ps1" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccountMonitors.mpx">

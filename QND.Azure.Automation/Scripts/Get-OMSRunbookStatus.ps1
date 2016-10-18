@@ -46,7 +46,7 @@ param([int]$traceLevel=2,
 [Parameter (Mandatory=$true)][string]$ADPassword,
 [Parameter (Mandatory=$true)][string]$resourceURI,
 [string]$APIVersion='2015-10-31',
-[Parameter (Mandatory=$false)][int]$Heartbeat=1,
+[Parameter (Mandatory=$false)][int]$Heartbeat=11,
 [Parameter (Mandatory=$false)] [int]$timeoutSeconds=300,
 
     [Parameter (Mandatory=$false)] [double]$tolerance=0.5,
@@ -54,7 +54,7 @@ param([int]$traceLevel=2,
     [Parameter (Mandatory=$false)] [int]$lookbackDays=-45,
 	[Parameter (Mandatory=$false)] [int]$LastnJobs=5,
 	[Parameter (Mandatory=$false)] [int]$MaxFailures=0,
-	[Parameter (Mandatory=$false)] [String]$FailureCondition='^[failed]$',
+	[Parameter (Mandatory=$false)] [String]$FailureCondition='^Failed|Suspended$',
 	[Parameter (Mandatory=$false)] [int]$MaxAge=-1,
 	[Parameter (Mandatory=$false)] [int]$MaxRuntime=-1,
 	[Parameter (Mandatory=$false)] [int]$WebHookExpirationDays=-1,
@@ -114,8 +114,13 @@ function Log-Params
 {
     param($Invocation)
     $line=''
-    foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
-	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. Invocation Name:$($Invocation.InvocationName)`n Parameters`n $line") $TRACE_INFO
+	$obfuscate='pass|cred'
+    foreach($key in $Invocation.BoundParameters.Keys) {
+		if($key -imatch $obfuscate -and $TraceLevel -le $TRACE_INFO) {$line += ('-{0} [{1}] ' -f $key, 'omissis')}
+		else {$line += ('-{0} {1} ' -f $key, $Invocation.BoundParameters[$key])}
+	}
+	$line += ('- running as {0}' -f (whoami))
+	Log-Event -eventID $EVENT_ID_START -eventType $EVENT_TYPE_INFORMATION -msg ("Starting script [{0}]. Invocation Name:{1}`n Parameters`n{2}" -f $SCRIPT_NAME, $Invocation.InvocationName, $line) -level $TRACE_INFO
 }
 
 function Create-Event
@@ -307,7 +312,7 @@ try
 	$connection = $authority.CreateAuthorizationHeader()
 }
 catch {
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
+	Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ("Cannot logon to AzureAD error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
 	Throw-KeepDiscoveryInfo
 	exit 1	
 }
@@ -602,10 +607,14 @@ Month week day occurrence:
         write-verbose ('From {0} to {1}' -f $from, $to)
 
 	    $uris=@(
-		    ('{0}{1}/jobs?api-version={2}&$filter=properties/startTime ge {3}%2B00:00 and properties/endTime le {4}%2B00:00 and properties/runbook/name eq ''{5}''' -f $ResourceBaseAddress,$resourceURI,$APIVersion, $from, $to, $rb.name)
+		    #('{0}{1}/jobs?api-version={2}&$filter=properties/startTime ge {3}%2B00:00 and properties/endTime le {4}%2B00:00 and properties/runbook/name eq ''{5}''' -f $ResourceBaseAddress,$resourceURI,$APIVersion, $from, $to, $rb.name)
+			('{0}{1}/jobs?api-version={2}&$filter=properties/creationTime ge {3}%2B00:00 and properties/runbook/name eq ''{5}''' -f $ResourceBaseAddress,$resourceURI,$APIVersion, $from, $to, $rb.name)
 	    )
-        $jobs = Get-AutomationItems -uris $uris -connection $connection | sort-object @{Expression={[datetime]$_.properties.startTime};Descending=$true}
+        $jobs = Get-AutomationItems -uris $uris -connection $connection | sort-object @{Expression={[datetime]$_.properties.creationTime};Descending=$true}
         $lastJobs = $jobs | Select-Object -First $LastnJobs
+
+		$lastjobs | % {Write-Verbose ('{0} -{1}' -f $_.Name, $_.properties.status)}
+
         $failures = ($lastJobs | where {$_.properties.status -imatch $failureCondition}).count
         $lastCompletedJob=0
         
@@ -698,7 +707,7 @@ Month week day occurrence:
 
     if($heartBeat) {
     write-verbose 'heartbeat'
-	    Create-Event -eventID $heartBeat -eventType $EVENT_TYPE_INFORMATION -level -1 -msg $SCRIPT_NAME -parameters @($resourceURI)
+	    Create-Event -eventID $heartBeat -eventType $EVENT_TYPE_INFORMATION -level -1 -msg ('{0} running for {1}' -f $SCRIPT_NAME, $resourceURI) -parameters @($resourceURI)
     }
 
 	If ($traceLevel -eq $TRACE_DEBUG)
@@ -710,7 +719,7 @@ Month week day occurrence:
 	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
+		Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ("Main got error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
 }

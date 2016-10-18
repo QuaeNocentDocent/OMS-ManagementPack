@@ -25,7 +25,7 @@
           <IntervalSeconds>21600</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
-          <TraceLevel>2</TraceLevel>
+          <TraceLevel>3</TraceLevel>
           <ClientId>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
           <SubscriptionId>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
           <Proxy>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
@@ -71,7 +71,7 @@
           <IntervalSeconds>3607</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
-          <TraceLevel>2</TraceLevel>
+          <TraceLevel>3</TraceLevel>
           <ClientId>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
           <SubscriptionId>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
           <Proxy>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
@@ -117,7 +117,7 @@
           <IntervalSeconds>86400</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
-          <TraceLevel>2</TraceLevel>
+          <TraceLevel>3</TraceLevel>
           <ClientId>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
           <SubscriptionId>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
           <Proxy>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>

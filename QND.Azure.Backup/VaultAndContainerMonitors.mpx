@@ -12,7 +12,140 @@
         <Category>AvailabilityHealth</Category>
         <Algorithm>WorstOf</Algorithm>
       </AggregateMonitor>
-                          
+
+      <UnitMonitor ID="QND.OMS.Recovery.Vault.Connectivity.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Recovery.Vault"
+    ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows!Microsoft.Windows.MissingEventLogSingleEventLog2StateMonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Recovery.Vault.Connectivity.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="EventRaised" HealthState="Success" />
+          <OperationalState ID="UnHealthy" MonitorTypeStateID="MissingEventRaised" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <ComputerName>.</ComputerName>
+          <LogName>Operations Manager</LogName>
+          <Expression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">11</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Progel Script</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[1]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Get-OMSRecoveryItemStatus</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </Expression>
+          <MissingComputerName>.</MissingComputerName>
+          <MissingLogName>Operations Manager</MissingLogName>
+          <MissingExpression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">11</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Progel Script</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[1]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Get-OMSRecoveryItemStatus</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </MissingExpression>
+          <Consolidator>
+            <ConsolidationProperties/>
+            <TimeControl>
+              <GenericSchedule>
+                <SimpleReccuringSchedule>
+                  <Interval Unit="Minutes">240</Interval>
+                </SimpleReccuringSchedule>
+                <ExcludeDates/>
+              </GenericSchedule>
+            </TimeControl>
+            <CountingCondition>
+              <CountMode>OnNewItemNOP_OnTimerOutputRestart</CountMode>
+            </CountingCondition>
+          </Consolidator>
+        </Configuration>
+      </UnitMonitor>
+      
        <DependencyMonitor ID="QND.OMS.Recovery.VaultToContainerAvailability.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Recovery.Container.ProtectedItemAvailability.AggMonitor"
           ParentMonitorID="Health!System.Health.AvailabilityState" Priority="Normal" RelationshipType="QND.OMS.Recovery.VaultContainsContainer"
           Remotable="true" Target="QND.OMS.Recovery.Vault">
@@ -53,6 +186,9 @@
     </Monitors>
   </Monitoring>
   <Presentation>
+    <StringResources>
+      <StringResource ID="QND.OMS.Recovery.Vault.Connectivity.Monitor.AlertMessage"/>
+    </StringResources>
   </Presentation>
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">
@@ -75,7 +211,13 @@
         <DisplayString ElementID="QND.OMS.Recovery.Container.ProtectedItemAvailability.AggMonitor">
           <Name>Protected Items</Name>
         </DisplayString>
-
+        <DisplayString ElementID="QND.OMS.Recovery.Vault.Connectivity.Monitor.AlertMessage">
+          <Name>QND - OMS Backup Vault is not monitored</Name>
+          <Description>The backup vault is not being monitored. Ivestigate the issue immediately.</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Recovery.Vault.Connectivity.Monitor">
+          <Name>Connectivity</Name>
+        </DisplayString>
       </DisplayStrings>
     </LanguagePack>
   </LanguagePacks>

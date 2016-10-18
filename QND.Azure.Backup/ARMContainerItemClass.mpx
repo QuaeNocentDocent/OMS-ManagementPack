@@ -36,7 +36,7 @@
         </DiscoveryTypes>
         <DataSource ID="DS" TypeID="QND.OMS.Recovery.Container.Discovery.DS">
           <TimeoutSeconds>900</TimeoutSeconds>
-          <TraceLevel>2</TraceLevel>
+          <TraceLevel>3</TraceLevel>
           <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
           <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
           <ResourceGroupId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</ResourceGroupId>

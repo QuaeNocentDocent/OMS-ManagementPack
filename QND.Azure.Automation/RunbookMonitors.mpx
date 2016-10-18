@@ -14,6 +14,7 @@
             <AlertParameter2>$Data/Context/Property[@Name="lastnJobs"]$</AlertParameter2>
             <AlertParameter3>$Data/Context/Property[@Name="maxFailures"]$</AlertParameter3>
             <AlertParameter4>$Data/Context/Property[@Name="lastJobStatus"]$</AlertParameter4>
+            <AlertParameter5>$Target/Property[Type="QND.OMS.Automation.RunbookGen"]/Description$</AlertParameter5>            
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -41,11 +42,11 @@
 
           <Tolerance>0.5</Tolerance>
           <OnlySJWH>1</OnlySJWH>
-          <LookbackDays>-1</LookbackDays>
+          <LookbackDays>-35</LookbackDays>
           <LastNJobs>5</LastNJobs>
           <MaxFailures>2</MaxFailures>
           <!--.net regex doesn't parse ^(?!Completed).*$ -->
-          <FailureCondition>Failed</FailureCondition>
+          <FailureCondition>^Failed|Suspended$</FailureCondition>
           <MaxAgeHours>-1</MaxAgeHours>
           <MaxRuntimeMinutes>180</MaxRuntimeMinutes>
           <WebHookExpirationDays>15</WebHookExpirationDays>
@@ -64,6 +65,7 @@
           <AlertParameters>
             <AlertParameter1>$Data/Context/Property[@Name="webHookDaysToExpiration"]$</AlertParameter1>
             <AlertParameter2>$Data/Context/Property[@Name="webHookStatus"]$</AlertParameter2>
+            <AlertParameter3>$Target/Property[Type="QND.OMS.Automation.RunbookGen"]/Description$</AlertParameter3>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -116,6 +118,7 @@
           <AlertParameters>
             <AlertParameter1>$Data/Context/Property[@Name="lastRunAgeHours"]$</AlertParameter1>
             <AlertParameter2>$Data/Context/Property[@Name="maxAge"]$</AlertParameter2>
+            <AlertParameter3>$Target/Property[Type="QND.OMS.Automation.RunbookGen"]/Description$</AlertParameter3>            
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -167,6 +170,7 @@
             <AlertParameter1>$Data/Context/Property[@Name="lastRuntimeMin"]$</AlertParameter1>
             <AlertParameter2>$Data/Context/Property[@Name="maxRuntime"]$</AlertParameter2>
             <AlertParameter3>$Data/Context/Property[@Name="lastCompletedRuntimeMin"]$</AlertParameter3>
+            <AlertParameter4>$Target/Property[Type="QND.OMS.Automation.RunbookGen"]/Description$</AlertParameter4>            
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -224,8 +228,9 @@
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.ExecStatus.Monitor.AlertMessage">
           <Name>QND - OMS Automation Runbook execution failed</Name>
-          <Description>The runbook failures count {0} is over the threshold set {2} over the last {1} runs. Last run status is {3}.
-              More details in the alert context
+          <Description>
+            The runbook failures count {0} is over the threshold set {2} over the last {1} runs. Last run status is {3}.
+            The runbook description is {4}. More details in the alert context
           </Description>
         </DisplayString>
         
@@ -235,7 +240,7 @@
         <DisplayString ElementID="QND.OMS.Automation.Runbook.RunAge.Monitor.AlertMessage">
           <Name>QND - OMS Automation Runbook last execution too old</Name>
           <Description>The runbook last run is {0} hours old which is over the threshold set at {1} hours.
-              More details in the alert context
+              The runbook description is {2}. More details in the alert context
           </Description>
         </DisplayString>
 
@@ -246,7 +251,7 @@
           <Name>QND - OMS Automation Runbook execution is taking too long</Name>
           <Description>
             The last runbook execution took {0} minutes which is over the set threshold of {1}. The last completed job took {2} minutes.
-            More details in the alert context
+            The runbook description is {3}. More details in the alert context
           </Description>
         </DisplayString>
 
@@ -257,7 +262,7 @@
           <Name>QND - OMS Automation Runbook webhook expired or near expiration</Name>
           <Description>
             One or more web hooks are expired or about to expire. Days to expiration {0}.
-            More details in the alert context
+            The runbook description is {2}. More details in the alert context
           </Description>
         </DisplayString>
       </DisplayStrings>
