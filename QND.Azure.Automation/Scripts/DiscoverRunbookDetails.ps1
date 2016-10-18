@@ -323,8 +323,11 @@ s","logVerbose":false,"logProgress":false,"logActivityTrace":9,"runbookType":"Sc
 				$RBInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource']/ResourceId$", $rb.id)
 				#param validation
 				$tags='';$description=''
-				if($detail.tags) {$tags=([string]$detail.tags).Substring(0,8191)}
-				if($detail.properties.description) {$description=([string]$detail.properties.description).SubString(0,255)}
+				$rbdetail=$detail.values[0]
+				if($rbdetail.tags) {$tags=([string]$rbdetail.tags)}
+				if($rbdetail.properties.description) {$description=([string]$rbdetail.properties.description)}
+				if($tags.Length -gt 8190) {$tags=$tags.SubString(0,8190)}
+				if($description.Lenght -gt 255) {$description=$description.SubString(0,255)}
 				$RBInstance.AddProperty("$MPElement[Name='QNDA!QND.OMS.GenericResource']/Tags$", $tags)
 				$RBInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.RunbookGen']/Description$", $description)
 				$discoveryData.AddInstance($RBInstance)

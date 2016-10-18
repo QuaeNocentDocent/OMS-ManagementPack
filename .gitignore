@@ -252,3 +252,4 @@ ModelManifest.xml
 /QND.Azure.Automation/Samples/QND.Azure.Test.xml
 *MPResources.Resources
 /QND.OMS/Tests/PScript1.ps1
+/ExternalHealthChecks/Tests/Tests.ps1
