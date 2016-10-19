@@ -56,15 +56,13 @@
                 </SimpleExpression>
               </Expression>
               <Expression>
-                <SimpleExpression>
+                <RegExExpression>
                   <ValueExpression>
                     <XPathQuery Type="String">Params/Param[1]</XPathQuery>
                   </ValueExpression>
-                  <Operator>Equal</Operator>
-                  <ValueExpression>
-                    <Value Type="String">Get-OMSRecoveryItemStatus</Value>
-                  </ValueExpression>
-                </SimpleExpression>
+                  <Operator>MatchesWildcard</Operator>
+                  <Pattern>Get-OMSRecoveryItemStatus*</Pattern>
+                </RegExExpression>
               </Expression>
               <Expression>
                 <SimpleExpression>
@@ -106,15 +104,13 @@
                 </SimpleExpression>
               </Expression>
               <Expression>
-                <SimpleExpression>
+                <RegExExpression>
                   <ValueExpression>
                     <XPathQuery Type="String">Params/Param[1]</XPathQuery>
                   </ValueExpression>
-                  <Operator>Equal</Operator>
-                  <ValueExpression>
-                    <Value Type="String">Get-OMSRecoveryItemStatus</Value>
-                  </ValueExpression>
-                </SimpleExpression>
+                  <Operator>MatchesWildcard</Operator>
+                  <Pattern>Get-OMSRecoveryItemStatus*</Pattern>
+                </RegExExpression>
               </Expression>
               <Expression>
                 <SimpleExpression>

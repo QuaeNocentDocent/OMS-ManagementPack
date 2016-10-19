@@ -42,7 +42,7 @@
 
           <Tolerance>0.5</Tolerance>
           <OnlySJWH>1</OnlySJWH>
-          <LookbackDays>-35</LookbackDays>
+          <LookbackDays>-1</LookbackDays>
           <LastNJobs>5</LastNJobs>
           <MaxFailures>2</MaxFailures>
           <!--.net regex doesn't parse ^(?!Completed).*$ -->

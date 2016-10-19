@@ -217,7 +217,7 @@ Function Format-Time
 Function Get-AutomationItems
 {
 param(
-	$uris, $connection
+	$uris, $connection, $bnoLink=$false
 )
 
 	$items=@()
@@ -228,7 +228,8 @@ param(
 			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken $connection -nextLink $nextLink -TimeoutSeconds $timeoutSeconds
 			$nextLink = $result.NextLink
 			if($result.gotValue) {$items+=$result.Values}
-            #hacking some unwanted chars
+            if($bnolink) {$nextLink=$null}
+			#hacking some unwanted chars
             if($nextLink) {$nextLink=$nextLink.Replace('+','%2B')}
 		} while ($nextLink)
 	}
@@ -606,47 +607,60 @@ Month week day occurrence:
 	    
         write-verbose ('From {0} to {1}' -f $from, $to)
 
+		#now it's much fater to return the last 100 jobs insetad of specifying a selection based on creationTime, so let's do it
 	    $uris=@(
 		    #('{0}{1}/jobs?api-version={2}&$filter=properties/startTime ge {3}%2B00:00 and properties/endTime le {4}%2B00:00 and properties/runbook/name eq ''{5}''' -f $ResourceBaseAddress,$resourceURI,$APIVersion, $from, $to, $rb.name)
-			('{0}{1}/jobs?api-version={2}&$filter=properties/creationTime ge {3}%2B00:00 and properties/runbook/name eq ''{5}''' -f $ResourceBaseAddress,$resourceURI,$APIVersion, $from, $to, $rb.name)
+			#('{0}{1}/jobs?api-version={2}&$filter=properties/creationTime ge {3}%2B00:00 and properties/runbook/name eq ''{5}''' -f $ResourceBaseAddress,$resourceURI,$APIVersion, $from, $to, $rb.name)
+			('{0}{1}/jobs?api-version={2}&$filter=properties/runbook/name eq ''{5}''' -f $ResourceBaseAddress,$resourceURI,$APIVersion, $from, $to, $rb.name)
 	    )
-        $jobs = Get-AutomationItems -uris $uris -connection $connection | sort-object @{Expression={[datetime]$_.properties.creationTime};Descending=$true}
+        $jobs = Get-AutomationItems -uris $uris -connection $connection -bnoLink $true | sort-object @{Expression={[datetime]$_.properties.creationTime};Descending=$true}
         $lastJobs = $jobs | Select-Object -First $LastnJobs
 
 		$lastjobs | % {Write-Verbose ('{0} -{1}' -f $_.Name, $_.properties.status)}
 
         $failures = ($lastJobs | where {$_.properties.status -imatch $failureCondition}).count
-        $lastCompletedJob=0
-        
+		#get last completed job
+        $lastCompletedJob=$null
+		$runningJob=$null
+		if($jobs.count -gt 0) {$lastCompletedJob = $jobs | where {$_.properties.endTime} | Select-Object -First 1}
+		if($jobs.count -gt 0) {
+			#for semplicity let's assume that if we have a runhning job it is the last one
+			if($jobs[0].properties.startTime -and ($jobs[0].properties.endTime -eq $null)) {$runningJob=$jobs[0]}
+		}
+
         write-verbose ('Got {0} jobs, selected {1} jobs' -f $jobs.count, $lastJobs.Count)
-        if ($jobs.count -eq 0) {
+        if ($jobs.Count -eq 0 -or (!$lastCompletedJob -and !$runningJob)) {
             $runtimeMin=0
             $lastRuntimeMin=0
-            $lastRunAgeHours=-1
+            $lastRunAgeHours=9999
             $activationTimeSec=0
             $runtimeError=$false
             $lastJobStatus='unknown'
             Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_WARNING `
-			-msg ('No jobs returned for {0}' `
+			-msg ('No jobs returned or no job completed or still running for {0}' `
 				-f $rb.name) `
 			-level $TRACE_WARNING 
+
         }
         else {
+			#if we don't have a completed job, for stats sake set it to the running job
+			if(! $lastCompletedJob) {$lastCompletedJob=$runningJob; Write-Verbose 'No completed job, going for running'}
             $lastRunAgeHours=0
-            write-verbose ('Job Endtime {0}' -f $lastJobs[0].properties.endTime)
-            if(! $lastJobs[0].properties.endTime -or [datetime]$lastJobs[0].properties.endTime -gt (Get-Date)) {$lastCompletedJob=1;write-verbose 'Last job still running'}
+            write-verbose ('Job Endtime {0}' -f $lastCompletedJob.properties.endTime)
+
+            #if(! $lastJobs[0].properties.endTime -or [datetime]$lastJobs[0].properties.endTime -gt (Get-Date)) {$lastCompletedJob=1;write-verbose 'Last job still running'}
             try {
-                $lastJobStatus=$lastJobs[$lastCompletedJob].properties.status
-                $runtimeMin = ([datetime]$lastJobs[$lastCompletedJob].properties.endTime - [datetime]$lastJobs[$lastCompletedJob].properties.startTime).TotalMinutes
-                if ($lastCompletedJob -ne 0) {
-                    $lastRuntimeMin = ((Get-Date)- [datetime]$lastJobs[$lastCompletedJob].properties.startTime).TotalMinutes
+                $lastJobStatus=$lastCompletedJob.properties.status
+                $runtimeMin = ([datetime]$lastCompletedJob.properties.endTime - [datetime]$lastCompletedJob.properties.startTime).TotalMinutes
+                if ($runningJob) {
+                    $lastRuntimeMin = ((Get-Date)- [datetime]$runningJob.properties.startTime).TotalMinutes
                     $lastRunAgeHours=0
                 }
                 else {
                     $lastRuntimeMin=$runtimeMin
-                    $lastRunAgeHours = ((Get-Date) - [datetime]$lastJobs[0].properties.endTime).TotalHours
+                    $lastRunAgeHours = ((Get-Date) - [datetime]$lastCompletedJob.properties.endTime).TotalHours
                 }
-                $activationTimeSec =([datetime] $lastJobs[$lastCompletedJob].properties.startTime - [datetime]$lastJobs[$lastCompletedJob].properties.creationTime).TotalSeconds      
+                $activationTimeSec =([datetime] $lastCompletedJob.properties.startTime - [datetime]$lastCompletedJob.properties.creationTime).TotalSeconds      
                 $longRunning=0
                 if($MaxRuntime -gt -1) {if ($lastRuntimeMin -gt $MaxRuntime) {$longRunning=1}}       
             }
