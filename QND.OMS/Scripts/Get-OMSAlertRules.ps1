@@ -289,7 +289,7 @@ if( [String]::IsNullOrEmpty($Exclusions) ) {$Exclusions='_____'} #let's say this
 			   if ($actions.Values) {
 					if ($actions.Values[0].properties.Type -ieq 'Alert') {
 						if ($actions.Values[0].properties.Name -inotmatch $Exclusions)	{
-							if ([String]::IsNullOrEmpty($actions.Values[0].properties.Description)) {$AlertDescription=''} else {$alertDescription=$actions.Values[0].properties.Description}
+							if ([String]::IsNullOrEmpty($actions.Values[0].properties.Description)) {$AlertDescription='n.a.'} else {$alertDescription=$actions.Values[0].properties.Description}
 							Discover-AlertRule -Id $schedule.Values[0].id -Interval $schedule.Values[0].properties.Interval -AlertName $actions.Values[0].properties.Name -AlertDescription $AlertDescription
 							Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('{0}, Interval={1}, Name={2}' -f $schedule.Values[0].id, $schedule.Values[0].properties.Interval, $actions.Values[0].properties.Name ) $TRACE_VERBOSE
 						}

@@ -76,7 +76,7 @@
     <Compile Include="MABClass.mpx">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ItemMonitors.mpx">
+    <Compile Include="ARMItemMonitors.mpx">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
