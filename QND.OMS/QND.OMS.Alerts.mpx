@@ -8,6 +8,7 @@
           <Property ID="AlertName" Key="false" Type="string" />
           <Property ID="Interval" Key="false" Type="int" />
           <Property ID="Description" Key="false" Type="string" MaxLength="1024"/>
+          <Property ID="Type" Key="false" Type="string" />
         </ClassType>
       
       </ClassTypes>
@@ -41,6 +42,7 @@
           <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
           <OMSAPIVersion>$Target/Property[Type="QND.OMS.Workspace"]/OMSAPIVersion$</OMSAPIVersion>
           <Exclusions></Exclusions>
+          <IncludeMetricBased>Yes</IncludeMetricBased>
         </DataSource>
       </Discovery>    
     </Discoveries>
@@ -130,6 +132,10 @@
         </DisplayString>
         <DisplayString ElementID="QND.OMS.AlertRule" SubElementID="Description">
           <Name>Description</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.AlertRule" SubElementID="Type">
+          <Name>Type</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.WorkspaceContainsAlertRule">

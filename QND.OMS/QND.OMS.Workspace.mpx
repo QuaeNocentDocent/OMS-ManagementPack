@@ -26,7 +26,7 @@
         <DataSource ID="DS" TypeID="QNDA!QND.OMS.ArmService.SeedDiscovery.DS">
           <IntervalSeconds>14450</IntervalSeconds>
           <SyncTime></SyncTime>
-          <ApiVersion>2015-03-20</ApiVersion>
+          <ApiVersion>2015-11-01-preview</ApiVersion>
           <AzureType>Microsoft.OperationalInsights/workspaces</AzureType>
           <ClassId>$MPElement[Name="QND.OMS.Workspace"]$</ClassId>
           <InstanceSettings>
@@ -49,7 +49,7 @@
               </Setting>
               <Setting>
                 <Name>$MPElement[Name="QND.OMS.Workspace"]/OMSAPIVersion$</Name>
-                <Value>2015-03-20</Value>
+                <Value>2015-11-01-preview</Value>
               </Setting>
             </Settings>
           </InstanceSettings>
@@ -88,8 +88,8 @@
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <OMSAPIVersion>2015-03-20</OMSAPIVersion>
-          <MaxAgeHours>1</MaxAgeHours>
+          <OMSAPIVersion>$Target/Property[Type="QND.OMS.Workspace"]/OMSAPIVersion$</OMSAPIVersion>
+            <MaxAgeHours>1</MaxAgeHours>
           <LookbackHours>240</LookbackHours>
           <ExcludePattern></ExcludePattern>
         </Configuration>
@@ -126,7 +126,7 @@
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <OMSAPIVersion>2015-03-20</OMSAPIVersion>
+          <OMSAPIVersion>$Target/Property[Type="QND.OMS.Workspace"]/OMSAPIVersion$</OMSAPIVersion>
           <MaxAgeMinutes>30</MaxAgeMinutes>
           <LookbackHours>120</LookbackHours>
           <ExcludePattern></ExcludePattern>

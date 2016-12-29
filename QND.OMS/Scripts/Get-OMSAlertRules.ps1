@@ -49,8 +49,9 @@ param([int]$traceLevel=2,
 [Parameter (Mandatory=$true)][string]$ADUserName,
 [Parameter (Mandatory=$true)][string]$ADPassword,
 [Parameter (Mandatory=$true)][string]$resourceURI,
-[string]$OMSAPIVersion='2015-03-20',
-[string]$Exclusions=$null
+[string]$OMSAPIVersion='2015-11-01-preview',
+[string]$Exclusions=$null,
+[string]$includeMetricBased='Yes'
 )
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
     [Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
@@ -201,7 +202,7 @@ Function Import-ResourceModule
 
 Function Discover-AlertRule
 {
-	param($Id, $Interval, $AlertName, $AlertDescription)
+	param($Id, $Interval, $AlertName, $AlertDescription, $AlertType)
 
 	try {
 		$serviceName = $resourceURI.Split('/')
@@ -220,9 +221,12 @@ Function Discover-AlertRule
 		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/Interval$", $Interval)	
 		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/AlertName$", $AlertName)	
 		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/Description$", $AlertDescription)	
+		$objInstance.AddProperty("$MPElement[Name='QND.OMS.AlertRule']/Type$", $AlertType)	
 		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $DisplayName)	
 		$discoveryData.AddInstance($objInstance)	
+    Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION -level $TRACE_VERBOSE -msg ('Posting discovery data for ''{0}'' for resource {1}' -f $AlertName, $resourceURI)
 }
+
 #Start by setting up API object.
 	$P_TraceLevel = $TRACE_VERBOSE
 	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
@@ -279,21 +283,27 @@ if( [String]::IsNullOrEmpty($Exclusions) ) {$Exclusions='_____'} #let's say this
 	foreach($search in $savedSearches) {
 		$uri = '{0}{1}/schedules?api-version={2}' -f $ResourceBaseAddress,$search.Id,$OMSAPIVersion
 		$nextLink=$null
+		#Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('Processing Saved Search {0}' -f $search.Id) $TRACE_VERBOSE
 		$schedule = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $extLink -data $null -TimeoutSeconds $timeout -ErrorAction SilentlyContinue -Verbose:($PSBoundParameters['Verbose'] -eq $true)
-		if($schedule.values) {
+		if($schedule.values) {			
 			#take into account just the first schedule for the search maybe this needs to be changed in future
 			if ($schedule.Values[0].properties.Enabled -ieq 'True') {
 			   $uri = '{0}{1}/actions?api-version={2}' -f $ResourceBaseAddress,$schedule.values.id,$OMSAPIVersion
 			   $nextLink=$null
 			   $actions = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout -Verbose:($PSBoundParameters['Verbose'] -eq $true)
 			   if ($actions.Values) {
-					if ($actions.Values[0].properties.Type -ieq 'Alert') {
-						if ($actions.Values[0].properties.Name -inotmatch $Exclusions)	{
-							if ([String]::IsNullOrEmpty($actions.Values[0].properties.Description)) {$AlertDescription='n.a.'} else {$alertDescription=$actions.Values[0].properties.Description}
-							Discover-AlertRule -Id $schedule.Values[0].id -Interval $schedule.Values[0].properties.Interval -AlertName $actions.Values[0].properties.Name -AlertDescription $AlertDescription
-							Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('{0}, Interval={1}, Name={2}' -f $schedule.Values[0].id, $schedule.Values[0].properties.Interval, $actions.Values[0].properties.Name ) $TRACE_VERBOSE
+					foreach($action in $actions.Values) {
+						if ($action.properties.Type -ieq 'Alert') {
+							$alertType='Standard'
+							try { if($action.properties.Threshold.MetricsTrigger) {$alertType='MetricBased'}} catch {}
+							if ($alertType -eq 'MetricBased' -and $includeMetricBased -ieq 'No') {continue}
+							if ($action.properties.Name -inotmatch $Exclusions)	{
+								if ([String]::IsNullOrEmpty($action.properties.Description)) {$AlertDescription='n.a.'} else {$alertDescription=$action.properties.Description}
+								Discover-AlertRule -Id $schedule.Values[0].id -Interval $schedule.Values[0].properties.Interval -AlertName $action.properties.Name -AlertDescription $AlertDescription -AlertType $alertType
+								Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('{0}, Interval={1}, Name={2}' -f $schedule.Values[0].id, $schedule.Values[0].properties.Interval, $action.properties.Name ) $TRACE_VERBOSE
+							}
+							else {Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('Alert={0} excluded from discovery' -f $action.properties.Name ) $TRACE_INFO}
 						}
-						else {Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ('Alert={0} excluded from discovery' -f $actions.Values[0].properties.Name ) $TRACE_INFO}
 					}
 			   }
 			}

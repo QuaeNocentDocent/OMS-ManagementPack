@@ -419,12 +419,14 @@
           <xsd:element name="ResourceURI" type="xsd:string" />
           <xsd:element name="OMSAPIVersion" type="xsd:string" />
           <xsd:element name="Exclusions" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="IncludeMetricBased" type="xsd:string" minOccurs="0" default="Yes"/>
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="OMSAPIVersion" Selector="$Config/OMSAPIVersion$" ParameterType="string" />
           <OverrideableParameter ID="Exclusions" Selector="$Config/Exclusions$" ParameterType="string" />
+          <OverrideableParameter ID="IncludeMetricBased" Selector="$Config/IncludeMetricBased$" ParameterType="string" />
         </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
@@ -543,6 +545,10 @@
                     <Name>Exclusions</Name>
                     <Value>$Config/Exclusions$</Value>
                   </Parameter>
+                  <Parameter>
+                    <Name>IncludeMetricBased</Name>
+                    <Value>$Config/IncludeMetricBased$</Value>
+                  </Parameter>                  
                 </Parameters>
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
                 <StrictErrorHandling>false</StrictErrorHandling>
