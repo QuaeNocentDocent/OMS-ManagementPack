@@ -263,11 +263,11 @@ catch {
 try {
 
 	if ($allInstances -gt 0) {
-		$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer'
+		$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace Type!=Heartbeat | measure max(TimeGenerated) as lastdata by Computer'
 	}
 	else {
 		#due to the fact that we can have spurious entries I cannot optimize this query (see commented out portion of the query)
-		$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer' # | where lastdata < NOW-{0}HOURS' -f $maxAgeHours
+		$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace Type!=Heartbeat | measure max(TimeGenerated) as lastdata by Computer' # | where lastdata < NOW-{0}HOURS' -f $maxAgeHours
 	}
 
 	$startDate=(Get-Date).AddHours(-$LookBackHours)
