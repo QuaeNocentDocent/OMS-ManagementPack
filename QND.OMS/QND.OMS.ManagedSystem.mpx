@@ -216,6 +216,9 @@
           <Name> QND - OMS System Data obsolete</Name>
           <Description>{0} data is obsolete. Last data point received {1} hours ago</Description>
         </DisplayString>
+        <DisplayString ElementID="QND.OMS.ManagedSystemLastSensitiveData.Monitor">
+          <Name>Last Sensitive Data Point</Name>
+        </DisplayString>
         <DisplayString ElementID="QND.OMS.ManagedSystemLastSensitiveData.Monitor.AlertMessage">
           <Name> QND - OMS System Sensitive Data obsolete</Name>
           <Description>{0} data is obsolete. Last data point received {1} hours ago</Description>

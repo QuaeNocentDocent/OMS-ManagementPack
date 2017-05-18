@@ -211,12 +211,15 @@
           <Name>Managed Systems</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.WorkspaceLastData.Monitor">
-          <Name>Last Data Collected</Name>
+          <Name>Data Collection</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.WorkspaceLastData.Monitor.AlertMessage">
           <Name> QND - OMS Workspace has systems with obsolete data</Name>
           <Description>{0} systems with obsolete data. Current threshold {1} hour(s).</Description>
         </DisplayString>
+        <DisplayString ElementID="QND.OMS.WorkspaceLastSensitiveData.Monitor">
+          <Name>Sensitive Data Collection</Name>
+        </DisplayString>        
         <DisplayString ElementID="QND.OMS.WorkspaceLastSensitiveData.Monitor.AlertMessage">
           <Name> QND - OMS Workspace has systems with obsolete sensitive data</Name>
           <Description>{0} systems with obsolete sensitive data. Current threshold {1} hour(s).</Description>
