@@ -325,7 +325,7 @@ s","logVerbose":false,"logProgress":false,"logActivityTrace":9,"runbookType":"Sc
 				$tags='n.a.';$description='n.a.'
 				$rbdetail=$detail.values[0]
 				if($rbdetail.tags) {$tags=([string]$rbdetail.tags)}
-				if($rbdetail.properties.description) {$description=([string]$rbdetail.properties.description)}
+				if(![String]::IsNullOrEmpty($rbdetail.properties.description)) {$description=([string]$rbdetail.properties.description)}
 				if($tags.Length -gt 8190) {$tags=$tags.SubString(0,8190)}
 				if($description.Lenght -gt 255) {$description=$description.SubString(0,255)}
 				$RBInstance.AddProperty("$MPElement[Name='QNDA!QND.OMS.GenericResource']/Tags$", $tags)
