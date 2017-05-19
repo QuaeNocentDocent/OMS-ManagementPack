@@ -137,7 +137,7 @@
                         ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.SysHeartbeat.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.SysHeartbeat.Monitor.AlertMessage">
-          <AlertOnState>Error</AlertOnState>
+          <AlertOnState>Warning</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
@@ -158,7 +158,7 @@
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
           <Computer>$Target/Property[Type="QND.OMS.ManagedSystem"]/Computer$</Computer>
-          <DelayLateMinutes>2</DelayLateMinutes>
+          <DelayLateMinutes>20</DelayLateMinutes>
           <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
           <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
           <!-- <ResourceGroupId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService"]/ResourceGroup$</ResourceGroupId> -->
