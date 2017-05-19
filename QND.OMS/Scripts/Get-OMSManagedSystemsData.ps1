@@ -1,8 +1,4 @@
 ﻿
-
-## This discovery needs to be splitted 'cause potentially can discover a huge number of entities
-## Gorup memeberhsip must be changed and split in diffrent rules using the properties we're setting
-
 #TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
 #SET ErrorLevel to 5 so show discovery info
 #https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
@@ -29,12 +25,7 @@
 #
 # Status
 #
-# 1.0 History
-#	  1.0 06.08.2010 DG First Release
-#     1.5 15.02.2014 DG minor cosmetics
-#
-# (c) Copyright 2015, Progel spa, All Rights Reserved
-# Proprietary and confidential to Progel srl              
+#           
 #
 #*************************************************************************
 

@@ -88,15 +88,56 @@
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
           <OMSAPIVersion>2015-03-20</OMSAPIVersion>
-          <MaxAgeHours>1</MaxAgeHours>          
+          <MaxAgeHours>2</MaxAgeHours>          
           <LookbackHours>240</LookbackHours>
+          <DataTypes></DataTypes>          
         </Configuration>
       </UnitMonitor>
+      <UnitMonitor ID="QND.OMS.ManagedSystemLastSensitiveData.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.ManagedSystem"
+                         ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.ManagedSystem.LastData.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.ManagedSystemLastSensitiveData.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Target/Property[Type="QND.OMS.ManagedSystem"]/Computer$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="AgeHours"]$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="Late" MonitorTypeStateID="Late" HealthState="Warning" />
+          <OperationalState ID="Obsolete" MonitorTypeStateID="Obsolete" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>3611</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <Computer>$Target/Property[Type="QND.OMS.ManagedSystem"]/Computer$</Computer>
+          <DelayLateHours>2</DelayLateHours>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <!-- <ResourceGroupId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService"]/ResourceGroup$</ResourceGroupId> -->
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <OMSAPIVersion>2015-03-20</OMSAPIVersion>
+          <MaxAgeHours>1</MaxAgeHours>
+          <LookbackHours>240</LookbackHours>
+          <DataTypes>^(SecurityData|Perf)$</DataTypes>
+        </Configuration>
+      </UnitMonitor>      
       <UnitMonitor ID="QND.OMS.SysHeartbeat.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.ManagedSystem"
                         ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.SysHeartbeat.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.OMS.SysHeartbeat.Monitor.AlertMessage">
-          <AlertOnState>Error</AlertOnState>
+          <AlertOnState>Warning</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
@@ -117,7 +158,7 @@
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
           <Computer>$Target/Property[Type="QND.OMS.ManagedSystem"]/Computer$</Computer>
-          <DelayLateMinutes>2</DelayLateMinutes>
+          <DelayLateMinutes>20</DelayLateMinutes>
           <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
           <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
           <!-- <ResourceGroupId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService"]/ResourceGroup$</ResourceGroupId> -->
@@ -137,6 +178,7 @@
     <Presentation>
     <StringResources>
       <StringResource ID="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage"/>
+      <StringResource ID="QND.OMS.ManagedSystemLastSensitiveData.Monitor.AlertMessage"/>      
       <StringResource ID="QND.OMS.SysHeartbeat.Monitor.AlertMessage"/>
     </StringResources>
   </Presentation>
@@ -172,6 +214,13 @@
         </DisplayString>
         <DisplayString ElementID="QND.OMS.ManagedSystemLastData.Monitor.AlertMessage">
           <Name> QND - OMS System Data obsolete</Name>
+          <Description>{0} data is obsolete. Last data point received {1} hours ago</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.ManagedSystemLastSensitiveData.Monitor">
+          <Name>Last Sensitive Data Point</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.ManagedSystemLastSensitiveData.Monitor.AlertMessage">
+          <Name> QND - OMS System Sensitive Data obsolete</Name>
           <Description>{0} data is obsolete. Last data point received {1} hours ago</Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.SysHeartbeat.Monitor">

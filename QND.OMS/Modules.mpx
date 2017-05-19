@@ -178,6 +178,7 @@
           <xsd:element name="LookbackHours" type="xsd:int" />
           <xsd:element name="AllInstances" type="xsd:int" />
           <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="DataTypes" type="xsd:string" minOccurs="0"/>
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
@@ -187,6 +188,7 @@
           <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
           <OverrideableParameter ID="LookbackHours" ParameterType="int" Selector="$Config/LookbackHours$"/>
           <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>
+          <OverrideableParameter ID="DataTypes" ParameterType="string" Selector="$Config/DataTypes$"/>
         </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
@@ -211,6 +213,7 @@
                 <LookbackHours>$Config/LookbackHours$</LookbackHours>                
                 <AllInstances>$Config/AllInstances$</AllInstances>
                 <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>
+                <DataTypes>$Config/DataTypes$</DataTypes>                
               </ProbeAction>
             </MemberModules>
             <Composition>
@@ -655,13 +658,15 @@
           <xsd:element name="MaxAgeHours" type="xsd:int" />
           <xsd:element name="LookbackHours" type="xsd:int" />
           <xsd:element name="AllInstances" type="xsd:int" />
-          <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>          
+          <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="DataTypes" type="xsd:string" minOccurs="0"/>          
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
           <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
           <OverrideableParameter ID="MaxAgeHours" ParameterType="int" Selector="$Config/MaxAgeHours$"/>
-          <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>          
+          <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>
+          <OverrideableParameter ID="DataTypes" ParameterType="string" Selector="$Config/DataTypes$"/>          
         </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
@@ -727,7 +732,11 @@
                   <Parameter>
                     <Name>ExcludePattern</Name>
                     <Value>$Config/ExcludePattern$</Value>
-                  </Parameter>                  
+                  </Parameter>
+                  <Parameter>
+                    <Name>dataTypes</Name>
+                    <Value>$Config/DataTypes$</Value>
+                  </Parameter>
                 </Parameters>
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
                 <StrictErrorHandling>false</StrictErrorHandling>
@@ -962,6 +971,7 @@
           <xsd:element name="MaxAgeHours" type="xsd:int" />
           <xsd:element name="LookbackHours" type="xsd:int" />
           <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="DataTypes" type="xsd:string" minOccurs="0"/>
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
@@ -972,6 +982,7 @@
           <OverrideableParameter ID="DelayLateHours" Selector="$Config/DelayLateHours$" ParameterType="int" />
           <OverrideableParameter ID="LookbackHours" Selector="$Config/LookbackHours$" ParameterType="int" />
           <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>
+          <OverrideableParameter ID="DataTypes" ParameterType="string" Selector="$Config/DataTypes$"/>
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
@@ -994,6 +1005,7 @@
               <LookbackHours>$Config/LookbackHours$</LookbackHours>
               <AllInstances>1</AllInstances>
               <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>
+              <DataTypes>$Config/DataTypes$</DataTypes>
             </DataSource>
             <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
               <Expression>
@@ -1027,6 +1039,17 @@
                   <Expression>
                     <SimpleExpression>
                       <ValueExpression>
+                        <XPathQuery Type="String">Property[@Name='Type']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value Type="String">_Total</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
                         <XPathQuery Type="Double">Property[@Name='AgeHours']</XPathQuery>
                       </ValueExpression>
                       <Operator>LessEqual</Operator>
@@ -1051,19 +1074,47 @@
             </ConditionDetection>
             <ConditionDetection ID="ObsoleteDataCD" TypeID="System!System.ExpressionFilter">
               <Expression>
-                <SimpleExpression>
-                  <ValueExpression>
-                    <XPathQuery Type="Double">Property[@Name='AgeHours']</XPathQuery>
-                  </ValueExpression>
-                  <Operator>Greater</Operator>
-                  <ValueExpression>
-                    <Value Type="Double">$Config/MaxAgeHours$</Value>
-                  </ValueExpression>
-                </SimpleExpression>
+                <And>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="String">Property[@Name='Type']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value Type="String">_Total</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Double">Property[@Name='AgeHours']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Greater</Operator>
+                      <ValueExpression>
+                        <Value Type="Double">$Config/MaxAgeHours$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  </And>
               </Expression>
             </ConditionDetection>
             <ConditionDetection ID="OntimeCD" TypeID="System!System.ExpressionFilter">
-                 <Expression>
+              <Expression>
+                <And>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="String">Property[@Name='Type']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value Type="String">_Total</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  <Expression>
                     <SimpleExpression>
                       <ValueExpression>
                         <XPathQuery Type="Double">Property[@Name='AgeHours']</XPathQuery>
@@ -1074,6 +1125,8 @@
                       </ValueExpression>
                     </SimpleExpression>
                   </Expression>
+                </And>
+              </Expression>
             </ConditionDetection>
           </MemberModules>
           <RegularDetections>
@@ -1131,6 +1184,7 @@
           <xsd:element name="MaxAgeHours" type="xsd:int" />
           <xsd:element name="LookbackHours" type="xsd:int" />
           <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="DataTypes" type="xsd:string" minOccurs="0"/>            
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
@@ -1140,6 +1194,7 @@
           <OverrideableParameter ID="MaxAgeHours" Selector="$Config/MaxAgeHours$" ParameterType="int" />
           <OverrideableParameter ID="LookbackHours" Selector="$Config/LookbackHours$" ParameterType="int" />
           <OverrideableParameter ID="ExcludePattern" ParameterType="string" Selector="$Config/ExcludePattern$"/>
+          <OverrideableParameter ID="DataTypes" ParameterType="string" Selector="$Config/DataTypes$"/>                
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
@@ -1162,6 +1217,7 @@
               <LookbackHours>$Config/LookbackHours$</LookbackHours>
               <AllInstances>0</AllInstances>
               <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>
+              <DataTypes>$Config/DataTypes$</DataTypes>
             </DataSource>
             <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
               <Expression>
@@ -1221,7 +1277,7 @@
           </RegularDetections>
         </MonitorImplementation>
       </UnitMonitorType>
-            <UnitMonitorType ID="QND.OMS.SysHeartbeat.MT" Accessibility="Public">
+      <UnitMonitorType ID="QND.OMS.SysHeartbeat.MT" Accessibility="Public">
         <MonitorTypeStates>
           <MonitorTypeState ID="Healthy"/>
           <MonitorTypeState ID="Late"/>

@@ -212,7 +212,7 @@ Function Discover-AlertRule
 		$serviceName='unknown'
 	}
 		$displayName=('{0} ({1})' -f $AlertName, $serviceName)
-
+		if([String]::IsNullOrEmpty($AlertDescription)) {$AlertDescription='n.a.'}
 		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.AlertRule']$")	
 		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
 		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)

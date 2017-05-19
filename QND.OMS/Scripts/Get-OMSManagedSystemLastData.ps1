@@ -20,13 +20,7 @@
 # Output properties
 #
 # Status
-#
-# Version History
-#	  1.0 06.08.2010 DG First Release
-#     1.5 15.02.2014 DG minor cosmetics
-#
-# (c) Copyright 2010, Progel srl, All Rights Reserved
-# Proprietary and confidential to Progel srl              
+#    
 #
 #*************************************************************************
 
@@ -46,7 +40,8 @@ param([int]$traceLevel=2,
 [int] $MaxAgeHours=2,
 [int] $LookBackHours=24*7,
 [int] $allInstances=0, #issues managing boolean values from OpsMgr
-[string] $excludePattern
+[string] $excludePattern,
+[string] $dataTypes=''
 )
  
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
@@ -262,13 +257,7 @@ catch {
 
 try {
 
-	if ($allInstances -gt 0) {
-		$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace Type!=Heartbeat | measure max(TimeGenerated) as lastdata by Computer'
-	}
-	else {
-		#due to the fact that we can have spurious entries I cannot optimize this query (see commented out portion of the query)
-		$query='ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace Type!=Heartbeat | measure max(TimeGenerated) as lastdata by Computer' # | where lastdata < NOW-{0}HOURS' -f $maxAgeHours
-	}
+	$query = 'Type NOT IN {"Heartbeat","Usage","QNDHeartbeatEx_CL"} | measure max(TimeGenerated) as LastData by Computer, Type'
 
 	$startDate=(Get-Date).AddHours(-$LookBackHours)
 	$endDate=Get-Date
@@ -302,14 +291,34 @@ try {
 	$cleanSys = @()
 	$systems | %{if($_) {$cleanSys+=$_}}
 	
-	write-verbose ('Return systems {0} clean systems {1}' -f $systems.count, $cleanSys.Count)
-	if ($allInstances -gt 0) {
+	write-verbose ('Returned systems {0} clean systems {1}' -f $systems.count, $cleanSys.Count)
+	
+	$systems=$null
+
+
+	if(![String]::IsNullOrEmpty($dataTypes)) {
+		foreach($sys in $cleanSys) {
+			if($sys.Type -inotmatch $dataTypes) {
+				$cleanSys[$cleanSys.IndexOf($sys)]=$null
+			}
+		}
+		$cleanSys = $cleanSys | where {$_ -ne $null}
+		#in this acase I need to check for oldest datapoint, if *ANY* of the Data types has obsolete data I want to be alerted
+		$totalInstances = $cleanSys | group Computer | select @{n='Computer';e={$_.Name}},@{n='Type';e={'_Total'}},@{n='LastData';e={ ($_.group | measure LastData -min).minimum}}
+	}
+	else {$totalInstances = $cleanSys | group Computer | select @{n='Computer';e={$_.Name}},@{n='Type';e={'_Total'}},@{n='LastData';e={ ($_.group | measure LastData -max).maximum}}}
+
+	#if we're looking for specific Types add the _total instance to the types so that in the context we can report everything, if not just report the _total instance as before
+	if([String]::IsNullOrEmpty($dataTypes)) {$cleanSys = $totalInstances} else {$cleanSys += $totalInstances}
+
+	if ($allInstances -ne 0) {
 		foreach($sys in $cleanSys) {
 			if(! [String]::IsNullOrEmpty($sys.Computer) ) {	
 				$diff = [DateTime]::Now - [DateTime]($sys.lastdata)
 				$hash=@{
 				'QNDType' ="Data"
 				'Computer'= $sys.Computer.ToLower()
+				'Type'=$sys.Type
 				'LastData'= $sys.lastdata
 				'AgeHours'= $diff.TotalHours
 				}			
