@@ -91,12 +91,12 @@ param(
 		$gotValue=$false
         if ($proxy) {
             if($proxyCred) {$result = Invoke-WebRequest -Method $HTTPVerb -Uri $restUri -Headers $headers -Body $body -TimeoutSec $timeoutSeconds -UseBasicParsing -Proxy $proxy -ProxyCredential $proxyCred}
-            else {$result = Invoke-WebRequest -Method $HTTPVerb -Uri $restUri -Headers $headers -Body $body -TimeoutSec $timeoutSeconds -UseBasicParsing -Proxy $proxy}
+            else {$result = Invoke-WebRequest -Method $HTTPVerb -Uri $restUri -Headers $headers -Body $body -TimeoutSec $timeoutSeconds -UseBasicParsing -Proxy $proxy -ErrorAction SilentlyContinue}
         }
         else {
             $result = Invoke-WebRequest -Method $HTTPVerb -Uri $restUri -Headers $headers -Body $body -TimeoutSec $timeoutSeconds -UseBasicParsing -ErrorAction SilentlyContinue
         }
-        write-verbose $result
+        write-verbose ($result)
         $statusCode=$result.StatusCode
         $lastContent=$result.Content
         if($result.StatusCode -ge 200 -and $result.StatusCode -le 399){        
@@ -120,14 +120,15 @@ param(
 		}
         $StatusCode=$result.StatusCode
     }
-    catch {
+    catch {	
         Write-Error ('Exception processing query {0}' -f $_.GetType().FullName)
         Write-Verbose $_
         $nl=$null
         if ($result) {$StatusCode=$result.StatusCode;$lastContent=$result}
         else {
             $StatusCode=500
-            [array]$returnValues = $_.Message
+            [array]$returnValues = $_.ErrorDetails
+			$lastContent=$_.ErrorDetails.Message
         }
     }
 	finally {
@@ -323,5 +324,52 @@ param(
 	}
 	catch {
 			Log-Event $EVENT_ID_FAILURE $EVENT_TYPE_ERROR ("Error querying OMS {0} for query {1} and uri {2}" -f $Error[0], $query, $uri) $TRACE_ERROR
+	}
+}
+
+Function Get-QNDKustoQueryResult
+{
+	[CmdletBinding()]
+	param(
+	[string] $query,
+	[string] $timespan,
+	[int] $timeout,
+	[string] $authToken,
+	[string]$ResourceBaseAddress,
+	[string]$resourceURI,
+	[string]$OMSAPIVersion
+	)
+	try {
+
+		$uri = '{0}{1}/api/query?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion	
+		$body='{{"query": "{0}", "timespan":"{1}"}}' -f $query, $timespan
+		$header=@{
+			"Prefer"="response-v1=true;wait=$timeout"
+			"Content-Type"="application/json"
+			}
+
+		$nextLink=$null
+		$items=@()
+		do {
+			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb POST -authToken $authToken -nextLink $nextLink -data $body -TimeoutSeconds 300 -otherHeader $header
+			if($result.StatusCode -notmatch '2[0-9][0-9]') {throw ($result.LastContent)}
+			$nextLink = $result.NextLink
+			if($result.Values) {
+				$table=$result.Values.tables[0]
+				foreach($row in $table.rows) {
+					$column=0
+					$item=@{}
+					foreach($key in $table.columns) {
+						$item.Add($key.Name,$row[$column] -as $key.Type)
+						$column++        
+					}
+					$items+=New-Object -TypeName PSCustomObject -Property $item
+				}
+			}
+		} while ($nextLink)
+		return $items
+	}
+	catch {
+			throw ("Error querying OMS {0} for query {1} and uri {2}" -f $Error[0], $query, $uri)
 	}
 }

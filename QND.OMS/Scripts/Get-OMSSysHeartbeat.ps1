@@ -42,11 +42,12 @@ param([int]$traceLevel=2,
 [Parameter (Mandatory=$true)][string]$ADUserName,
 [Parameter (Mandatory=$true)][string]$ADPassword,
 [Parameter (Mandatory=$true)][string]$resourceURI,
-[string]$OMSAPIVersion='2015-03-20',
+[string]$OMSAPIVersion,
 [int] $MaxAgeMinutes=30,
 [int] $LookBackHours=24*7,
 [int] $allInstances=0, #issues managing boolean values from OpsMgr
-[string] $excludePattern
+[string] $excludePattern,
+[int] $heartbeat
 )
  
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
@@ -85,7 +86,7 @@ $EventDataType	= 2
 $PerformanceDataType = 2
 $StateDataType       = 3
 
-$EventSource = 'Progel Script'
+$EventSource = 'QND Script'
 $EventLog= 'Operations Manager'
 #endregion
 
@@ -279,24 +280,15 @@ try {
 	#prepare query body
 
 	#$uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
-	$query='Type:Heartbeat | dedup Computer'
-	$startDate=(Get-Date).ToUniversalTime().AddHours(-$LookBackHours)
-	$endDate=(Get-Date).ToUniversalTime()
-	$systems=Get-QNDOMSQueryResult -query $query -startDate $startDate -endDate $endDate -authToken ($connection.CreateAuthorizationHeader()) -ResourceBaseAddress  $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion -timeout $timeout
+	$query='Heartbeat | summarize TimeGenerated=max(TimeGenerated) by Computer'
+	If(! [String]::IsNullOrEmpty($excludePattern)) {$query+=' | where not(Computer matches regex \"{0}\")' -f $excludePattern}
+	$timespan='PT{0}H' -f $LookBackHours
+	$systems=Get-QNDKustoQueryResult -query $query -timespan $timespan -authToken ($connection.CreateAuthorizationHeader()) -ResourceBaseAddress  $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion -timeout $timeout
 
-	#exluded systems
-	$cleanSys = @()
-	If(! [String]::IsNullOrEmpty($excludePattern)) {
-		$systems | %{if($_.Computer -inotmatch $excludePattern){$cleanSys+=$_}}	
-	}
-    else {
-        $cleanSys = $systems
-    }
-
-	$link=('https://{0}.portal.mms.microsoft.com/#Workspace/search/index?q=Type%3AHeartbeat%20%7C%20dedup%20Computer' -f $workspaceId)
-	write-verbose ('Return systems {0} clean systems {1}' -f $systems.count, $cleanSys.Count)
+	$link = 'https://portal.azure.com/?nocdn=true#resource/{0}/Overview' -f $resourceUri
+	write-verbose ('Return systems {0}' -f $systems.count)
 	if ($allInstances -gt 0) {
-		foreach($sys in $cleanSys) {
+		foreach($sys in $systems) {
 				$diff = [DateTime]::Now - [DateTime]($sys.TimeGenerated)
 				$hash=@{
 				'QNDType' ="Data"
@@ -310,7 +302,7 @@ try {
 	}
 	else {
 		$obsolete = @()
-		$cleanSys | %{if(([DateTime]::Now - [DateTime]($_.TimeGenerated)).TotalMinutes -ge $MaxAgeMinutes) {$obsolete+=$_}}
+		$systems | %{if(([DateTime]::Now - [DateTime]($_.TimeGenerated)).TotalMinutes -ge $MaxAgeMinutes) {$obsolete+=$_}}
 		write-verbose ('Obsolete systems {0}' -f $obsolete.count)
 		if($obsolete.count -gt 0) {$sampleSys = ($obsolete | select -first 5 | ConvertTo-Json)}
 		else {$sampleSys=''}
@@ -324,8 +316,11 @@ try {
 		}			
 		Return-Bag -object $hash -key QNDType
 	}
-
-
+	
+	if($heartBeat -gt 0) {
+		write-verbose 'heartbeat'
+	    Create-Event -eventID $heartBeat -eventType $EVENT_TYPE_INFORMATION -level -1 -msg ('{0} running for {1}' -f $SCRIPT_NAME, $resourceURI) -parameters @($resourceURI)
+    }
 
 	If ($traceLevel -eq $TRACE_DEBUG)
 	{

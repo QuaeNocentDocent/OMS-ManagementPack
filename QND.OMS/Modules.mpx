@@ -109,54 +109,7 @@
         </ModuleImplementation>
         <OutputType>System!System.Discovery.Data</OutputType>
       </DataSourceModuleType>
-      <DataSourceModuleType ID="QND.OMS.GenericQuery.DS" Accessibility="Public" Batching="false">
-        <Configuration>
-          <xsd:element name="IntervalSeconds" type="xsd:int" />
-          <xsd:element name="SyncTime" type="xsd:string" />
-          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
-          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
-          <xsd:element name="TenantADName" type="xsd:string" />
-          <xsd:element name="SubscriptionId" type="xsd:string" />
-          <xsd:element name="Workspace" type="xsd:string" />
-          <xsd:element name="ResourceGroup" type="xsd:string" />
-          <xsd:element name="AADUserName" type="xsd:string" />
-          <xsd:element name="AADPassword" type="xsd:string" />
-          <xsd:element name="Query" type="xsd:string" />          
-        </Configuration>
-        <OverrideableParameters>
-          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
-          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
-        </OverrideableParameters>
-        <ModuleImplementation>
-          <Composite>
-            <MemberModules>
-              <DataSource ID="Scheduler" TypeID="System!System.SimpleScheduler">
-                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
-                <SyncTime>$Config/SyncTime$</SyncTime>
-              </DataSource>
-              <ProbeAction ID="Probe" TypeID="QND.OMS.GenericQuery.PT">
-                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
-                <TraceLevel>$Config/TraceLevel$</TraceLevel>
-                <TenantADName>$Config/TenantADName$</TenantADName>
-                <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
-                <Workspace>$Config/Workspace$</Workspace>
-                <ResourceGroup>$Config/ResourceGroup$</ResourceGroup>
-                <AADUserName>$Config/AADUserName$</AADUserName>
-                <AADPassword>$Config/AADPassword$</AADPassword>
-                <Query>$Config/Query$</Query>
-              </ProbeAction>
-            </MemberModules>
-            <Composition>
-              <Node ID ="Probe">
-                <Node ID="Scheduler"></Node>
-              </Node>
-            </Composition>
-          </Composite>
-        </ModuleImplementation>
-        <OutputType>System!System.PropertyBagData</OutputType>
-      </DataSourceModuleType>
+
       <DataSourceModuleType ID="QND.OMS.ManagedSystemLastData.DS" Accessibility="Public" Batching="false">
         <Configuration>
           <xsd:element name="IntervalSeconds" type="xsd:int" />
@@ -246,6 +199,7 @@
           <xsd:element name="LookbackHours" type="xsd:int" />
           <xsd:element name="AllInstances" type="xsd:int" />
           <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="Heartbeat" type="xsd:int" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
@@ -279,6 +233,7 @@
                 <LookbackHours>$Config/LookbackHours$</LookbackHours>
                 <AllInstances>$Config/AllInstances$</AllInstances>
                 <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>
+                <Heartbeat>$Config/Heartbeat$</Heartbeat>
               </ProbeAction>
             </MemberModules>
             <Composition>
@@ -467,7 +422,7 @@
                         </ValueExpression>
                         <Operator>Equal</Operator>
                         <ValueExpression>
-                          <Value Type="String">OMS Discovery</Value>
+                          <Value Type="String">QND Discovery</Value>
                         </ValueExpression>
                       </SimpleExpression>
                     </Expression>
@@ -478,7 +433,7 @@
                         </ValueExpression>
                         <Operator>Equal</Operator>
                         <ValueExpression>
-                          <Value Type="String">AlertRule</Value>
+                          <Value Type="String">AlertRule $Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Value>
                         </ValueExpression>
                       </SimpleExpression>
                     </Expression>
@@ -565,82 +520,99 @@
           </Composite>
         </ModuleImplementation>
         <OutputType>System!System.Discovery.Data</OutputType>
-      </DataSourceModuleType>      
-      <ProbeActionModuleType ID="QND.OMS.GenericQuery.PT" Accessibility="Public" Batching="false">
+      </DataSourceModuleType>
+
+      <DataSourceModuleType ID="QND.OMS.Workspace.OMSAPIDiscovery.DS" Accessibility="Public" Batching="true">
         <Configuration>
-          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
-          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
-          <xsd:element name="TenantADName" type="xsd:string" />
-          <xsd:element name="SubscriptionId" type="xsd:string" />
-          <xsd:element name="Workspace" type="xsd:string" />
-          <xsd:element name="ResourceGroup" type="xsd:string" />
-          <xsd:element name="AADUserName" type="xsd:string" />
-          <xsd:element name="AADPassword" type="xsd:string" />
-          <xsd:element name="Query" type="xsd:string" />
+          <xsd:element name="OMSAPIVersion" type="xsd:string" />
+          <xsd:element name="EventID" type="xsd:int" />
+          <xsd:element name="EventPublisher" type="xsd:string" />
+          <xsd:element name="EventParam" type="xsd:string" />
         </Configuration>
-        <OverrideableParameters>
-          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
-          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
-        </OverrideableParameters>
         <ModuleImplementation>
           <Composite>
             <MemberModules>
-              <ProbeAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
-                <ScriptName>Get-OMSManagedSystemsData.ps1</ScriptName>
-                <ScriptBody>
-                  $IncludeFileContent/Scripts/Get-OMSManagedSystemsData.ps1$
-                </ScriptBody>
-                <Parameters>
-                  <Parameter>
-                    <Name>TraceLevel</Name>
-                    <Value>$Config/TraceLevel$</Value>
-                  </Parameter>
-                    <Parameter>
-                      <Name>TenantADName</Name>
-                      <Value>$Config/TenantADName$</Value>
-                    </Parameter>
-                    <Parameter>
-                      <Name>Subscription</Name>
-                      <Value>$Config/SubscriptionId$</Value>
-                    </Parameter>
-                    <Parameter>
-                      <Name>Workspace</Name>
-                      <Value>$Config/Workspace$</Value>
-                    </Parameter>
-                    <Parameter>
-                      <Name>ResourceGroup</Name>
-                      <Value>$Config/ResourceGroup$</Value>
-                    </Parameter>
-                    <Parameter>
-                      <Name>Username</Name>
-                      <Value>$Config/AADUserName$</Value>
-                    </Parameter>
-                    <Parameter>
-                      <Name>Password</Name>
-                      <Value>$Config/AADPassword$</Value>
-                    </Parameter>
-                    <Parameter>
-                      <Name>Query</Name>
-                      <Value>$Config/Query$</Value>
-                    </Parameter>
-                    <Parameter>
-                      <Name>ProxyUrl</Name>
-                      <Value></Value>
-                    </Parameter>
-                </Parameters>
-                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
-                <StrictErrorHandling>false</StrictErrorHandling>
-                <!-- true only for Tasks -->
-              </ProbeAction>
+              <DataSource ID="Trigger" TypeID="Windows!Microsoft.Windows.EventProvider">
+                <ComputerName></ComputerName>
+                <LogName>Operations Manager</LogName>
+                <AllowProxying>false</AllowProxying>
+                <Expression>
+                  <And>
+                    <Expression>
+                      <RegExExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                        </ValueExpression>
+                        <Operator>MatchesRegularExpression</Operator>
+                        <Pattern>$Config/EventID$</Pattern>
+                      </RegExExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="Integer">EventLevel</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="Integer">4</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="String">PublisherName</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="String">$Config/EventPublisher$</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="String">$Config/EventParam$</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                  </And>
+                </Expression>
+              </DataSource>
+              <ConditionDetection ID="Mapper" TypeID="System!System.Discovery.ClassSnapshotDataMapper">
+                <ClassId>$MPElement[Name='QND.OMS.Workspace']$</ClassId>
+                <InstanceSettings>
+                  <Settings>
+                    <Setting>
+                      <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Name>
+                      <Value>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="QNDA!QND.Azure.GenericService"]/ServiceId$</Name>
+                      <Value>$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="QND.OMS.Workspace"]/OMSAPIVersion$</Name>
+                      <Value>$Config/OMSAPIVersion$</Value>
+                    </Setting>
+                  </Settings>
+                </InstanceSettings>
+              </ConditionDetection>
             </MemberModules>
             <Composition>
-              <Node ID="POSH" />
+              <Node ID="Mapper">
+                  <Node ID="Trigger" />
+              </Node>
             </Composition>
           </Composite>
         </ModuleImplementation>
-        <OutputType>System!System.PropertyBagData</OutputType>
-        <InputType>System!System.BaseData</InputType>
-      </ProbeActionModuleType>                
+        <OutputType>System!System.Discovery.Data</OutputType>        
+      </DataSourceModuleType>
+    
       <ProbeActionModuleType ID="QND.OMS.ManagedSystemLastData.PT" Accessibility="Public" Batching="false">
         <Configuration>
           <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
@@ -769,6 +741,7 @@
           <xsd:element name="LookbackHours" type="xsd:int" />
           <xsd:element name="AllInstances" type="xsd:int" />
           <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="Heartbeat" type="xsd:int" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
@@ -840,6 +813,10 @@
                   <Parameter>
                     <Name>ExcludePattern</Name>
                     <Value>$Config/ExcludePattern$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Heartbeat</Name>
+                    <Value>$Config/Heartbeat$</Value>
                   </Parameter>
                 </Parameters>
                 <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
@@ -1304,6 +1281,7 @@
           <xsd:element name="MaxAgeMinutes" type="xsd:int" />
           <xsd:element name="LookbackHours" type="xsd:int" />
           <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="Heartbeat" type="xsd:int" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
@@ -1336,6 +1314,7 @@
               <LookbackHours>$Config/LookbackHours$</LookbackHours>
               <AllInstances>1</AllInstances>
               <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>
+              <Heartbeat>$Config/Heartbeat$</Heartbeat>
             </DataSource>
             <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
               <Expression>
@@ -1473,6 +1452,7 @@
           <xsd:element name="MaxAgeMinutes" type="xsd:int" />
           <xsd:element name="LookbackHours" type="xsd:int" />
           <xsd:element name="ExcludePattern" type="xsd:string" minOccurs="0"/>
+          <xsd:element name="Heartbeat" type="xsd:int" />          
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
@@ -1504,6 +1484,7 @@
               <LookbackHours>$Config/LookbackHours$</LookbackHours>
               <AllInstances>0</AllInstances>
               <ExcludePattern>$Config/ExcludePattern$</ExcludePattern>
+              <Heartbeat>$Config/Heartbeat$</Heartbeat>
             </DataSource>
             <ConditionDetection ID="DataFilter" TypeID="System!System.ExpressionFilter">
               <Expression>

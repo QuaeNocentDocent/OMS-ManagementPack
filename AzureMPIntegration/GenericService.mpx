@@ -10,8 +10,24 @@
         <ClassType ID="QND.OMS.GenericService" Base="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
           <Property ID="ApiVersion" Key="false" Type="string" />        
         </ClassType>
-      
+        <ClassType ID="QND.Azure.GenericService" Base="System!System.LogicalEntity" Accessibility="Public" Abstract="true"
+          Hosted="true" Singleton="false">
+          <Property ID="ServiceId" Type="string" AutoIncrement="false" Key="true" CaseSensitive="false" MaxLength="2083" MinLength="0" Required="false" Scale="0" />
+          <Property ID="ServiceName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="Type" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="255" MinLength="0" Required="false" Scale="0" />
+          <Property ID="Location" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="SubscriptionId" Type="string" Key="false" CaseSensitive="false" Required="false" />
+          <Property ID="ApiVersion" Key="false" Type="string" />
+          <Property ID="ResourceGroup" Type="string" Key="false" CaseSensitive="false" Required="false" />
+        </ClassType>
+        
       </ClassTypes>
+      <RelationshipTypes>
+        <RelationshipType ID="QND.Azure.Subscription.Hosts.GenericService" Accessibility="Public" Abstract="false" Base="System!System.Hosting">
+          <Source ID="Source" MinCardinality="0" MaxCardinality="2147483647" Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription" />
+          <Target ID="Target" MinCardinality="0" MaxCardinality="2147483647" Type="QND.Azure.GenericService" />
+        </RelationshipType>
+      </RelationshipTypes>      
     </EntityTypes>
   </TypeDefinitions>
   <LanguagePacks>
@@ -29,13 +45,43 @@
           <Description></Description>
         </DisplayString>
 
-        <!-- Uncomment the below section if you need to add a user friendly string for each property. -->
-        <!--
-        <DisplayString ElementID="QND.AzureMPIntegration.QND" SubElementID="Property1">
-          <Name>Property1 Property</Name>
+        <DisplayString ElementID="QND.Azure.GenericService">
+          <Name>QND - Azure Generic Service</Name>
           <Description></Description>
         </DisplayString>
-        -->
+        <DisplayString ElementID="QND.Azure.GenericService" SubElementID="ServiceId">
+          <Name>ID</Name>
+          <Description></Description>
+        </DisplayString>
+
+        <DisplayString ElementID="QND.Azure.GenericService" SubElementID="ServiceName">
+          <Name>Name</Name>
+          <Description></Description>
+        </DisplayString>      
+
+        <DisplayString ElementID="QND.Azure.GenericService" SubElementID="Type">
+          <Name>Type</Name>
+          <Description></Description>
+        </DisplayString>
+
+        <DisplayString ElementID="QND.Azure.GenericService" SubElementID="Location">
+          <Name>Location</Name>
+          <Description></Description>
+        </DisplayString>
+
+        <DisplayString ElementID="QND.Azure.GenericService" SubElementID="SubscriptionId">
+          <Name>Subscription Id</Name>
+          <Description></Description>
+        </DisplayString>
+
+        <DisplayString ElementID="QND.Azure.GenericService" SubElementID="ApiVersion">
+          <Name>ARM API Version</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.Azure.GenericService" SubElementID="ResourceGroup">
+          <Name>Resource Group</Name>
+          <Description></Description>
+        </DisplayString>
       </DisplayStrings>
     </LanguagePack>
   </LanguagePacks>

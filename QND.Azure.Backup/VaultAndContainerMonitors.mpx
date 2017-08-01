@@ -1,17 +1,6 @@
 ﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Monitoring>
     <Monitors>
-      <!-- missing rollup for Execution and Age under Availability, direct connection for runtime-->
-      <!-- <AggregateMonitor ID="QND.OMS.Backup.Vault.ContainerAvailability.AggMonitor" Accessibility="Public" Enabled="true" 
-                        ParentMonitorID="Health!System.Health.AvailabilityState" Priority="Normal" Remotable="true" Target="QND.OMS.Backup.Vault">
-        <Category>AvailabilityHealth</Category>
-        <Algorithm>WorstOf</Algorithm>
-      </AggregateMonitor> -->
-      <AggregateMonitor ID="QND.OMS.Recovery.Container.ProtectedItemAvailability.AggMonitor" Accessibility="Public" Enabled="true" 
-                        ParentMonitorID="Health!System.Health.AvailabilityState" Priority="Normal" Remotable="true" Target="QND.OMS.Recovery.Vault.Container">
-        <Category>AvailabilityHealth</Category>
-        <Algorithm>WorstOf</Algorithm>
-      </AggregateMonitor>
 
       <UnitMonitor ID="QND.OMS.Recovery.Vault.Connectivity.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Recovery.Vault"
     ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows!Microsoft.Windows.MissingEventLogSingleEventLog2StateMonitorType" ConfirmDelivery="false">
@@ -51,7 +40,7 @@
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="String">Progel Script</Value>
+                    <Value Type="String">QND Script</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -71,7 +60,7 @@
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+                    <Value Type="String">$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -99,7 +88,7 @@
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="String">Progel Script</Value>
+                    <Value Type="String">QND Script</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -119,7 +108,7 @@
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+                    <Value Type="String">$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -142,7 +131,7 @@
         </Configuration>
       </UnitMonitor>
       
-       <DependencyMonitor ID="QND.OMS.Recovery.VaultToContainerAvailability.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Recovery.Container.ProtectedItemAvailability.AggMonitor"
+       <DependencyMonitor ID="QND.OMS.Recovery.VaultToContainerAvailability.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="Health!System.Health.AvailabilityState"
           ParentMonitorID="Health!System.Health.AvailabilityState" Priority="Normal" RelationshipType="QND.OMS.Recovery.VaultContainsContainer"
           Remotable="true" Target="QND.OMS.Recovery.Vault">
         <Category>AvailabilityHealth</Category>
@@ -152,8 +141,8 @@
         <MemberUnAvailable>Warning</MemberUnAvailable>
       </DependencyMonitor>
       
-      <DependencyMonitor ID="QND.OMS.Recovery.ContainerToItemLastJobStatus.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Recovery.Item.LastJobStatus.Monitor"
-          ParentMonitorID="QND.OMS.Recovery.Container.ProtectedItemAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Recovery.ContainerContainsItem"
+      <DependencyMonitor ID="QND.OMS.Recovery.ContainerToItemAvailability.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="Health!System.Health.AvailabilityState"
+          ParentMonitorID="Health!System.Health.AvailabilityState" Priority="Normal" RelationshipType="QND.OMS.Recovery.ContainerContainsItem"
           Remotable="true" Target="QND.OMS.Recovery.Vault.Container">
         <Category>AvailabilityHealth</Category>
         <Algorithm>Percentage</Algorithm>
@@ -161,24 +150,7 @@
         <MemberInMaintenance>Success</MemberInMaintenance>
         <MemberUnAvailable>Warning</MemberUnAvailable>
       </DependencyMonitor>
-    <DependencyMonitor ID="QND.OMS.Recovery.ContainerToItemLastRecoveryPointAge.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Recovery.Item.RecoveryPointAge.Monitor"
-          ParentMonitorID="QND.OMS.Recovery.Container.ProtectedItemAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Recovery.ContainerContainsItem"
-          Remotable="true" Target="QND.OMS.Recovery.Vault.Container">
-        <Category>AvailabilityHealth</Category>
-        <Algorithm>Percentage</Algorithm>
-        <AlgorithmParameter>30</AlgorithmParameter>
-        <MemberInMaintenance>Success</MemberInMaintenance>
-        <MemberUnAvailable>Warning</MemberUnAvailable>
-      </DependencyMonitor>
-      <DependencyMonitor ID="QND.OMS.Recovery.ContainerToItemJobFailureRate.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.Recovery.Item.JobFailureRate.Monitor"
-            ParentMonitorID="QND.OMS.Recovery.Container.ProtectedItemAvailability.AggMonitor" Priority="Normal" RelationshipType="QND.OMS.Recovery.ContainerContainsItem"
-            Remotable="true" Target="QND.OMS.Recovery.Vault.Container">
-        <Category>AvailabilityHealth</Category>
-        <Algorithm>Percentage</Algorithm>
-        <AlgorithmParameter>30</AlgorithmParameter>
-        <MemberInMaintenance>Success</MemberInMaintenance>
-        <MemberUnAvailable>Warning</MemberUnAvailable>
-      </DependencyMonitor>
+      
     </Monitors>
   </Monitoring>
   <Presentation>
@@ -192,21 +164,12 @@
         <DisplayString ElementID="QND.OMS.Recovery.VaultToContainerAvailability.DepMonitor">
           <Name>Protected Items</Name>
         </DisplayString>        
-        <DisplayString ElementID="QND.OMS.Recovery.ContainerToItemLastJobStatus.DepMonitor">
-          <Name>Last Job Status</Name>
+        <DisplayString ElementID="QND.OMS.Recovery.ContainerToItemAvailability.DepMonitor">
+          <Name>Protected Item Status</Name>
         </DisplayString>        
-        <DisplayString ElementID="QND.OMS.Recovery.ContainerToItemLastRecoveryPointAge.DepMonitor">
-          <Name>Last Recovery Point Age</Name>
-        </DisplayString>
-        <DisplayString ElementID="QND.OMS.Recovery.ContainerToItemJobFailureRate.DepMonitor">
-          <Name>Jobs Failure rate</Name>
-        </DisplayString>       
         <!-- <DisplayString ElementID="QND.OMS.Backup.Vault.ContainerAvailability.AggMonitor">
           <Name>Containers</Name>
         </DisplayString> -->
-        <DisplayString ElementID="QND.OMS.Recovery.Container.ProtectedItemAvailability.AggMonitor">
-          <Name>Protected Items</Name>
-        </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Vault.Connectivity.Monitor.AlertMessage">
           <Name>QND - OMS Backup Vault is not monitored</Name>
           <Description>The backup vault is not being monitored. Ivestigate the issue immediately.</Description>

@@ -62,7 +62,7 @@ param([int]$traceLevel=2,
 
 #region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "Get-OMSRecoveryItemStatus"
+$SCRIPT_NAME	= "Get-OMSRecoveryItemStatus"
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -93,7 +93,7 @@ $EventDataType	= 2
 $PerformanceDataType = 2
 $StateDataType       = 3
 
-$EventSource = 'Progel Script'
+$EventSource = 'QND Script'
 $EventLog= 'Operations Manager'
 #endregion
 
@@ -113,7 +113,7 @@ function Log-Params
 		else {$line += ('-{0} {1} ' -f $key, $Invocation.BoundParameters[$key])}
 	}
 	$line += ('- running as {0}' -f (whoami))
-	Log-Event -eventID $EVENT_ID_START -eventType $EVENT_TYPE_INFORMATION -msg ("Starting script [{0}]. Invocation Name:{1}`n Parameters`n{2}" -f $SCRIPT_NAME, $Invocation.InvocationName, $line) -level $TRACE_INFO
+	Log-Event -eventID $START_EVENT_ID -eventType $EVENT_TYPE_INFORMATION -msg ("Starting script [{0}]. Invocation Name:{1}`n Parameters`n{2}" -f $SCRIPT_NAME, $Invocation.InvocationName, $line) -level $TRACE_INFO
 }
 
 function Create-Event
@@ -273,7 +273,7 @@ try
 	$connection = $authority.CreateAuthorizationHeader()
 }
 catch {
-	Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ("Cannot logon to AzureAD error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
+	Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_ERROR -msg ("Cannot logon to AzureAD error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
 	Throw-KeepDiscoveryInfo
 	exit 1	
 }
@@ -284,8 +284,9 @@ try {
 
 
 	$uris =@(
-		('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''AzureIaasVM'' and itemType eq ''VM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
-		('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''MAB'' and itemType eq ''FileFolder''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+		('{0}{1}/backupProtectedItems?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+		#('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''AzureIaasVM'' and itemType eq ''VM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
+		#('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''MAB'' and itemType eq ''FileFolder''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
 	)
 	$items = Get-OMSRecItems -uris $uris -connection $connection
 
@@ -341,18 +342,49 @@ properties : @{jobType=AzureIaaSVMJob; duration=02:05:37.9565506; actionsInfo=Sy
 	$uris=@(
 		('{0}{1}/backupPolicies?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
 	)
+<#
+backupManagementType : AzureWorkload
+workLoadType         : SQLDataBase
+settings             : @{timeZone=UTC; issqlcompression=False}
+subProtectionPolicy  : {@{policyType=Full; schedulePolicy=; retentionPolicy=}, @{policyType=Log; schedulePolicy=; retentionPolicy=}}
+protectedItemsCount  : 0
 
+ [DBG]>> $pol.properties.subProtectionPolicy
+
+policyType schedulePolicy                                                                                                                      retentionPolicy                                                 
+---------- --------------                                                                                                                      ---------------                                                 
+Full       @{schedulePolicyType=SimpleSchedulePolicy; scheduleRunFrequency=Daily; scheduleRunTimes=System.Object[]; scheduleWeeklyFrequency=0} @{retentionPolicyType=LongTermRetentionPolicy; dailySchedule=}  
+Log        @{schedulePolicyType=LogSchedulePolicy; scheduleFrequencyInMins=60}                                                                 @{retentionPolicyType=SimpleRetentionPolicy; retentionDuration=}
+
+ [DBG]>> $pol.properties.subProtectionPolicy[0].schedulePolicy
+
+schedulePolicyType   scheduleRunFrequency scheduleRunTimes       scheduleWeeklyFrequency
+------------------   -------------------- ----------------       -----------------------
+SimpleSchedulePolicy Daily                {2017-11-27T22:30:00Z}                       0
+
+#>
 	if($AutoMaxAgeHours -eq 0) {
 		$policySLA=@{}
 		$policies = Get-OMSRecItems -uris $uris -connection $connection
 		foreach($pol in $policies) {
-			switch ($pol.properties.schedulePolicy.scheduleRunFrequency) 
+			switch($pol.properties.backupManagementType) {
+				'AzureWorkload' {
+					#'let's take the Full policy for SQLDB
+					$fullPolicy= $pol.properties.subProtectionPolicy | where {$_.policyType -ieq 'Full'}
+					if ($fullPOlicy) {
+						$scheduleFreq=$fullPOlicy.schedulePolicy.scheduleRunFrequency
+					}
+					else {$scheduleFreq='Daily'}
+				}
+				'AzureIaasVM' {$scheduleFreq=$pol.properties.schedulePolicy.scheduleRunFrequency}
+			}
+			switch ($scheduleFreq) 
 			{
 				'Daily' {$slaHours=24*(1+$Tolerance)}
 				'Weekly' {$slaHours=(24*7)*(1+$Tolerance)}
 				default {
 					$slaHours=24*(1+$Tolerance)
-					Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unknown schedule policy {0}' -f $pol.properties.schedulePolicy.scheduleRunFrequency) $TRACE_WARNING	
+					Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unknown schedule policy {0}' -f (convertto-json $pol.properties)) $TRACE_WARNING	
 				}
 			}
 			$policySLA.Add($pol.name,$slaHours)
@@ -374,18 +406,26 @@ scheduleRunFrequency : Daily
 scheduleRunTimes     : {2016-02-24T16:30:00} 
 #>
 
-			foreach($item in $items) {      
-			try {
-				Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
-					-msg ('Processing {0}' `
-						-f $item.Name) `
-					-level $TRACE_VERBOSE   
+	foreach($item in $items) {      
+		
+		try {
+			Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
+				-msg ('Processing {0} of Type {1}' `
+					-f $item.Name, $item.properties.backupManagementType.ToString()) `
+				-level $TRACE_VERBOSE   
 
-				$lastRecPointDate='2015-01-01'
-				if($item.properties.lastRecoveryPoint) {$lastRecPointDate = $item.properties.lastRecoveryPoint}
-				$lastRecoveryPointAgeHours = ((Get-Date) - [datetime]$lastRecPointDate).TotalHours
+			$lastRecPointDate='2015-01-01'
+			if($item.properties.lastRecoveryPoint) {$lastRecPointDate = $item.properties.lastRecoveryPoint}
+			$lastRecoveryPointAgeHours = ((Get-Date) - [datetime]$lastRecPointDate).TotalHours
 
-				#getting jobs
+			#getting jobs only for workloads with a policy defined
+			$itemJobs=$null
+			$lastJob=$null
+			$selectedJobs=$null
+			$lastjobDurationHours=-1
+			$lastJobSizeGB=-1
+			$lastJobStatus='Success'
+			if (! [String]::IsNullOrEmpty($item.properties.policyId)) {
 				if ($LastNJobs -gt 1) {
 					$itemJobs=@($jobs | where {$_.properties.entityFriendlyName -ieq $item.properties.friendlyName})
 					$lastJob = $itemjobs | where {$_.properties.status -ieq 'Completed'} | Select-Object -First 1
@@ -402,88 +442,98 @@ scheduleRunTimes     : {2016-02-24T16:30:00}
 				#get last job stats
 				$lastjobDurationHours=-1
 				$lastJobSizeGB=-1
-				$lastJobStatus='n.a.'
+				$lastJobStatus='Success'
 				if($lastJobDetails) {
 					if ($lastJobDetails.properties) {
 						try {
-						$lastJobStatus = $lastJobDetails.properties.status
-						$lastjobDurationHours = (([datetime]$lastJobDetails.properties.duration).TimeOfDay).TotalHours
-						$lastJobSizeGB = ([int]($lastJobDetails.properties.extendedInfo.propertyBag.'Backup Size').Replace(' MB',''))/1024
+							$lastJobStatus = $lastJobDetails.properties.status
+							$lastjobDurationHours = (([datetime]$lastJobDetails.properties.duration).TimeOfDay).TotalHours
+							$lastJobSizeGB = ([int]($lastJobDetails.properties.extendedInfo.propertyBag.'Backup Size').Replace(' MB',''))/1024
 						}
 						catch {
 							Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Issue getting last job details for {0} - {1}' -f $item.name, $uri) $TRACE_WARNING	
 						}
 					}
 				}
-				#if MaxAAgeHours==0 then let's go dynaminc and try to infer the SLA from the policy
-				$ageError='False'
-				switch ($item.properties.protectedItemType)
-				{
-					'Microsoft.Compute/virtualMachines' {$ageMode='Auto'}
-					'Microsoft.ClassicCompute/virtualMachines' { $ageMode='Auto'}	
-					'MabFileFolderProtectedItem' { $ageMode='Fixed' }
-					default { 
-						$ageMode='Fixed'
-						Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unrecognized Item Type {0}' -f $item.properties.protectedItemType) $TRACE_WARNING	
-					}
-				}
-					
-				if($ageMode -eq 'Auto') {
-					$specificAge=$AutoMaxAgeHours
-					switch ($AutoMaxAgeHours) {
-						0 {
-							if ($policySLA.ContainsKey($item.properties.policyName)) {
-								$specificAge=$policySLA[$item.properties.policyName]
-								$ageError=($lastRecoveryPointAgeHours -gt $specificAge).ToString()
-							}
-							break;
-						}
-						-1 {$ageError='False'; break;}
-						default {$ageError=($lastRecoveryPointAgeHours -gt $AutoMaxAgeHours).ToString()}
-					}
-				}
-				else {
-						switch ($FixedMaxAgeHours) {
-						-1 {$ageError='False'; break;}
-						default {$ageError=($lastRecoveryPointAgeHours -gt ($FixedMaxAgeHours*(1+$Tolerance))).ToString()}
-						}
-				}
-				$bag = $g_api.CreatePropertyBag()
-				$bag.AddValue('ItemId', $item.Id)
-				#return calculated status and input parameters
-				$execError=($failures -gt $MaxFailures).ToString()
-
-				$bag.AddValue('JobsReturned', $itemJobs.Count)
-				$bag.AddValue('JobsSelected', $selectedJobs.Count)
-				$bag.AddValue('Failures', $failures)
-				$bag.AddValue('LastJobDurationHours', $lastjobDurationHours)
-				$bag.AddValue('LastJobSizeGB', $lastJobSizeGB)
-				$bag.AddValue('LastJobStatus', $lastJobStatus)
-				$bag.AddValue('LastRecoveryPointDate', $lastRecPointDate)
-				$bag.AddValue('LastRecoveryPointAge', $lastRecoveryPointAgeHours)
-
-				$bag.AddValue('ExecError', $execError)
-				$bag.AddValue('AgeError', $ageError)
-
-				$bag.AddValue('MaxFailures', $MaxFailures)
-				$bag.AddValue('MaxAgeHours', $specificAge)
-
-
-				if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
-				$bag
-
-				Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
-					-msg ('{0} - retunred jobs {1} selected jobs {2} failures {3} last job status {4} last job duration {5} last recovery point {6} last recovery point age {7}' `
-						-f $item.Id, $itemJobs.Count, $selectedJobs.Count, $failures, $lastJobStatus, $lastjobDurationHours, $lastRecPointDate, $lastRecoveryPointAgeHours) `
-					-level $TRACE_VERBOSE              
-				}
-			catch {
-				Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Error getting stats for item {0} - {1}' -f $Item.Name, $Error[0]) $TRACE_WARNING	
-				write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
-				Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
-				continue;
 			}
+			#if MaxAAgeHours==0 then let's go dynaminc and try to infer the SLA from the policy
+			$ageError='False'
+			switch ($item.properties.protectedItemType)
+			{
+				'Microsoft.Compute/virtualMachines' {$ageMode='Auto'}
+				'Microsoft.ClassicCompute/virtualMachines' { $ageMode='Auto'}	
+				'MabFileFolderProtectedItem' { $ageMode='Fixed' }
+				'DPMProtectedItem' {$ageMode='Fixed';}
+				default { 
+					if ([String]::IsNullOrEmpty($item.properties.policyName)) {$ageMode='Fixed'} else {$ageMode='Auto'}
+					Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unrecognized Item Type {0}' -f $item.properties.protectedItemType) $TRACE_WARNING	
+				}
+			}
+					
+			if($ageMode -eq 'Auto') {
+				$specificAge=$AutoMaxAgeHours
+				switch ($AutoMaxAgeHours) {
+					0 {
+						if ($policySLA.ContainsKey($item.properties.policyName)) {
+							$specificAge=$policySLA[$item.properties.policyName]
+							$ageError=($lastRecoveryPointAgeHours -gt $specificAge).ToString()
+						} 
+						else {
+							$specificage=-1
+							$ageError=$false
+						}
+						break;
+					}
+					-1 {$ageError='False'; break;}
+					default {$ageError=($lastRecoveryPointAgeHours -gt $AutoMaxAgeHours).ToString()}
+				}
+			}
+			else {
+					switch ($FixedMaxAgeHours) {
+					-1 {$ageError='False'; break;}
+					default {$ageError=($lastRecoveryPointAgeHours -gt ($FixedMaxAgeHours*(1+$Tolerance))).ToString()}
+					}
+			}
+			$bag = $g_api.CreatePropertyBag()
+			$bag.AddValue('ItemId', $item.Id)
+			$bag.AddValue('ProtectionState', $item.properties.protectionState)
+			if($item.properties.protectionStatus) {$bag.AddValue('ProtectionStatus', $item.properties.protectionStatus)} else {$bag.AddValue('ProtectionStatus', 'Healthy')}
+			if($item.properties.HealthStatus) {$bag.AddValue('HealthStatus', $item.properties.HealthStatus)} else {$bag.AddValue('HealthStatus', 'Passed')}
+
+			#return calculated status and input parameters
+			$execError=($failures -gt $MaxFailures).ToString()
+
+			$bag.AddValue('JobsReturned', $itemJobs.Count)
+			$bag.AddValue('JobsSelected', $selectedJobs.Count)
+			$bag.AddValue('Failures', $failures)
+			$bag.AddValue('LastJobDurationHours', $lastjobDurationHours)
+			$bag.AddValue('LastJobSizeGB', $lastJobSizeGB)
+			$bag.AddValue('LastJobStatus', $lastJobStatus)
+			$bag.AddValue('LastRecoveryPointDate', $lastRecPointDate)
+			$bag.AddValue('LastRecoveryPointAge', $lastRecoveryPointAgeHours)
+
+			$bag.AddValue('ExecError', $execError)
+			$bag.AddValue('AgeError', $ageError)
+
+			$bag.AddValue('MaxFailures', $MaxFailures)
+			$bag.AddValue('MaxAgeHours', $specificAge)
+
+
+			if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
+			$bag
+
+			Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
+				-msg ('{0} - retunred jobs {1} selected jobs {2} failures {3} last job status {4} last job duration {5} last recovery point {6} last recovery point age {7}' `
+					-f $item.Id, $itemJobs.Count, $selectedJobs.Count, $failures, $lastJobStatus, $lastjobDurationHours, $lastRecPointDate, $lastRecoveryPointAgeHours) `
+				-level $TRACE_VERBOSE              
+			}
+		catch {
+			Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Error getting stats for item {0} - {1}' -f $Item.Name, $Error[0]) $TRACE_WARNING	
+			write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+			Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+			continue;
 		}
+	}
 
 	if($heartBeat) {
     write-verbose 'heartbeat'
@@ -495,10 +545,10 @@ scheduleRunTimes     : {2016-02-24T16:30:00}
 		#it breaks in exception when run insde OpsMgr and POSH IDE	
 		$g_API.ReturnItems() 
 	}
-	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("$SCRIPT_NAME has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
-		Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ("Main got error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
+		Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_ERROR -msg ("Main got error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
 }

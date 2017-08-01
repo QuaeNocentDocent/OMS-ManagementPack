@@ -79,6 +79,7 @@ $FAILURE_EVENT_ID = 4000		#errore generico nello script
 $SUCCESS_EVENT_ID = 1101
 $START_EVENT_ID = 1102
 $STOP_EVENT_ID = 1103
+$INFO_EVENT_ID = 1104
 
 #TypedPropertyBag
 $AlertDataType = 0
@@ -86,7 +87,7 @@ $EventDataType	= 2
 $PerformanceDataType = 2
 $StateDataType       = 3
 
-$EventSource = 'Progel Script'
+$EventSource = 'QND Script'
 $EventLog= 'Operations Manager'
 #endregion
 
@@ -106,7 +107,7 @@ function Log-Params
 		else {$line += ('-{0} {1} ' -f $key, $Invocation.BoundParameters[$key])}
 	}
 	$line += ('- running as {0}' -f (whoami))
-	Log-Event -eventID $EVENT_ID_START -eventType $EVENT_TYPE_INFORMATION -msg ("Starting script [{0}]. Invocation Name:{1}`n Parameters`n{2}" -f $SCRIPT_NAME, $Invocation.InvocationName, $line) -level $TRACE_INFO
+	Log-Event -eventID $START_EVENT_ID -eventType $EVENT_TYPE_INFORMATION -msg ("Starting script [{0}]. Invocation Name:{1}`n Parameters`n{2}" -f $SCRIPT_NAME, $Invocation.InvocationName, $line) -level $TRACE_INFO
 }
 function Create-Event
   {
@@ -247,22 +248,29 @@ Function Discover-BackupProtectedItem
 		if ($obj) {
 			$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']$")	
 			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
-			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)
-			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric']/ServiceId$", $resourceURI)	
+			$objInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/ServiceId$", $resourceURI)	
 			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.Container']/Id$", $containerId)		
 
 			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/Id$", $obj.id)	
 			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/Name$", $obj.name)	
-			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/ItemType$", ('{0}-{1}-{2}' -f $obj.properties.protectedItemType,$obj.properties.backupManagementType,$obj.properties.workloadType))	
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/ManagementType$", $obj.properties.backupManagementType)	
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/WorkloadType$", $obj.properties.workloadType)	
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/ItemType$", $obj.properties.protectedItemType)	
 			$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.properties.friendlyName)	
 
 #Write-Host $obj.properties
 			if($obj.properties.policyId) {
+				$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/PolicyId$", $obj.properties.policyId)
 				try {
-					$policyName=$obj.properties.policyId.Split(';')[1]
+					#$policyName=$obj.properties.policyId.Split(';')[1]
+					$policyName=$obj.properties.PolicyName
 					$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/PolicyName$", $policyName)	
 				}
 				catch {}
+			}
+			else {
+				$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/PolicyId$", '')
+				$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/PolicyName$", '')	
 			}
 			$discoveryData.AddInstance($objInstance)	
 		}
@@ -303,7 +311,7 @@ try
 	$connection = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
 }
 catch {
-	Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ("Cannot logon to AzureAD error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
+	Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_ERROR -msg ("Cannot logon to AzureAD error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
 	Throw-KeepDiscoveryInfo
 	exit 1	
 }
@@ -315,8 +323,9 @@ try {
 	#don't have an API for optimized discovery so we must retrieve evrything and then filter epr container
 	#I chose this way so that the disocvery payload doen't become huge
 	$uris =@(
-		('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''AzureIaasVM'' and itemType eq ''VM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
-		('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''MAB'' and itemType eq ''FileFolder''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+		('{0}{1}/backupProtectedItems?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+		#('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''AzureIaasVM'' and itemType eq ''VM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
+		#('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''MAB'' and itemType eq ''FileFolder''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
 	)
 	Log-Event $SUCCESS_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting items") $TRACE_VERBOSE
 
@@ -328,7 +337,7 @@ try {
 			if($result.gotValue) {	
 				foreach($item in $result.Values) {
 					if($item.id -imatch $containerId) {
-						write-verbose $item.properties.friendlyName
+						Log-Event -eventType $EVENT_TYPE_INFORMATION -level $TRACE_VERBOSE -msg ('Discoverying contaioner: {0}' -f $item.properties.friendlyName) -eventID $INFO_EVENT_ID
 						Discover-BackupProtectedItem -obj $item -containerId $containerId
 					}
 				}
@@ -344,10 +353,10 @@ try {
 		$g_API.Return($discoveryData)
 	}
 	
-	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("$SCRIPT_NAME has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
-		Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ("Main got error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
+		Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_ERROR -msg ("Main got error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
 }

@@ -2,61 +2,6 @@
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">
       <KnowledgeArticles>
-        <KnowledgeArticle ElementID="QND.OMS.Backup.Size.Monitor">
-          <MamlContent>
-            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
-              <title>Summary</title>
-              <para>This monitor is disabled by default. Once enabled it checks for the dataset size on Windows Azure Backup Vault and raises an alert if it's over the configure threshold</para>
-              <para>The backup vault size it's not an isse per se, alerting is useful to proactively keeping under control the billing for the Vault</para>
-              <para>
-                For more info see <navigationLink>
-                  <linkText>GitHub Wiki</linkText>
-                  <uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Backup-Size-Monitor" />
-                </navigationLink>
-              </para>
-            </section>
-            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
-              <title>Causes</title>
-              <para>The Windows Azure Backup Agent policy is too wide in scopre, or the amount of data to be backed up has grown</para>
-            </section>
-            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
-              <title>Solution</title>
-              <para>Check the policy and set it appropriately</para>
-            </section>
-          </MamlContent>
-        </KnowledgeArticle>
-        <KnowledgeArticle ElementID="QND.OMS.Backup.Policy.Age.Monitor">
-          <MamlContent>
-            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
-              <title>Summary</title>
-              <para>This monitor checks for the age of the latest backup set and raises an alert if it is older then the configured threshold.</para>
-              <para>A dated backup set indcates some sort of issue on the backup process either on the protectd machine or on Azure Backup Vault.</para>
-              <para>
-                For more info see <navigationLink>
-                  <linkText>GitHub Wiki</linkText>
-                  <uri href="https://github.com/QuaeNocentDocent/OMS-ManagementPack/wiki/Backup-Policy-Age-Monitor" />
-                </navigationLink>
-              </para>              
-            </section>
-            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
-              <title>Causes</title>
-              <para>It is highly probable an issue with the agent you should connect to the affected machine and check for:</para>
-              <list>
-                <listItem>
-                  <para>Backup Certificate correctness. Is it expired?</para>
-                </listItem>
-                <listItem>
-                  <para>Encryption key correctness. Is the encryption key still set? It can be check via powershell: Import-Module MSOnlineBackup; Get-OBMachineSetting</para>
-                </listItem>
-              </list>
-            </section>
-            <section xmlns="http://schemas.microsoft.com/maml/2004/10">
-              <title>Solution</title>
-              <para>Check the agent status</para>
-            </section>
-          </MamlContent>
-        </KnowledgeArticle>        
-
         
         <KnowledgeArticle ElementID="QND.OMS.Recovery.Item.LastJobStatus.Monitor">
           <MamlContent>

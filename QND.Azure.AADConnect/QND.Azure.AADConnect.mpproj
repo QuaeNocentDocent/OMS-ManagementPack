@@ -1,12 +1,11 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <ProjectGuid>{d83135fa-e78f-4ef6-955d-25efe60135f8}</ProjectGuid>
-    <RootNamespace>QND.OMS.Automation</RootNamespace>
-    <Name>QND.OMS.Automation</Name>
-    <ManagementPackName>QND.OMS.Automation</ManagementPackName>
-    <Version>2.0.0.60</Version>
+    <ProjectGuid>{cd660e24-8875-4372-a0f3-0884df56546a}</ProjectGuid>
+    <RootNamespace>QND.Azure.AADConnect</RootNamespace>
+    <Name>QND.Azure.AADConnect</Name>
+    <ManagementPackName>QND.Azure.AADConnect</ManagementPackName>
+    <Version>1.0.0.0</Version>
     <MpFrameworkVersion>v7.0.2</MpFrameworkVersion>
     <MpFrameworkProfile>OM</MpFrameworkProfile>
     <ProductVersion>1.1.0.0</ProductVersion>
@@ -18,7 +17,7 @@
     <Company>Quae Nocent Docent</Company>
     <Copyright>Copyright (c) QND. All rights reserved.</Copyright>
     <DelaySigning>False</DelaySigning>
-    <AssemblyOriginatorKeyFile>..\..\..\Firma\QND1.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>C:\Local\dev\OpsMgr\Firma\QND1.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugSymbols>false</DebugSymbols>
@@ -30,25 +29,15 @@
     <AssemblyOriginatorKeyFile />
   </PropertyGroup>
   <ItemGroup>
-    <ManagementPackReference Include="Microsoft.SystemCenter.InstanceGroup.Library">
-      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.InstanceGroup.Library.mp</HintPath>
-      <Alias>MSIL</Alias>
-      <MinVersion>7.5.8501.0</MinVersion>
-    </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.SystemCenter.Library">
       <Alias>SC</Alias>
       <PackageToBundle>false</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.SystemCenter.MicrosoftAzure">
-      <HintPath>..\References\Microsoft.SystemCenter.MicrosoftAzure.mpb</HintPath>
+      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\Microsoft.SystemCenter.MicrosoftAzure.mpb</HintPath>
       <Alias>Azure</Alias>
       <MinVersion>1.3.18.0</MinVersion>
       <PackageToBundle>False</PackageToBundle>
-    </ManagementPackReference>
-    <ManagementPackReference Include="Microsoft.SystemCenter.ServiceDesigner.Library">
-      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.ServiceDesigner.Library.mp</HintPath>
-      <Alias>MSSL</Alias>
-      <MinVersion>7.0.8433.0</MinVersion>
     </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.Windows.Library">
       <Alias>Windows</Alias>
@@ -57,13 +46,8 @@
     <ManagementPackReference Include="QND.AzureMPIntegration">
       <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\QND.AzureMPIntegration.mpb</HintPath>
       <Alias>QNDA</Alias>
-      <MinVersion>2.0.0.58</MinVersion>
+      <MinVersion>2.0.0.48</MinVersion>
       <PackageToBundle>False</PackageToBundle>
-    </ManagementPackReference>
-    <ManagementPackReference Include="System.AdminItem.Library">
-      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\System.AdminItem.Library.mp</HintPath>
-      <Alias>SAL</Alias>
-      <MinVersion>7.5.8501.0</MinVersion>
     </ManagementPackReference>
     <ManagementPackReference Include="System.Health.Library">
       <Alias>Health</Alias>
@@ -77,49 +61,39 @@
       <Alias>Visualization</Alias>
       <PackageToBundle>false</PackageToBundle>
     </ManagementPackReference>
-    <ManagementPackReference Include="System.Software.Library">
-      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\System.Software.Library.mp</HintPath>
-      <Alias>SSL</Alias>
-      <MinVersion>7.5.8501.0</MinVersion>
-    </ManagementPackReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Docs" />
+    <Folder Include="Tests" />
     <Folder Include="Scripts" />
-    <Folder Include="Samples" />
-    <Folder Include="Scripts\obsolete" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Samples\ARMStatements.ps1" />
-    <EmbeddedResource Include="Samples\Get-AutomationRunbookStatusBAD.ps1" />
-    <EmbeddedResource Include="Samples\QND.Azure.Test.xml" />
-    <EmbeddedResource Include="Scripts\obsolete\Discover-AzureAutomation.ps1" />
-    <EmbeddedResource Include="Scripts\obsolete\Get-AutomationRunbookStatus.ps1" />
-    <EmbeddedResource Include="Scripts\obsolete\Get-empty.ps1" />
-    <EmbeddedResource Include="Scripts\Get-OMSRunbookStatus.ps1" />
-    <EmbeddedResource Include="Scripts\DiscoverRunbookDetails.ps1" />
+    <None Include="Tests\Test.ps1" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AccountMonitors.mpx">
+    <Compile Include="AADConnectHealth.mpx">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AutomationAccountAndRunbookClass.mpx">
-      <SubType>Code</SubType>
-    </Compile>
-    <None Include="KBArticles.mpx">
-      <SubType>Code</SubType>
-    </None>
     <Compile Include="ManagementPack.mpx">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Modules.mpx">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Presentation.mpx">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="RunbookMonitors.mpx">
-      <SubType>Code</SubType>
-    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\Get-AADConnectHealth.ps1" />
+    <EmbeddedResource Include="Scripts\Get-AADConnectHealthStatus.ps1" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="readme.md">
+      <SubType>Content</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Docs\Connect Health API - Guide.pdf">
+      <SubType>Content</SubType>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>

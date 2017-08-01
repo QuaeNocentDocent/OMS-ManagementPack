@@ -68,7 +68,7 @@
                         </ValueExpression>
                         <Operator>Equal</Operator>
                         <ValueExpression>
-                          <Value Type="String">RecoveryContainer</Value>
+                          <Value Type="String">RecoveryContainer $Config/ResourceURI$</Value>
                         </ValueExpression>
                       </SimpleExpression>
                     </Expression>
@@ -216,7 +216,7 @@
                         </ValueExpression>
                         <Operator>Equal</Operator>
                         <ValueExpression>
-                          <Value Type="String">RecoveryItem</Value>
+                          <Value Type="String">RecoveryContainer $Config/ResourceURI$</Value>
                         </ValueExpression>
                       </SimpleExpression>
                     </Expression>
@@ -890,6 +890,136 @@
         </MonitorImplementation>
       </UnitMonitorType>
 
+      <UnitMonitorType ID="QND.OMS.Recovery.ItemStatusGeneric.MT" Accessibility="Public">
+              <MonitorTypeStates>
+                <MonitorTypeState ID="Healthy"/>
+                <MonitorTypeState ID="Unhealthy"/>
+              </MonitorTypeStates>
+              <Configuration>
+
+                <xsd:element name="ItemId" type="xsd:string" />
+                <xsd:element name="IntervalSeconds" type="xsd:int" />
+                <xsd:element name="SyncTime" type="xsd:string" />
+                
+                <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+                <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+                <xsd:element name="ClientId" type="xsd:string" />
+                <xsd:element name="SubscriptionId" type="xsd:string" />
+                <xsd:element name="Proxy" type="xsd:string" />
+                <xsd:element name="AuthBaseAddress" type="xsd:string" />
+                <xsd:element name="ResourceBaseAddress" type="xsd:string" />
+                <xsd:element name="AADUserName" type="xsd:string" />
+                <xsd:element name="AADPassword" type="xsd:string" />
+                <xsd:element name="ResourceURI" type="xsd:string" />
+                <xsd:element name="APIVersion" type="xsd:string" />
+
+                <xsd:element name="LastNJobs" type="xsd:int" />
+                <xsd:element name="MaxFailures" type="xsd:int" />
+                <xsd:element name="FailureCondition" type="xsd:string" />
+                <xsd:element name="AutoMaxAgeHours" type="xsd:int" />
+                <xsd:element name="FixedMaxAgeHours" type="xsd:int" />
+                <xsd:element name="LookbackDays" type="xsd:int" />
+                <xsd:element name="Tolerance" type="xsd:double" minOccurs="0" maxOccurs="1" default="0.5"/>
+
+                <xsd:element name="Property" type="xsd:string" />
+                <xsd:element name="HealthyValue" type="xsd:string" />
+       
+              </Configuration>
+              <OverrideableParameters>
+                <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+                <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+                <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+                <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+                <OverrideableParameter ID="Tolerance" ParameterType="double" Selector="$Config/Tolerance$"/>
+                <OverrideableParameter ID="LastNJobs" ParameterType="int" Selector="$Config/LastNJobs$"/>
+                <OverrideableParameter ID="MaxFailures" ParameterType="int" Selector="$Config/MaxFailures$"/>
+                <OverrideableParameter ID="FailureCondition" ParameterType="string" Selector="$Config/FailureCondition$"/>
+                <OverrideableParameter ID="AutoMaxAgeHours" ParameterType="int" Selector="$Config/AutoMaxAgeHours$"/>
+                <OverrideableParameter ID="FixedMaxAgeHours" ParameterType="int" Selector="$Config/FixedMaxAgeHours$"/>
+                <OverrideableParameter ID="LookbackDays" ParameterType="int" Selector="$Config/LookbackDays$"/>
+              </OverrideableParameters>
+              <MonitorImplementation>
+                <MemberModules>
+                  <DataSource ID="DS" TypeID="QND.OMS.Recovery.Vault.ItemStatus.DS">
+                    <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                    <SyncTime>$Config/SyncTime$</SyncTime>
+                    <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                    <TraceLevel>$Config/TraceLevel$</TraceLevel>
+                    <ClientId>$Config/ClientId$</ClientId>
+                    <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+                    <Proxy>$Config/Proxy$</Proxy>
+                    <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+                    <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
+                    <AADUserName>$Config/AADUserName$</AADUserName>
+                    <AADPassword>$Config/AADPassword$</AADPassword>
+                    <ResourceURI>$Config/ResourceURI$</ResourceURI>
+                    <APIVersion>$Config/APIVersion$</APIVersion>
+                    <LastNJobs>$Config/LastNJobs$</LastNJobs>
+                    <MaxFailures>$Config/MaxFailures$</MaxFailures>
+                    <FailureCondition>$Config/FailureCondition$</FailureCondition>
+                    <AutoMaxAgeHours>$Config/AutoMaxAgeHours$</AutoMaxAgeHours>
+                    <FixedMaxAgeHours>$Config/FixedMaxAgeHours$</FixedMaxAgeHours>
+                    <LookbackDays>$Config/LookbackDays$</LookbackDays>
+                    <Tolerance>$Config/Tolerance$</Tolerance>
+                  </DataSource>
+                  <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+                    <Expression>
+                          <SimpleExpression>
+                            <ValueExpression>
+                              <XPathQuery Type="String">Property[@Name='ItemId']</XPathQuery>
+                            </ValueExpression>
+                            <Operator>Equal</Operator>
+                            <ValueExpression>
+                              <Value Type="String">$Config/ItemId$</Value>
+                            </ValueExpression>
+                          </SimpleExpression>
+                    </Expression>
+                  </ConditionDetection>
+                  <ConditionDetection ID="HealthyCD" TypeID="System!System.ExpressionFilter">
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="String">Property[@Name='$Config/Property$']</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="String">$Config/HealthyValue$</Value>
+                        </ValueExpression>                
+                      </SimpleExpression>
+                    </Expression>
+                  </ConditionDetection>
+                  <ConditionDetection ID="UnHealthyCD" TypeID="System!System.ExpressionFilter">
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="String">Property[@Name='$Config/Property$']</XPathQuery>
+                        </ValueExpression>
+                        <Operator>NotEqual</Operator>
+                        <ValueExpression>
+                          <Value Type="String">$Config/HealthyValue$</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                  </ConditionDetection>
+                </MemberModules>
+                <RegularDetections>
+                  <RegularDetection MonitorTypeStateID="Healthy">
+                    <Node ID="HealthyCD">
+                      <Node ID="Filter">
+                      <Node ID="DS" />
+                      </Node>
+                    </Node>
+                  </RegularDetection>
+                  <RegularDetection MonitorTypeStateID="Unhealthy">
+                    <Node ID="UnHealthyCD">
+                      <Node ID="Filter">
+                          <Node ID="DS"></Node>
+                      </Node>
+                    </Node>
+                  </RegularDetection>
+                </RegularDetections>
+              </MonitorImplementation>
+            </UnitMonitorType>      
     </MonitorTypes>
   </TypeDefinitions>
 </ManagementPackFragment>
