@@ -325,7 +325,11 @@ try {
 		Return-Bag -object $hash -key QNDType
 	}
 
-
+	$heartbeat=11
+	if($heartBeat) {
+    write-verbose 'heartbeat'
+	    Create-Event -eventID $heartBeat -eventType $EVENT_TYPE_INFORMATION -level -1 -msg ('{0} running for {1}' -f $SCRIPT_NAME, $resourceURI) -parameters @($resourceURI)
+    }
 
 	If ($traceLevel -eq $TRACE_DEBUG)
 	{

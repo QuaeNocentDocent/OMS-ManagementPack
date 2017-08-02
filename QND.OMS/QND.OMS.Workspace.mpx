@@ -171,6 +171,134 @@
           <ExcludePattern></ExcludePattern>
         </Configuration>
       </UnitMonitor>
+      <UnitMonitor ID="QND.OMS.Workspace.Connectivity.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Workspace"
+    ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows!Microsoft.Windows.MissingEventLogSingleEventLog2StateMonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Workspace.Connectivity.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="EventRaised" HealthState="Success" />
+          <OperationalState ID="UnHealthy" MonitorTypeStateID="MissingEventRaised" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <ComputerName>.</ComputerName>
+          <LogName>Operations Manager</LogName>
+          <Expression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">11</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Progel Script</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <RegExExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[1]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>MatchesWildcard</Operator>
+                  <Pattern>Get-OMSSysHeartbeat*</Pattern>
+                </RegExExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </Expression>
+          <MissingComputerName>.</MissingComputerName>
+          <MissingLogName>Operations Manager</MissingLogName>
+          <MissingExpression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">11</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">Progel Script</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <RegExExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[1]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>MatchesWildcard</Operator>
+                  <Pattern>Get-OMSSysHeartbeat*</Pattern>
+                </RegExExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </MissingExpression>
+          <Consolidator>
+            <ConsolidationProperties/>
+            <TimeControl>
+              <GenericSchedule>
+                <SimpleReccuringSchedule>
+                  <Interval Unit="Minutes">90</Interval>
+                </SimpleReccuringSchedule>
+                <ExcludeDates/>
+              </GenericSchedule>
+            </TimeControl>
+            <CountingCondition>
+              <CountMode>OnNewItemNOP_OnTimerOutputRestart</CountMode>
+            </CountingCondition>
+          </Consolidator>
+        </Configuration>
+      </UnitMonitor>
 
       <DependencyMonitor ID="QND.OMS.WorkspaceToSystem.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.ManagedSystemLastData.Monitor" ParentMonitorID="Health!System.Health.AvailabilityState" Priority="Normal"
                          RelationshipType="QND.OMS.WorkspaceContainsSystem" Remotable="true" Target="QND.OMS.Workspace">
@@ -188,6 +316,7 @@
       <StringResource ID="QND.OMS.WorkspaceLastData.Monitor.AlertMessage"/>
       <StringResource ID="QND.OMS.WorkspaceLastSensitiveData.Monitor.AlertMessage"/>      
       <StringResource ID="QND.OMS.Workspace.SysHeartbeat.Monitor.AlertMessage"/>
+      <StringResource ID="QND.OMS.Workspace.Connectivity.Monitor.AlertMessage"/>
     </StringResources>
   </Presentation>
   <LanguagePacks>
@@ -230,7 +359,14 @@
         <DisplayString ElementID="QND.OMS.Workspace.SysHeartbeat.Monitor.AlertMessage">
           <Name> QND - OMS Workspace has systems not heartbeating</Name>
           <Description>{0} systems with obsolete data. Current threshold {1} minutes. More info at {2}</Description>
-        </DisplayString>          
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace.Connectivity.Monitor.AlertMessage">
+          <Name>QND - OMS Workspace is not monitored</Name>
+          <Description>The Log Anlytics workspace is not being monitored. Ivestigate the issue immediately.</Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace.Connectivity.Monitor">
+          <Name>Connectivity</Name>
+        </DisplayString>
       </DisplayStrings>
     </LanguagePack>
   </LanguagePacks>
