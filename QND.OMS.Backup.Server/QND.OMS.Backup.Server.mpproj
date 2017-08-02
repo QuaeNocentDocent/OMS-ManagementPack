@@ -30,10 +30,10 @@
     <AssemblyOriginatorKeyFile />
   </PropertyGroup>
   <ItemGroup>
-    <ManagementPackReference Include="Microsoft.SystemCenter.DataProtectionManager.2012.Library">
-      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\Microsoft.SystemCenter.DataProtectionManager.2012.Library.mp</HintPath>
+    <ManagementPackReference Include="Microsoft.SystemCenter.DataProtectionManager.2016.Library">
+      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\Microsoft.SystemCenter.DataProtectionManager.2016.Library.mp</HintPath>
       <Alias>DPM</Alias>
-      <MinVersion>4.2.1276.0</MinVersion>
+      <MinVersion>5.0.1300.0</MinVersion>
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.SystemCenter.Library">
@@ -64,6 +64,12 @@
     <Compile Include="ManagementPack.mpx">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Scripts" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\Cheat.vbs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>
