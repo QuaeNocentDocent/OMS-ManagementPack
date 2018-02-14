@@ -1,34 +1,26 @@
-﻿#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
+﻿
+#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
 #SET ErrorLevel to 5 so show discovery info
 #https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
 #*************************************************************************
 # Script Name - 
 # Author	  -  Daniele Grandini - QND
-# Version	  - 1.0 30-04-2016
+# Version	  - 1.0 07/02/2018
 # Purpose     - 
 #               
 # Assumptions - 
 #				
 #               
 # Parameters  - TraceLevel
-#             - ComputerName
-#				- SourceId
-#				- ManagedEntityId
-# Command Line - .\test.ps1 4 "serverName" '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}' '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}'
-# If discovery must be added the followinf parameters
-#				SourceId ($ MPElement $ )
-#				ManagedEntityId ($ Target/Id $)
+#             
 #
 # Output properties
 #
 # Status
 #
 # Version History
-#	  1.0 06.08.2010 DG First Release
-#     1.5 15.02.2014 DG minor cosmetics
 #
-# (c) Copyright 2010, Progel srl, All Rights Reserved
-# Proprietary and confidential to Progel srl              
+# (c) Copyright 2018, QND, All Rights Reserved             
 #
 #*************************************************************************
 
@@ -39,15 +31,12 @@ param([int]$traceLevel=2,
 [Parameter (Mandatory=$true)] [string]$ManagedEntityId,
 [Parameter (Mandatory=$true)][string]$clientId,
 [Parameter (Mandatory=$true)][string]$SubscriptionId,
-[Parameter (Mandatory=$true)][string]$ResourceGroupId,
 [string]$Proxy,
 [Parameter (Mandatory=$true)][string]$AuthBaseAddress,
-[Parameter (Mandatory=$true)][string]$ResourceBaseAddress,
+[Parameter (Mandatory=$true)][string]$ResourceBaseAddress='https://api.aadconnecthealth.azure.com/v1/connectHealth',
 [Parameter (Mandatory=$true)][string]$ADUserName,
 [Parameter (Mandatory=$true)][string]$ADPassword,
-[Parameter (Mandatory=$true)][string]$resourceURI,
-[Parameter (Mandatory=$true)][string]$apiVersion,
-[Parameter (Mandatory=$true)][string]$containerId
+[Parameter (Mandatory=$true)][string]$resourceURI
 )
  
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
@@ -55,7 +44,7 @@ param([int]$traceLevel=2,
 
 #region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "Get-OMSRecoveryItems"
+$SCRIPT_NAME			= "QND.Azure.Get-AADConnectHealth"
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -79,6 +68,7 @@ $FAILURE_EVENT_ID = 4000		#errore generico nello script
 $SUCCESS_EVENT_ID = 1101
 $START_EVENT_ID = 1102
 $STOP_EVENT_ID = 1103
+$INFO_EVENT_ID = 1104
 
 #TypedPropertyBag
 $AlertDataType = 0
@@ -108,6 +98,7 @@ function Log-Params
 	$line += ('- running as {0}' -f (whoami))
 	Log-Event -eventID $START_EVENT_ID -eventType $EVENT_TYPE_INFORMATION -msg ("Starting script [{0}]. Invocation Name:{1}`n Parameters`n{2}" -f $SCRIPT_NAME, $Invocation.InvocationName, $line) -level $TRACE_INFO
 }
+
 function Create-Event
   {
     param(
@@ -140,11 +131,12 @@ function Create-Event
 
 function Log-Event
 {
-	param($eventID, $eventType, $msg, $level)
+	param($eventID, $eventType, $msg, $level, [switch] $includeName=$true)
 	
 	Write-Verbose ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
 	if($level -le $P_TraceLevel)
 	{
+		if ($includeName) {$msg='[{0}] {1}' -f $SCRIPT_NAME, $msg.toString()}
 		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
         Create-Event -eventID $eventID -eventType $eventType -msg ($msg + "`n" + "Version :" + $SCRIPT_VERSION) -parameters @($SCRIPT_NAME,$SCRIPT_VERSION)
 		#$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
@@ -158,7 +150,7 @@ Function Throw-EmptyDiscovery
 	param($SourceId, $ManagedEntityId)
 
 	$oDiscoveryData = $g_API.CreateDiscoveryData(0, $SourceId, $ManagedEntityId)
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
+	Log-Event $EVENT_ID_FAILURE $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
 	$oDiscoveryData
 	If($traceLevel -eq $TRACE_DEBUG)
 	{
@@ -173,7 +165,7 @@ param($SourceId, $ManagedEntityId)
 	$oDiscoveryData = $g_API.CreateDiscoveryData(0,$SourceId,$ManagedEntityId)
 	#Instead of Snapshot discovery, submit Incremental discovery data
 	$oDiscoveryData.IsSnapshot = $false
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
+	Log-Event $EVENT_ID_FAILURE $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
 	$oDiscoveryData    
 	If($traceLevel -eq $TRACE_DEBUG)
 	{
@@ -184,6 +176,40 @@ param($SourceId, $ManagedEntityId)
 
 #endregion
 
+#region Property Bags
+Function Return-Bag
+{
+    param($object, $key)
+    try {    
+		$bag = $g_api.CreatePropertyBag()
+        foreach($property in $object.Keys) {
+		    $bag.AddValue($property, $object[$property])
+        }
+        $bag
+
+		if($traceLevel -eq $TRACE_DEBUG) {
+			$g_API.AddItem($bag)
+			$object.Keys | %{write-verbose ('{0}={1}' -f $_,$object[$_]) -Verbose}
+		}
+		
+
+		$bag=''
+		$object.Keys | %{$bag+=('{0}={1}///' -f $_,$object[$_])}
+		Log-Event -eventID $EVENT_ID_DETAILS -eventType $EVENT_TYPE_INFORMATION `
+			-msg ('Returned status bag: {0} ' `
+				-f $bag) `
+			-level $TRACE_VERBOSE 	
+    }
+    catch {
+		Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_WARNING `
+			-msg ('{0} - error creating status bag {1}' `
+				-f $object[$key]), $_.Message `
+			-level $TRACE_VERBOSE 
+    }
+}
+#endregion
+
+#region common utilities
 Function Import-ResourceModule
 {
 	param($moduleName, $ArgumentList=$null)
@@ -201,82 +227,77 @@ Function Import-ResourceModule
 	else {Throw [System.DllNotFoundException] ('{0} not found' -f $module)}
 }
 
-
-<#
-
-ContainerId: /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/Windows;pre
-             -subca.pre.lab
-# MAB + FileFolder
-
-id         : /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/Windows;PRE
-             -SUBCA.PRE.LAB/protectedItems/FileFolder;C
-name       : C
-type       : Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems
-properties : @{friendlyName=C:\; computerName=PRE-SUBCA.PRE.LAB; protectedItemType=MabFileFolderProtectedItem; backupManagementType=MAB; workloadType=FileFolder; containerName=PRE-SUBCA.PRE.LAB; 
-             lastRecoveryPoint=2016-05-12T09:16:43.0837478Z} 
-#>
-
-<#
-
-ContainerId: /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/IaasVMConta
-             iner;iaasvmcontainer;pre-infrastructure;pre-adsync
-
-AzureIaasVM + VM
-id         : /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/IaasVMConta
-             iner;iaasvmcontainer;pre-infrastructure;pre-adsync/protectedItems/VM;iaasvmcontainer;pre-infrastructure;pre-adsync
-name       : iaasvmcontainer;pre-infrastructure;pre-adsync
-type       : Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems
-properties : @{friendlyName=pre-adsync; virtualMachineId=/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/Pre-Infrastructure/providers/Microsoft.ClassicCompute/virtualMachines/pre-adsync; 
-             protectionStatus=Healthy; protectionState=IRPending; lastBackupStatus=; lastBackupTime=2001-01-01T00:00:00Z; protectedItemType=Microsoft.ClassicCompute/virtualMachines; 
-             backupManagementType=AzureIaasVM; workloadType=VM; containerName=iaasvmcontainer;pre-infrastructure;pre-adsync; 
-             policyId=/Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupPolicies/VMLab1; policyName=VMLab1}
- 
-#>
+#endregion
 
 
-
-Function Discover-BackupProtectedItem
+Function Discover-AADConnect
 {
-	param($obj, $containerId)
+	param($obj)
 
-	#$obj
-    try {
-
-
-
-		if ($obj) {
-			$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']$")	
-			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
-			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)
-			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric']/ServiceId$", $resourceURI)	
-			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.Container']/Id$", $containerId)		
-
-			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/Id$", $obj.id)	
-			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/Name$", $obj.name)	
-			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/ItemType$", ('{0}-{1}-{2}' -f $obj.properties.protectedItemType,$obj.properties.backupManagementType,$obj.properties.workloadType))	
-			$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.properties.friendlyName)	
-
-#Write-Host $obj.properties
-			if($obj.properties.policyId) {
-				try {
-					$policyName=$obj.properties.policyId.Split(';')[1]
-					$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/PolicyName$", $policyName)	
-				}
-				catch {}
-			}
-			$discoveryData.AddInstance($objInstance)	
-		}
-    }
-    catch {
-        Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Error disocvering backup Item {2} in vault {0}\{1} - {3}' -f $resourceURI, $containerId, $obj.Id, $Error[0]) $TRACE_WARNING	
+	<#
+		@odata.context              : https://s1.adhybridhealth.azure.com/v1/$metadata#connectHealth/$entity
+		id                          : 2a8ed329-87d9-41d8-8478-a303f3e1188e
+		displayName                 : Progel Spa
+		aadLicense                  : Premium
+		initialDomain               : Progel.onmicrosoft.com
+		countryLetterCode           : IT
+		consentedToMicrosoftSupport : False
+		globalAdminsEmail           : {}
+	#>
+	try {
+		if ([String]::IsNullOrEmpty($obj.id)) {return;}
+		Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ("Discoverying $($obj.Id)") $TRACE_VERBOSE
+		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.Azure.AADConnectHealth']$")	
+		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
+		$objInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/ServiceId$", $obj.id)				
+		$objInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/ServiceName$", $obj.displayName)				
+		$objInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/Type$", "AADConnectHealth")				
+		$objInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/Location$", "")				
+		$objInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/SubscriptionId$", $SubscriptionId)				
+		$objInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/ApiVersion$", "")				
+		$objInstance.AddProperty("$MPElement[Name='QND.Azure.AADConnectHealth']/Id$", $obj.id)	
+		$objInstance.AddProperty("$MPElement[Name='QND.Azure.AADConnectHealth']/License$", $obj.aadLicense)	
+		$objInstance.AddProperty("$MPElement[Name='QND.Azure.AADConnectHealth']/Domain$", $obj.initialDomain)	
+		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.displayName)	
+		$discoveryData.AddInstance($objInstance)	
+	}
+	catch {
+	    Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_WARNING -msg ('Error disocvering AAD Connect Health {1} for {0} - {2}' -f $resourceURI, $obj.Id, $Error[0]) -level $TRACE_WARNING	
 	    write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	    Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
-    }
-
+	}
 }
 
+Function Discover-AADConnectSvcs
+{
+	param($obj, $vaultId, $type)
+
+	try {
+		if ([String]::IsNullOrEmpty($obj.id)) {return;}
+		Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ("Discoverying $($obj.Id)") $TRACE_VERBOSE
+		
+	$services=@('syncServices','adfsServices','addsServices')
+		switch ($type){
+			'syncServices' {$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.Azure.AADConnectHealth.SyncSvcs']$")	}
+			'adfsServices' {$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.Azure.AADConnectHealth.AdfsSvcs']$")}
+			'addsServices' {$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.Azure.AADConnectHealth.AddsSvcs']$")}
+		}
+		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
+		$objInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/ServiceId$", $vaultId)				
+		$objInstance.AddProperty("$MPElement[Name='QND.Azure.AADConnectHealth']/Id$", $vaultId)	
+		$objInstance.AddProperty("$MPElement[Name='QND.Azure.AADConnectHealth.Svcs']/Id$", $obj.id)	
+		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", "$($obj.displayName) ($type)")	
+		$discoveryData.AddInstance($objInstance)	
+	}
+	catch {
+	    Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_WARNING -msg ('Error discovering AAD Connect Health {3} {1} for {0} - {2}' -f $resourceURI, $obj.Id, $Error[0], $type) -level $TRACE_WARNING	
+	    write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+	    Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+	}
+}
+
+
 #Start by setting up API object.
-	$P_TraceLevel = $TRACE_VERBOSE
 	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
 	#$g_RegistryStatePath = "HKLM\" + $g_API.GetScriptStateKeyPath($SCRIPT_NAME)
 
@@ -300,40 +321,43 @@ try
 	}
 	$pwd = ConvertTo-SecureString $ADPassword -AsPlainText -Force
 	$cred = New-Object System.Management.Automation.PSCredential ($ADUserName, $pwd)
+	if($resourcebaseAddress.SubString($resourcebaseAddress.Length-1,1) -ne '/') {$ResourceBaseAddress+='/'}
+	if($authBaseAddress.SubString($authBaseAddress.Length-1,1) -ne '/') {$authBaseAddress+='/'}
 	$connection = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
 }
 catch {
-	Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_ERROR -msg ("Cannot logon to AzureAD error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
 	Throw-KeepDiscoveryInfo
 	exit 1	
 }
 
 try {
-	$timeoutSeconds=300
 	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
+			
+	$tenantId=$connection.TenantId
+	$uri = '{0}/{1}' -f $resourceUri, $tenantId
+	$body=$null
+	$nextLink = $null
 
-	#don't have an API for optimized discovery so we must retrieve evrything and then filter epr container
-	#I chose this way so that the disocvery payload doen't become huge
-	$uris =@(
-		('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''AzureIaasVM'' and itemType eq ''VM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
-		('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''MAB'' and itemType eq ''FileFolder''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
-	)
-	Log-Event $SUCCESS_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting items") $TRACE_VERBOSE
+	Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ("About to query AAD Connect Health $uri") $TRACE_VERBOSE
+	$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -data $body -TimeoutSeconds 300 -ErrorAction SilentlyContinue
+	Discover-AADConnect -obj $result.Values
+	
+	$vaultId=$result.Values.Id
 
-	foreach($uri in $uris) {
-		$nextLink=$null
-		do {
-			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -TimeoutSeconds $timeoutSeconds
-			$nextLink = $result.NextLink
-			if($result.gotValue) {	
-				foreach($item in $result.Values) {
-					if($item.id -imatch $containerId) {
-						write-verbose $item.properties.friendlyName
-						Discover-BackupProtectedItem -obj $item -containerId $containerId
-					}
-				}
-			}
-		} while ($nextLink)
+	$services=@('syncServices','adfsServices','addsServices')
+
+	foreach($service in $services) {
+		#discovers sync services
+		$uri = '{0}/{1}/{2}' -f $resourceUri, $tenantId, $service
+		$body=$null
+		$nextLink = $null
+
+		Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ("About to query AAD Connect Health $uri") $TRACE_VERBOSE
+		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -data $body -TimeoutSeconds 300 -ErrorAction SilentlyContinue
+		foreach($value in $result.Values) {
+			Discover-AADConnectSvcs -obj $value -vaultid $vaultId -type $service
+		}
 	}
 
 	$discoveryData
@@ -341,17 +365,18 @@ try {
 	{
 		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
 		#it breaks in exception when run insde OpsMgr and POSH IDE	
+		write-warning 'Exception expected if run inside powershell ISE'
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent		
 		$g_API.Return($discoveryData)
 	}
 	
-	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("$SCRIPT_NAME has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
-		Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_ERROR -msg ("Main got error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
+	Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_WARNING -msg ("Main " + $Error) -level $TRACE_WARNING	
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
 }
-
 
 
 

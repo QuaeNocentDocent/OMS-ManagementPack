@@ -56,9 +56,9 @@
       <PackageToBundle>false</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="QND.AzureMPIntegration">
-      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\AzureMPIntegration\bin\Debug\QND.AzureMPIntegration.mpb</HintPath>
+      <HintPath>C:\Users\grandinid\SkyDrive\Dev\OpsMgr\GIT\QND.OMS\References\QND.AzureMPIntegration.mpb</HintPath>
       <Alias>QNDA</Alias>
-      <MinVersion>2.0.0.37</MinVersion>
+      <MinVersion>2.0.0.48</MinVersion>
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="System.AdminItem.Library">
@@ -112,6 +112,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="ExternalChecks" />
     <Folder Include="Tests" />
     <Folder Include="Scripts" />
   </ItemGroup>
@@ -120,6 +121,8 @@
       <SubType>Content</SubType>
       <Generator>FragmentGenerator</Generator>
     </Content>
+    <None Include="ExternalChecks\Publish-HeartBeatEx.ps1" />
+    <None Include="ExternalChecks\Tests.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSAlertRules.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSAlertRuleState.ps1" />
     <EmbeddedResource Include="Scripts\Get-OMSSysHeartbeat.ps1" />

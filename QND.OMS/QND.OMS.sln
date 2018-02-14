@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.LogAnalytics", "QND.OMS.LogAnalytics.mpproj", "{A5239F19-F154-4CD2-A3AD-679E8969286B}"
 EndProject
@@ -15,7 +15,7 @@ Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.Backup.Server", "..
 EndProject
 Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.Azure.StorageAccount", "..\QND.Azure.StorageAccount\QND.Azure.StorageAccount.mpproj", "{DB0120B9-00CF-4E43-B9E3-9C12970A39AF}"
 EndProject
-Project("{F5034706-568F-408A-B7B3-4D38C6DB8A32}") = "ExternalHealthChecks", "..\ExternalHealthChecks\ExternalHealthChecks.pssproj", "{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}"
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.Azure.AADConnect", "..\QND.Azure.AADConnect\QND.Azure.AADConnect.mpproj", "{CD660E24-8875-4372-A0F3-0884DF56546A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,16 +61,17 @@ Global
 		{DB0120B9-00CF-4E43-B9E3-9C12970A39AF}.Release|Any CPU.ActiveCfg = Release|x86
 		{DB0120B9-00CF-4E43-B9E3-9C12970A39AF}.Release|x86.ActiveCfg = Release|x86
 		{DB0120B9-00CF-4E43-B9E3-9C12970A39AF}.Release|x86.Build.0 = Release|x86
-		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Debug|x86.Build.0 = Debug|Any CPU
-		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Release|x86.ActiveCfg = Release|Any CPU
-		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Release|x86.Build.0 = Release|Any CPU
+		{CD660E24-8875-4372-A0F3-0884DF56546A}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{CD660E24-8875-4372-A0F3-0884DF56546A}.Debug|x86.ActiveCfg = Debug|x86
+		{CD660E24-8875-4372-A0F3-0884DF56546A}.Debug|x86.Build.0 = Debug|x86
+		{CD660E24-8875-4372-A0F3-0884DF56546A}.Release|Any CPU.ActiveCfg = Release|x86
+		{CD660E24-8875-4372-A0F3-0884DF56546A}.Release|x86.ActiveCfg = Release|x86
+		{CD660E24-8875-4372-A0F3-0884DF56546A}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C3048C10-7B85-4EC4-88AA-1296918ACBCC}
 	EndGlobalSection
 EndGlobal

@@ -85,7 +85,7 @@ $EventDataType	= 2
 $PerformanceDataType = 2
 $StateDataType       = 3
 
-$EventSource = 'Progel Script'
+$EventSource = 'QND Script'
 $EventLog= 'Operations Manager'
 #endregion
 
@@ -327,7 +327,7 @@ try {
 		$g_API.Return($discoveryData)
 	}
 	
-	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("$SCRIPT_NAME has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
 		Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_ERROR -msg ("Main got error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	

@@ -62,7 +62,7 @@ param([int]$traceLevel=2,
 
 #region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "Get-OMSRecoveryItemStatus"
+$SCRIPT_NAME	= "Get-OMSRecoveryItemStatus"
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -93,7 +93,7 @@ $EventDataType	= 2
 $PerformanceDataType = 2
 $StateDataType       = 3
 
-$EventSource = 'Progel Script'
+$EventSource = 'QND Script'
 $EventLog= 'Operations Manager'
 #endregion
 

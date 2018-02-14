@@ -2,9 +2,9 @@
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
-        <DisplayString ElementID="QND.Azure.StorageAccount">
-          <Name>QND Azure Storage Account Monitor</Name>
-          <Description>QND Azure Storage Account Monitoring</Description>
+        <DisplayString ElementID="QND.Azure.AADConnect">
+          <Name>QND - Azure AD Connect Health Monitor</Name>
+          <Description>Reports on issues on the Azure AD Connect Health Service</Description>
         </DisplayString>
       </DisplayStrings>
     </LanguagePack>

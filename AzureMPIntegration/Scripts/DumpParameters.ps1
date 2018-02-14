@@ -87,7 +87,7 @@ $EventDataType	= 2
 $PerformanceDataType = 2
 $StateDataType       = 3
 
-$EventSource = 'Progel Script'
+$EventSource = 'QND Script'
 $EventLog= 'Operations Manager'
 
 if ([System.Diagnostics.EventLog]::SourceExists($EventSource) -eq $false) {

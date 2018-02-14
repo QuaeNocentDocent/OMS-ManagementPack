@@ -253,3 +253,4 @@ ModelManifest.xml
 *MPResources.Resources
 /QND.OMS/Tests/PScript1.ps1
 /ExternalHealthChecks/Tests/Tests.ps1
+/QND.Azure.AADConnect/Docs/Connect Health API - Guide.pdf

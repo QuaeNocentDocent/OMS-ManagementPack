@@ -85,7 +85,7 @@ $EventDataType	= 2
 $PerformanceDataType = 2
 $StateDataType       = 3
 
-$EventSource = 'Progel Script'
+$EventSource = 'QND Script'
 $EventLog= 'Operations Manager'
 #endregion
 

@@ -12,8 +12,11 @@
           <Property ID="ResourceGroup" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
           <Property ID="Tags" Type="string" MaxLength="8192" MinLength="0" Required="false" />
         </ClassType>
-      
+
+
+        
       </ClassTypes>
+
     </EntityTypes>
   </TypeDefinitions>
   <LanguagePacks>
