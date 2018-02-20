@@ -26,18 +26,18 @@
           <SyncTime></SyncTime>
           <Property>jobFailures</Property>
           <MaxThreshold>2</MaxThreshold>
-          <RunbookId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</RunbookId>
+          <RunbookId>$Target/Property[Type="QNDA!QND.Azure.GenericResource"]/ResourceId$</RunbookId>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <ResourceURI>$Target/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
           <Heartbeat>11</Heartbeat>
 
           <Tolerance>0.5</Tolerance>
@@ -79,18 +79,18 @@
           <Property>webHookDaysToExpiration</Property>
           <ThresholdHigh>1</ThresholdHigh>
           <ThresholdLow>15</ThresholdLow>
-          <RunbookId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</RunbookId>
+          <RunbookId>$Target/Property[Type="QNDA!QND.Azure.GenericResource"]/ResourceId$</RunbookId>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <ResourceURI>$Target/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
           <Heartbeat>11</Heartbeat>
 
           <Tolerance>0.5</Tolerance>
@@ -130,18 +130,18 @@
           <SyncTime></SyncTime>
           <Property>lastRunObsolete</Property>
           <MaxThreshold>0</MaxThreshold>
-          <RunbookId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</RunbookId>
+          <RunbookId>$Target/Property[Type="QNDA!QND.Azure.GenericResource"]/ResourceId$</RunbookId>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <ResourceURI>$Target/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
           <Heartbeat>11</Heartbeat>
 
           <Tolerance>0.5</Tolerance>
@@ -150,7 +150,7 @@
           <LastNJobs>5</LastNJobs>
           <MaxFailures>2</MaxFailures>
           <!--.net regex doesn't parse ^(?!Completed).*$ -->
-          <FailureCondition>Failed</FailureCondition>
+          <FailureCondition>^Failed|Suspended$</FailureCondition>
           <MaxAgeHours>-1</MaxAgeHours>
           <MaxRuntimeMinutes>180</MaxRuntimeMinutes>
           <WebHookExpirationDays>15</WebHookExpirationDays>
@@ -182,18 +182,18 @@
           <SyncTime></SyncTime>
           <Property>longRunning</Property>
           <MaxThreshold>0</MaxThreshold>
-          <RunbookId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ServiceResource"]/ResourceId$</RunbookId>
+          <RunbookId>$Target/Property[Type="QNDA!QND.Azure.GenericResource"]/ResourceId$</RunbookId>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <ResourceURI>$Target/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
           <Heartbeat>11</Heartbeat>
 
           <Tolerance>0.5</Tolerance>

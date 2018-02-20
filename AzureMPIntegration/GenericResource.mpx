@@ -13,7 +13,15 @@
           <Property ID="Tags" Type="string" MaxLength="8192" MinLength="0" Required="false" />
         </ClassType>
 
-
+        <ClassType ID="QND.Azure.GenericResource" Base="System!System.LogicalEntity" Accessibility="Public" Abstract="true"
+           Hosted="false" Singleton="false">
+          <Property ID="ResourceName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="255" MinLength="0" Required="false" Scale="0" />
+          <Property ID="ResourceId" Type="string" AutoIncrement="false" Key="true" CaseSensitive="false" MaxLength="2083" MinLength="0" Required="false" Scale="0" />
+          <Property ID="Type" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="255" MinLength="0" Required="false" Scale="0" />
+          <Property ID="SubscriptionId" Type="string" Key="false" CaseSensitive="false" Required="false" />          
+          <Property ID="ResourceGroup" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="Tags" Type="string" MaxLength="8192" MinLength="0" Required="false" />
+        </ClassType>
         
       </ClassTypes>
 
@@ -27,6 +35,35 @@
              Descriptions are also helpful when the user is doing a search in the Console. -->
         <DisplayString ElementID="QND.OMS.GenericResource">
           <Name>QND - OMS Generic Arm Resource</Name>
+          <Description></Description>
+        </DisplayString>
+        
+        <DisplayString ElementID="QND.Azure.GenericResource">
+          <Name>QND - Azure Generic Arm Resource</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.Azure.GenericResource" SubElementID="ResourceName">
+          <Name>Name</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.Azure.GenericResource" SubElementID="ResourceId">
+          <Name>ID</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.Azure.GenericResource" SubElementID="Type">
+          <Name>Type</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.Azure.GenericResource" SubElementID="SubscriptionId">
+          <Name>Subscription Id</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.Azure.GenericResource" SubElementID="ResourceGroup">
+          <Name>Resource Group</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.Azure.GenericResource" SubElementID="Tags">
+          <Name>Tags</Name>
           <Description></Description>
         </DisplayString>
 

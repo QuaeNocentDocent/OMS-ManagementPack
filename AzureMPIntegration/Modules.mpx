@@ -259,6 +259,229 @@
         <OutputType>System!System.Discovery.Data</OutputType>
       </DataSourceModuleType>
       
+      <DataSourceModuleType ID="QND.Azure.GenericService.Discovery.DS" Accessibility="Public" Batching="false">
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>System!System.ExpressionEvaluatorSchema</SchemaType>
+            <SchemaType>System!System.Discovery.MapperSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="600" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" default="2"/>
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="Type" type="xsd:string" />
+          <xsd:element name="ClassId" type="xsd:string" />
+          <xsd:element name="ApiVersion" type="xsd:string" />          
+          <xsd:element name="EventID" type="xsd:int" />
+          <xsd:element name="EventPublisher" type="xsd:string" />
+          <xsd:element name="EventParam" type="xsd:string" />          
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Trigger" TypeID="Windows!Microsoft.Windows.EventProvider">
+                <ComputerName></ComputerName>
+                <LogName>Operations Manager</LogName>
+                <AllowProxying>false</AllowProxying>
+                <Expression>
+                  <And>
+                    <Expression>
+                      <RegExExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                        </ValueExpression>
+                        <Operator>MatchesRegularExpression</Operator>
+                        <Pattern>$Config/EventID$</Pattern>
+                      </RegExExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="Integer">EventLevel</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="Integer">4</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="String">PublisherName</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="String">$Config/EventPublisher$</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                    <Expression>
+                      <SimpleExpression>
+                        <ValueExpression>
+                          <XPathQuery Type="String">Params/Param[2]</XPathQuery>
+                        </ValueExpression>
+                        <Operator>Equal</Operator>
+                        <ValueExpression>
+                          <Value Type="String">$Config/EventParam$</Value>
+                        </ValueExpression>
+                      </SimpleExpression>
+                    </Expression>
+                  </And>
+                </Expression>
+              </DataSource>
+              <ProbeAction ID="Script" TypeID="QND.Azure.GenericResourceDiscovery.PT">
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <TraceLevel>$Config/TraceLevel$</TraceLevel>
+                <ClientId>$Config/ClientId$</ClientId>
+                <SubscriptionId>$Config/SubscriptionId$</SubscriptionId>
+                <Proxy>$Config/Proxy$</Proxy>
+                <AuthBaseAddress>$Config/AuthBaseAddress$</AuthBaseAddress>
+                <ResourceBaseAddress>$Config/ResourceBaseAddress$</ResourceBaseAddress>
+                <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+                <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+                <Type>$Config/Type$</Type>                
+              </ProbeAction>
+              <ConditionDetection ID="Mapper" TypeID="System!System.Discovery.ClassSnapshotDataMapper">
+                <ClassId>$Config/ClassId$</ClassId>
+                <InstanceSettings>
+                  <Settings>
+                    <Setting>
+                      <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Name>
+                      <Value>$Config/SubscriptionId$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="QND.Azure.GenericService"]/ServiceId$</Name>
+                      <Value>$Data/Property[@Name="id"]$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="QND.Azure.GenericService"]/ServiceName$</Name>
+                      <Value>$Data/Property[@Name="name"]$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="QND.Azure.GenericService"]/Type$</Name>
+                      <Value>$Data/Property[@Name="type"]$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="QND.Azure.GenericService"]/Location$</Name>
+                      <Value>$Data/Property[@Name="location"]$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="QND.Azure.GenericService"]/SubscriptionId$</Name>
+                      <Value>$Config/SubscriptionId$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="QND.Azure.GenericService"]/ResourceGroup$</Name>
+                      <Value>$Data/Property[@Name="resourcegroup"]$</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="System!System.Entity"]/DisplayName$</Name>
+                      <Value>$Data/Property[@Name="name"]$ ($Data/Property[@Name="type"]$)</Value>
+                    </Setting>
+                    <Setting>
+                      <Name>$MPElement[Name="QND.Azure.GenericService"]/ApiVersion$</Name>
+                      <Value>$Config/ApiVersion$</Value>
+                    </Setting>
+                  </Settings>
+                </InstanceSettings>
+              </ConditionDetection>
+            </MemberModules>
+            <Composition>
+              <Node ID="Mapper">
+                <Node ID="Script">
+                <Node ID="Trigger" />
+                </Node>
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
+      <ProbeActionModuleType ID="QND.Azure.GenericResourceDiscovery.PT" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="TimeoutSeconds" type="xsd:int" minOccurs="0" maxOccurs="1" default="60" />
+          <xsd:element name="TraceLevel" type="xsd:int" minOccurs="0" maxOccurs="1" />
+          <xsd:element name="ClientId" type="xsd:string" />
+          <xsd:element name="SubscriptionId" type="xsd:string" />
+          <xsd:element name="Proxy" type="xsd:string" />
+          <xsd:element name="AuthBaseAddress" type="xsd:string" />
+          <xsd:element name="ResourceBaseAddress" type="xsd:string" />
+          <xsd:element name="AADUserName" type="xsd:string" />
+          <xsd:element name="AADPassword" type="xsd:string" />
+          <xsd:element name="Type" type="xsd:string" />          
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="TraceLevel" ParameterType="int" Selector="$Config/TraceLevel$"/>
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <ProbeAction ID="POSH" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+                <ScriptName>Get-GenericAzureResource.ps1</ScriptName>
+                <ScriptBody>
+                  $IncludeFileContent/Scripts/Get-GenericAzureResource.ps1$
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>TraceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>clientId</Name>
+                    <Value>$Config/ClientId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Subscription</Name>
+                    <Value>$Config/SubscriptionId$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Proxy</Name>
+                    <Value>$Config/Proxy$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>AuthBaseAddress</Name>
+                    <Value>$Config/AuthBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ResourceBaseAddress</Name>
+                    <Value>$Config/ResourceBaseAddress$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADUsername</Name>
+                    <Value>$Config/AADUserName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ADPassword</Name>
+                    <Value>$Config/AADPassword$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Type</Name>
+                    <Value>$Config/Type$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+                <!-- true only for Tasks -->
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="POSH" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </ProbeActionModuleType>
       <WriteActionModuleType ID="QND.DiscoveryEvent.WAT" Accessibility="Public" Batching="false">
         <Configuration>
           <xsd:element name="LogName" type="xsd:string" />

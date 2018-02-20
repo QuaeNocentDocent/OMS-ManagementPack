@@ -65,7 +65,7 @@
                         </ValueExpression>
                         <Operator>Equal</Operator>
                         <ValueExpression>
-                          <Value Type="String">AADConnectHealth</Value>
+                          <Value Type="String">$Config/SubscriptionId$</Value>
                         </ValueExpression>
                       </SimpleExpression>
                     </Expression>

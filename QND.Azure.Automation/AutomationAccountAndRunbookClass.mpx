@@ -5,9 +5,9 @@
 
 
         <!-- moved from Id to Name as key property becasue the key property is used in Health Explorer as the display name -->
-        <ClassType ID="QND.OMS.Automation.Account" Base="QNDA!QND.OMS.GenericService" Accessibility="Internal" Abstract="false" Hosted="true" Singleton="false">      
+        <ClassType ID="QND.OMS.Automation.Account" Base="QNDA!QND.Azure.GenericService" Accessibility="Internal" Abstract="false" Hosted="true" Singleton="false">      
         </ClassType>
-        <ClassType ID="QND.OMS.Automation.RunbookGen" Base="QNDA!QND.OMS.GenericResource" Accessibility="Internal" Abstract="false" Hosted="true" Singleton="false">
+        <ClassType ID="QND.OMS.Automation.RunbookGen" Base="QNDA!QND.Azure.GenericResource" Accessibility="Internal" Abstract="false" Hosted="true" Singleton="false">
           <Property ID="RunbookType" Key="false" Type="string" />
           <Property ID="Description" Key="false" Type="string"  MaxLength="256"/>
         </ClassType>      
@@ -76,7 +76,7 @@
                         </ValueExpression>
                         <Operator>Equal</Operator>
                         <ValueExpression>
-                          <Value Type="String">OMS Discovery</Value>
+                          <Value Type="String">QND Discovery</Value>
                         </ValueExpression>
                       </SimpleExpression>
                     </Expression>
@@ -176,34 +176,31 @@
 
   <Monitoring>
     <Discoveries>
-      <Discovery ID="QND.OMS.Automation.Account.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" 
-                 Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService">
+      <Discovery ID="QND.OMS.Automation.Account.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true"
+                 Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription">
         <Category>Discovery</Category>
         <DiscoveryTypes>
           <DiscoveryClass TypeID="QND.OMS.Automation.Account" />
         </DiscoveryTypes>
-        <DataSource ID="DS" TypeID="QNDA!QND.OMS.ArmService.SeedDiscoverywApi.DS">
-          <IntervalSeconds>14987</IntervalSeconds>
-          <SyncTime></SyncTime>
-          <ApiVersion>2015-10-31</ApiVersion>
-          <AzureType>Microsoft.Automation/automationAccounts</AzureType>
+        <DataSource ID="DS" TypeID="QNDA!QND.Azure.GenericService.Discovery.DS">
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <ClientId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <Type>Microsoft.Automation/automationAccounts</Type>
           <ClassId>$MPElement[Name='QND.OMS.Automation.Account']$</ClassId>
+          <ApiVersion>2015-10-31</ApiVersion>
+          <EventID>1</EventID>
+          <EventPublisher>QND Discovery</EventPublisher>
+          <EventParam>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</EventParam>
         </DataSource>
       </Discovery>
-      
-      <Discovery ID="QND.OMS.Automation.Runbook.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" 
-                 Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmResource">
-        <Category>Discovery</Category>
-        <DiscoveryTypes>
-          <DiscoveryClass TypeID="QND.OMS.Automation.RunbookGen" />          
-        </DiscoveryTypes>
-        <DataSource ID="DS" TypeID="QNDA!QND.OMS.ArmResource.SeedDiscovery.DS">
-          <IntervalSeconds>7217</IntervalSeconds>
-          <SyncTime></SyncTime>
-          <AzureType>Microsoft.Automation/AutomationAccounts/Runbooks</AzureType>
-          <ClassId>$MPElement[Name='QND.OMS.Automation.RunbookGen']$</ClassId>
-        </DataSource>
-      </Discovery>
+           
       <Discovery ID="QND.OMS.Automation.RunbookDetails.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="QND.OMS.Automation.Account">
         <Category>Discovery</Category>
         <DiscoveryTypes>
@@ -211,21 +208,38 @@
         </DiscoveryTypes>
         <DataSource ID="DS" TypeID="QND.OMS.Automation.Runbook.Discovery.DS">
           <TimeoutSeconds>900</TimeoutSeconds>
-          <TraceLevel>3</TraceLevel>
-          <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <ResourceGroupId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</ResourceGroupId>
-          <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <TraceLevel>2</TraceLevel>
+          <ClientId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <ResourceGroupId>$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ResourceGroup$</ResourceGroupId>
+          <Proxy>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <ResourceURI>$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
         </DataSource>
       </Discovery>      
     </Discoveries>
     <Rules>
+      <Rule ID="QND.OMS.AutomationAccount.DiscoveryTrigger.Rule" ConfirmDelivery="false" DiscardLevel="100" Enabled="true" Priority="Normal" Remotable="true" Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription">
+        <Category>Discovery</Category>
+        <DataSources>
+          <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
+            <IntervalSeconds>43200</IntervalSeconds>
+          </DataSource>
+        </DataSources>
+        <WriteActions>
+          <WriteAction ID="WriteEvent" TypeID="QNDA!QND.DiscoveryEvent.WAT">
+            <LogName>Operations Manager</LogName>
+            <SourceName>QND Discovery</SourceName>
+            <EventId>1</EventId>
+            <Message>QND Automation Account</Message>
+            <Key>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Key>
+          </WriteAction>
+        </WriteActions>
+      </Rule>
       <Rule ID="QND.OMS.Automation.Runbook.DiscoveryTrigger.Rule" ConfirmDelivery="false" DiscardLevel="100" Enabled="true" Priority="Normal" Remotable="true" Target="QND.OMS.Automation.Account">
         <Category>Discovery</Category>
         <DataSources>
@@ -236,10 +250,10 @@
         <WriteActions>
           <WriteAction ID="WriteEvent" TypeID="QNDA!QND.DiscoveryEvent.WAT">
             <LogName>Operations Manager</LogName>
-            <SourceName>OMS Discovery</SourceName>
+            <SourceName>QND Discovery</SourceName>
             <EventId>1</EventId>
             <Message>QND Automation Runbook</Message>
-            <Key>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</Key>
+            <Key>$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Key>
           </WriteAction>
         </WriteActions>
       </Rule>
@@ -275,6 +289,10 @@
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Automation.Runbook.DiscoveryTrigger.Rule">
           <Name>QND - OMS Runbook details discovery trigger rule</Name>
+        </DisplayString>
+
+        <DisplayString ElementID="QND.OMS.AutomationAccount.DiscoveryTrigger.Rule">
+          <Name>QND - OMS Automation Account disocvery trigger rule</Name>
         </DisplayString>
       </DisplayStrings>
     </LanguagePack>

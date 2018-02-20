@@ -51,7 +51,7 @@
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="String">Progel Script</Value>
+                    <Value Type="String">QND Script</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -99,7 +99,7 @@
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="String">Progel Script</Value>
+                    <Value Type="String">QND Script</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>

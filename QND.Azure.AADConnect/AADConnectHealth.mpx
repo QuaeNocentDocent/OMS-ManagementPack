@@ -63,7 +63,7 @@
             <SourceName>QND Discovery</SourceName>
             <EventId>1</EventId>
             <Message>QND</Message>
-            <Key>AADConnectHealth</Key>
+            <Key>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Key>
           </WriteAction>
         </WriteActions>
       </Rule>

@@ -120,7 +120,7 @@ function Log-Params
 		else {$line += ('-{0} {1} ' -f $key, $Invocation.BoundParameters[$key])}
 	}
 	$line += ('- running as {0}' -f (whoami))
-	Log-Event -eventID $EVENT_ID_START -eventType $EVENT_TYPE_INFORMATION -msg ("Starting script [{0}]. Invocation Name:{1}`n Parameters`n{2}" -f $SCRIPT_NAME, $Invocation.InvocationName, $line) -level $TRACE_INFO
+	Log-Event -eventID $START_EVENT_ID -eventType $EVENT_TYPE_INFORMATION -msg ("Starting script [{0}]. Invocation Name:{1}`n Parameters`n{2}" -f $SCRIPT_NAME, $Invocation.InvocationName, $line) -level $TRACE_INFO
 }
 
 function Create-Event
@@ -313,7 +313,7 @@ try
 	$connection = $authority.CreateAuthorizationHeader()
 }
 catch {
-	Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ("Cannot logon to AzureAD error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
+	Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_ERROR -msg ("Cannot logon to AzureAD error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
 	Throw-KeepDiscoveryInfo
 	exit 1	
 }
@@ -518,7 +518,7 @@ Microsoft.Automation/automationAccounts/PreLabsAutoWE/schedules/TestSchedule1",
         }
         if($onlySJWH -and !$wh -and !$jsch) {continue}
         write-verbose ('Runbook {0} has webhook or valid schedule' -f $rb.name)
-        [double]$autoAge=24*30 #24 H * 30 days
+        [double]$autoAge=24*32 #24 H * 32 days tot ake into account monthly schedules
 <#
 Request body for weekly: 
 {
@@ -583,7 +583,7 @@ Month week day occurrence:
 					if($autoAge -gt $s.properties.interval*$worstCase*24) {$autoAge=$s.properties.interval*$worstCase*24}
 				}
                 'Month' {
-					$worstCase=30
+					$worstCase=31
 					if($s.properties.advancedSchedule.monthDays) {
 						$worstCase = 31 - $s.properties.advancedSchedule.monthDays.Count
 					}
@@ -733,7 +733,7 @@ Month week day occurrence:
 	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }
 Catch [Exception] {
-		Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ("Main got error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
+		Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_ERROR -msg ("Main got error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
 }

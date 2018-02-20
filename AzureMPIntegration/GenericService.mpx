@@ -17,7 +17,8 @@
           <Property ID="Type" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="255" MinLength="0" Required="false" Scale="0" />
           <Property ID="Location" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
           <Property ID="SubscriptionId" Type="string" Key="false" CaseSensitive="false" Required="false" />
-          <Property ID="ApiVersion" Key="false" Type="string" />        
+          <Property ID="ApiVersion" Key="false" Type="string" />
+          <Property ID="ResourceGroup" Type="string" Key="false" CaseSensitive="false" Required="false" />
         </ClassType>
         
       </ClassTypes>
@@ -76,7 +77,11 @@
         <DisplayString ElementID="QND.Azure.GenericService" SubElementID="ApiVersion">
           <Name>ARM API Version</Name>
           <Description></Description>
-        </DisplayString>      
+        </DisplayString>
+        <DisplayString ElementID="QND.Azure.GenericService" SubElementID="ResourceGroup">
+          <Name>Resource Group</Name>
+          <Description></Description>
+        </DisplayString>
       </DisplayStrings>
     </LanguagePack>
   </LanguagePacks>

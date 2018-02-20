@@ -1,4 +1,4 @@
-
+﻿
 #SET ErrorLevel to 5 so show discovery info
 
 #*************************************************************************
@@ -36,26 +36,23 @@ param(
 [Parameter(Mandatory=$true)]
 [ValidateScript({$_ -ge 0 -and $_ -le 5})]
 [int]$traceLevel,
-[Parameter (Mandatory=$true)] [string]$sourceID,
-[Parameter (Mandatory=$true)] [string]$ManagedEntityId,
-[Parameter (Mandatory=$true)] [string]$clientId,
-[Parameter (Mandatory=$true)] [string]$SubscriptionId,
-[Parameter (Mandatory=$true)] [string]$ResourceGroupId,
+[Parameter (Mandatory=$true)][string]$clientId,
+[Parameter (Mandatory=$true)][string]$SubscriptionId,
 [string]$Proxy,
-[Parameter (Mandatory=$true)] [string]$AuthBaseAddress,
-[Parameter (Mandatory=$true)] [string]$ResourceBaseAddress,
-[Parameter (Mandatory=$true)] [string]$ADUserName,
-[Parameter (Mandatory=$true)] [string]$ADPassword,
-[Parameter (Mandatory=$true)] [string]$resourceURI,
-[Parameter (Mandatory=$true)] [string]$APIVersion='2015-10-31',
-[Parameter (Mandatory=$true)] [int]$APITimeoutSeconds=30)
-	
-[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
+[Parameter (Mandatory=$true)][string]$AuthBaseAddress,
+[Parameter (Mandatory=$true)][string]$ResourceBaseAddress='https://api.aadconnecthealth.azure.com/v1/connectHealth',
+[Parameter (Mandatory=$true)][string]$ADUserName,
+[Parameter (Mandatory=$true)][string]$ADPassword,
+[Parameter (Mandatory=$true)][string]$Type
+
+)
+
+	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
     [Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
 
 #region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "QND.DiscoverRunbookDetails"
+$SCRIPT_NAME	= "QND.Get-GenericAzureResource"
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -240,26 +237,6 @@ Function Import-ResourceModule
 
 #endregion
 
-Function Get-AutomationItems
-{
-param(
-	$uris, $connection
-)
-
-	$items=@()
-	foreach($uri in $uris) {
-		$nextLink=$null
-		Log-Event $EVENT_ID_SUCCESS $EVENT_TYPE_SUCCESS ("Getting items $uri") $TRACE_VERBOSE
-		do {
-			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken $connection -nextLink $nextLink -TimeoutSeconds $APItimeoutSeconds
-			$nextLink = $result.NextLink
-			if($result.gotValue) {$items+=$result.Values}
-            #hacking some unwanted chars
-            if($nextLink) {$nextLink=$nextLink.Replace('+','%2B')}
-		} while ($nextLink)
-	}
-	return $items
-}
 
 #Start by setting up API object.
 	$P_TraceLevel = $TRACE_VERBOSE
@@ -274,93 +251,73 @@ param(
 		Import-ResourceModule -moduleName QNDAzure
 	}
 	catch {
-		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot load required powershell modules $Error") $TRACE_ERROR
+		Log-Event $EVENT_ID_FAILURE $EVENT_TYPE_ERROR ("Cannot load required powershell modules $Error") $TRACE_ERROR
+		exit 1	
+	}
+
+	try
+	{
+		if($proxy) {
+			Log-Event $EVENT_ID_FAILURE $EVENT_TYPE_WARNING ("Proxy is not currently supported {0}" -f $proxy) $TRACE_WARNING
+		}
+		$pwd = ConvertTo-SecureString $ADPassword -AsPlainText -Force
+		$cred = New-Object System.Management.Automation.PSCredential ($ADUserName, $pwd)
+		if($resourcebaseAddress.SubString($resourcebaseAddress.Length-1,1) -ne '/') {$ResourceBaseAddress+='/'}
+		if($authBaseAddress.SubString($authBaseAddress.Length-1,1) -ne '/') {$authBaseAddress+='/'}
+		$connection = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
+	}
+	catch {
+		Log-Event $EVENT_ID_FAILURE $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
 		exit 1	
 	}
 
 try
 {
-	if($proxy) {
-		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Proxy is not currently supported {0}" -f $proxy) $TRACE_WARNING
-	}
-	$pwd = ConvertTo-SecureString $ADPassword -AsPlainText -Force
-	$cred = New-Object System.Management.Automation.PSCredential ($ADUserName, $pwd)
-	$authority = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
-	$connection = $authority.CreateAuthorizationHeader()
-}
-catch {
-	Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ("Cannot logon to AzureAD error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
-	Throw-KeepDiscoveryInfo
-	exit 1	
-}
+	$tenantId=$connection.TenantId
+	# sample 'https://management.azure.com/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resources?$filter=resourceType EQ ''Microsoft.Network/virtualNetworks''&api-version=2016-09-01'
+	<#
+	id       : /subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.Network/virtualNetworks/EA-Lab-Reggio-ARM
+	name     : EA-Lab-Reggio-ARM
+	type     : Microsoft.Network/virtualNetworks
+	location : westeurope
+	tags     : 
+	#>
+	$uri = '{0}/subscriptions/{1}/resources?$filter=resourceType EQ ''{2}''&api-version=2016-09-01' -f $ResourceBaseAddress, $SubscriptionId, $Type
+	$body=$null
+	$nextLink = $null
 
-try
-{
-	$uris =@(('{0}{1}/runbooks?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion))
-	$runBooks = Get-AutomationItems -uris $uris -connection $connection
-	if ($runBooks) {
-		Log-Event -eventID $EVENT_ID_DETAILS -eventType $EVENT_TYPE_INFORMATION -msg ("Got {0} runbooks" -f $runbooks.Count) -level $TRACE_VERBOSE	
-	}
-<#
-{"id":"/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/OaaSCSHRWRPZB6GXQVDR3MZN4LZ2ID5KGAHA3HNK26JFKSEGZK7HOMRALQ-West-Europe/providers/Microsoft.Automation/automationAccounts/PreLabsAutoWE/runbooks/ASR-HybridAutomation//A
-SR-HybridAutomation","name":"ASR-HybridAutomation","type":"Microsoft.Automation/AutomationAccounts/Runbooks","location":"West Europe","tags":{"Owner":"Daniele Grandini"},"etag":"\"636123691040030000\"","properties":{"description":"Testing Description
-s","logVerbose":false,"logProgress":false,"logActivityTrace":9,"runbookType":"Script","parameters":{},"state":"Edit","jobCount":0,"provisioningState":"Succeeded","serviceManagementTags":null,"outputTypes":[],"creationTime":"2015-09-30T14:16:40.933+00
-:00","lastModifiedBy":"live.com#daniele.grandini@live.it","lastModifiedTime":"2016-10-18T06:31:44.003+00:00"}}
-#>
-	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
-	foreach($rb in $runbooks) {
-		try {
-			$detail = invoke-QNDAzureRestRequest -uri ('{0}{1}?api-version={2}' -f $ResourceBaseAddress, $rb.id, $apiVersion) -httpVerb GET -authToken $connection -TimeoutSeconds $APITimeoutSeconds
-			if($detail.Values -and $detail.Values.count -eq 1) {
-				Log-Event -eventID $EVENT_ID_DETAILS -eventType $EVENT_TYPE_INFORMATION -msg ("Discovering: {0} " -f $rb.Id) -level $TRACE_VERBOSE
-				$RBInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Automation.RunbookGen']$")
+	$items=@()
+	do {
+		Log-Event $EVENT_ID_DETAILS $EVENT_TYPE_SUCCESS ("About to query ARM $uri") $TRACE_VERBOSE
+		$result=invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -data $body -TimeoutSeconds 300 -ErrorAction SilentlyContinue
+		$nextLink = $result.NextLink
+		if($result.gotValue) {$items+=$result.Values}
+        #hacking some unwanted chars
+        if($nextLink) {$nextLink=$nextLink.Replace('+','%2B')}
+	} while ($nextLink)
 
-				#first add the hosting class
-				$RBInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
-				$RBInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/ServiceId$", $resourceURI)	
-				#let's add the keys
-				$RBInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericResource']/ResourceId$", $rb.id)
-				#param validation
-				$tags='n.a.';$description='n.a.'
-				$rbdetail=$detail.values[0]
-				if($rbdetail.tags) {$tags=([string]$rbdetail.tags)}
-				if(![String]::IsNullOrEmpty($rbdetail.properties.description)) {$description=([string]$rbdetail.properties.description)}
-				if($tags.Length -gt 8190) {$tags=$tags.SubString(0,8190)}
-				if($description.Lenght -gt 255) {$description=$description.SubString(0,255)}
-				$RBInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericResource']/Tags$", $tags)
-				$RBInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericResource']/Type$", $rb.Type)
-				$RBInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericResource']/ResourceName$", $rb.Name)
-				$RBInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericResource']/SubscriptionId$", $SubscriptionId)
-				$RBInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.RunbookGen']/Description$", $description)
-				$RBInstance.AddProperty("$MPElement[Name='QND.OMS.Automation.RunbookGen']/RunbookType$", [string]$rbdetail.properties.runbookType)
-				#inherited
-				$RBInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", ('{0} ({1})' -f $rb.Name, $rb.Type))	
-
-				$discoveryData.AddInstance($RBInstance)
-
-			}
-			else {
-				Log-Event -eventID $EVENT_ID_DETAILS -eventType $EVENT_TYPE_WARNING -msg ("Error getting details for: {0} " -f $rb.Id) -level $TRACE_WARNING	
-			}
+	foreach($service in $items) {
+		$resourcegroup = ($service.id -split '/')[4]
+		$returnValue=@{
+			id=$service.id
+			name=$service.name
+			type=$service.type
+			location=$service.location
+			resourcegroup=$resourcegroup
 		}
-		catch {
-			Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_WARNING -msg ('Error discovering runbook details {0} - {1}' -f $rb.id, $Error[0]) $TRACE_WARNING	
-			write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
-			Write-Verbose $("TRAPPED: " + $_.Exception.Message);
-		}
+		Return-Bag -object $returnValue -key id
 	}
-	$discoveryData
-	If ($traceLevel -eq $TRACE_DEBUG)
-	{
+
+
+	if($traceLevel -eq $TRACE_DEBUG) {
 		write-warning 'Exception expected if run inside powershell ISE'
-		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent		
-		$g_API.Return($discoveryData)
+		$g_API.ReturnItems()
 	}
-
+	
 	Log-Event -eventID $EVENT_ID_STOP -eventType $EVENT_TYPE_INFORMATION -msg ('{0} has completed successfully in {1} seconds.' -f $SCRIPT_NAME, ((Get-Date)- ($dtstart)).TotalSeconds) -level $TRACE_INFO
 }
 Catch [Exception] {
-	Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ("Main got error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
+	Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ("Main got error: {0} for {1}" -f $Error[0],$SubscriptionId) -level $TRACE_ERROR	
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
 }

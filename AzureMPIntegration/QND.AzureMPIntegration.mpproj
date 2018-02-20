@@ -91,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Scripts\DumpParameters.ps1" />
+    <EmbeddedResource Include="Scripts\Get-GenericAzureResource.ps1" />
     <EmbeddedResource Include="Scripts\New-DiscoveryEvent.ps1" />
   </ItemGroup>
   <ItemGroup>
