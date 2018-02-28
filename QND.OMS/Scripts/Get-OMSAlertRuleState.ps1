@@ -236,7 +236,7 @@ try {
 
 	$rules=@{}
 
-$timeout=300
+	$timeout=300
     $uri = '{0}{1}/savedSearches?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
 	$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout
 	$savedSearches=@()
@@ -279,12 +279,8 @@ $timeout=300
 		}
 	}
 
-	#now get the alerts in the last 24hours
-	#$query='Type:Alert SourceSystem=OMS | measure count() As Count, max(TimeGenerated) As Last by AlertName'
-	$query='Type:Alert SourceSystem=OMS | dedup AlertName' #this needs to be changed when we will generate one alert per computer in metrics based alerts
-	$startDate=(Get-Date).ToUniversalTime().AddDays(-7)
-	
-	$result = Get-QNDOMSQueryResult -query $query -startDate $startDate -endDate (Get-Date).ToUniversalTime() -timeout $timeout -authToken $connection `
+	$query='Alert | where SourceSystem=="OMS" | summarize arg_max(TimeGenerated,*) by AlertName'	
+	$result = Get-QNDKustoQueryResult -query $query -timespan 'P3D' -timeout $timeout -authToken $connection `
 		-ResourceBaseAddress $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion
 	foreach($alert in $result) {
 		if(! [String]::IsNullOrEmpty($alert.AlertName)) {
@@ -301,7 +297,7 @@ $timeout=300
 					#if it's active let's populate some more info and get the query result
 					if([String]::IsNullOrEmpty($rules.Item($Alert.AlertName).Threshold)) {
 						$query=$alert.Query
-					    $details = Get-QNDOMSQueryResult -query $query -startDate ([datetime] $alert.QueryExecutionStartTime).ToUniversalTime() -endDate ([datetime] $alert.QueryExecutionEndTime).ToUniversalTime() `
+					    $details = Get-QNDKustoQueryResult -query $query -timespan 'P3D' `
 						    -timeout $timeout -authToken $connection -ResourceBaseAddress $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion
 					    $first5 = $details | select-object -First 5 | ConvertTo-Json
 					    $rules.Item($alert.AlertName).First5Results=$first5
@@ -310,19 +306,19 @@ $timeout=300
 						try {
                             #in this version
                             # 1. get again all the alerts
-                            $query=('Type:Alert SourceSystem=OMS AlertName="{0}"' -f $alert.AlertName) #this needs to be changed when we will generate one alert per computer in metrics based alerts
-	                        $startDate=(Get-Date).ToUniversalTime().AddMinutes(-($rules.Item($alert.AlertName).Interval*(1+$Tolerance)))
-	                        $alertList = Get-QNDOMSQueryResult -query $query -startDate $startDate -endDate (Get-Date).ToUniversalTime() -timeout $timeout -authToken $connection `
+                            $query=('Alert | where SourceSystem=="OMS" and AlertName=="{0}"' -f $alert.AlertName) #this needs to be changed when we will generate one alert per computer in metrics based alerts
+	                        $timespan='PT{0}M' -f $rules.Item($alert.AlertName).Interval*(1+$Tolerance)
+	                        $alertList = Get-QNDKustoQueryResult -query $query -timespan $timespan -timeout $timeout -authToken $connection `
 		                        -ResourceBaseAddress $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion
                             $threshold = ConvertFrom-Json  $rules.Item($Alert.AlertName).Threshold
 							if ($threshold.MetricsTrigger) {								
                                 Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION -level $TRACE_VERBOSE -msg ('Getting details from metrics')
 								if ($threshold.Operator -ieq 'gt') {$op='>'} else {$op='<'}
-								$queryTemplate = 'Computer="{3}" {0} | where AggregatedValue {1} {2}'
+								$queryTemplate = '{0} | where Computer=="{3}" and AggregatedValue {1} {2} and TimeGenerated>{4} and TimeGenerated<{5}'
                                 #for each active alert get the actual value
                                 foreach($metricAlert in $alertList) {
-                                    $query = ($queryTemplate -f $Alert.Query, $op, $threshold.Value, $metricAlert.Computer)
-					                $details = Get-QNDOMSQueryResult -query $query -startDate ([datetime] $alert.QueryExecutionStartTime).ToUniversalTime() -endDate ([datetime] $alert.QueryExecutionEndTime).ToUniversalTime() `
+                                    $query = ($queryTemplate -f $Alert.Query, $op, $threshold.Value, $metricAlert.Computer, ([datetime] $alert.QueryExecutionStartTime).ToUniversalTime(), ([datetime]$alert.QueryExecutionEndTime).ToUniversalTime())
+					                $details = Get-QNDKustoQueryResult -query $query -timespan 'P3D' `
 						                -timeout $timeout -authToken $connection -ResourceBaseAddress $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion
                                     $rules.Item($alert.AlertName).First5Results+=(ConvertTo-Json $details[0])
                                 }

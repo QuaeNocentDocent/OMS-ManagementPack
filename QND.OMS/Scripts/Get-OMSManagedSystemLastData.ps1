@@ -256,16 +256,16 @@ catch {
 }
 
 try {
+	
+	if(![String]::IsNullOrEmpty($dataTypes)) {
+		$query = 'search * | where Type matches regex \"{0}\" | summarize LastData = max(TimeGenerated) by Computer, Type' -f $dataTypes
+	}
+	else {$query = 'search * | where not(Type in (\"Usage\")) | summarize LastData = max(TimeGenerated) by Computer, Type'}
+	
+	$timespan='PT{0}H' -f $LookBackHours
+	$systems=Get-QNDKustoQueryResult -query $query -timespan $timespan -authToken ($connection.CreateAuthorizationHeader()) -ResourceBaseAddress  $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion -timeout $timeout
 
-	$query = 'Type NOT IN {"Heartbeat","Usage","QNDHeartbeatEx_CL"} | measure max(TimeGenerated) as LastData by Computer, Type'
-
-	$startDate=(Get-Date).AddHours(-$LookBackHours)
-	$endDate=Get-Date
-	$systems=Get-QNDOMSQueryResult -query $query -startDate $startDate -endDate $endDate -authToken ($connection.CreateAuthorizationHeader()) -ResourceBaseAddress  $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion -timeout $timeout
-
-
-
-	#in this version just remove no fwdn systems
+	<#in this version just remove no fwdn systems #>
 	$nofqdnSys=@()
 	$systems| %{If(! $_.Computer.contains('.')){$nofqdnSys+=$_}}
 
@@ -276,6 +276,7 @@ try {
 			}
 		}
 	}
+	
 
 	#exluded systems
 	If(! [String]::IsNullOrEmpty($excludePattern)) {
@@ -295,14 +296,7 @@ try {
 	
 	$systems=$null
 
-
 	if(![String]::IsNullOrEmpty($dataTypes)) {
-		foreach($sys in $cleanSys) {
-			if($sys.Type -inotmatch $dataTypes) {
-				$cleanSys[$cleanSys.IndexOf($sys)]=$null
-			}
-		}
-		$cleanSys = $cleanSys | where {$_ -ne $null}
 		#in this acase I need to check for oldest datapoint, if *ANY* of the Data types has obsolete data I want to be alerted
 		$totalInstances = $cleanSys | group Computer | select @{n='Computer';e={$_.Name}},@{n='Type';e={'_Total'}},@{n='LastData';e={ ($_.group | measure LastData -min).minimum}}
 	}
@@ -343,15 +337,12 @@ try {
 		Return-Bag -object $hash -key QNDType
 	}
 
-
-
 	If ($traceLevel -eq $TRACE_DEBUG)
 	{
 		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
 		#it breaks in exception when run insde OpsMgr and POSH IDE	
 		$g_API.ReturnItems() 
 	}
-
 	
 	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
 }

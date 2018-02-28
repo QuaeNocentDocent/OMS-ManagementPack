@@ -197,7 +197,7 @@
           <ApiVersion>2015-10-31</ApiVersion>
           <EventID>1</EventID>
           <EventPublisher>QND Discovery</EventPublisher>
-          <EventParam>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</EventParam>
+          <EventParam>AutomationAccount $Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</EventParam>
         </DataSource>
       </Discovery>
            
@@ -236,7 +236,7 @@
             <SourceName>QND Discovery</SourceName>
             <EventId>1</EventId>
             <Message>QND Automation Account</Message>
-            <Key>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Key>
+            <Key>AutomationAccount $Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Key>
           </WriteAction>
         </WriteActions>
       </Rule>

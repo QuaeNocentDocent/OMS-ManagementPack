@@ -8,8 +8,8 @@
              More information can be found in the Management Pack Development Kit: 
              
              http://msdn.microsoft.com/en-us/library/ee533867.aspx -->
-        <ClassType ID="QND.OMS.Workspace" Base="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
-          <Property ID="OMSAPIVersion" Type="string"/>
+        <ClassType ID="QND.OMS.Workspace" Base="QNDA!QND.Azure.GenericService" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          <Property ID="OMSAPIVersion" Type="string" DefaultValue="2017-01-01-preview"/>
         </ClassType>      
       </ClassTypes>
       <RelationshipTypes>
@@ -18,41 +18,41 @@
   </TypeDefinitions>
   <Monitoring>
     <Discoveries>
-      <Discovery ID="QND.OMS.Workspace.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService">
+      <Discovery ID="QND.OMS.Workspace.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription">
         <Category>Discovery</Category>
         <DiscoveryTypes>
           <DiscoveryClass TypeID="QND.OMS.Workspace" />
         </DiscoveryTypes>
-        <DataSource ID="DS" TypeID="QNDA!QND.OMS.ArmService.SeedDiscovery.DS">
-          <IntervalSeconds>14450</IntervalSeconds>
-          <SyncTime></SyncTime>
-          <ApiVersion>2015-11-01-preview</ApiVersion>
-          <AzureType>Microsoft.OperationalInsights/workspaces</AzureType>
-          <ClassId>$MPElement[Name="QND.OMS.Workspace"]$</ClassId>
-          <InstanceSettings>
-            <Settings>
-              <Setting>
-                <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Name>
-                <Value>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Value>
-              </Setting>
-              <Setting>
-                <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</Name>
-                <Value>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</Value>
-              </Setting>
-              <Setting>
-                <Name>$MPElement[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Name>
-                <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
-              </Setting>
-            <Setting>
-                <Name>$MPElement[Name="System!System.Entity"]/DisplayName$</Name>
-                <Value>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceName$ ($Target/Host/Host/Property[Type="System!System.Entity"]/DisplayName$)</Value>
-              </Setting>
-              <Setting>
-                <Name>$MPElement[Name="QND.OMS.Workspace"]/OMSAPIVersion$</Name>
-                <Value>2015-11-01-preview</Value>
-              </Setting>
-            </Settings>
-          </InstanceSettings>
+        <DataSource ID="DS" TypeID="QNDA!QND.Azure.GenericService.Discovery.DS">
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <ClientId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <Type>Microsoft.OperationalInsights/workspaces</Type>
+          <ClassId>$MPElement[Name='QND.OMS.Workspace']$</ClassId>
+          <ApiVersion>2015-10-31</ApiVersion>
+          <EventID>1</EventID>
+          <EventPublisher>QND Discovery</EventPublisher>
+          <EventParam>LAWorkspace $Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</EventParam>
+        </DataSource>                
+      </Discovery>
+      <Discovery ID="QND.OMS.Workspace.API.Discovery" Enabled="true" Remotable="true" Target="QND.OMS.Workspace" ConfirmDelivery="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.Workspace">
+            <Property PropertyID="OMSAPIVersion" TypeID="QND.OMS.Workspace"/>
+          </DiscoveryClass>        
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.OMS.Workspace.OMSAPIDiscovery.DS">
+          <OMSAPIVersion>2017-01-01-preview</OMSAPIVersion>
+          <EventID>1</EventID>
+          <EventPublisher>QND Discovery</EventPublisher>
+          <EventParam>LAWorkspace $Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</EventParam>
         </DataSource>
       </Discovery>
     </Discoveries>
@@ -79,17 +79,16 @@
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <!-- <ResourceGroupId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService"]/ResourceGroup$</ResourceGroupId> -->
-          <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <ClientId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <ResourceURI>$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
           <OMSAPIVersion>$Target/Property[Type="QND.OMS.Workspace"]/OMSAPIVersion$</OMSAPIVersion>
-            <MaxAgeHours>2</MaxAgeHours>
+           <MaxAgeHours>2</MaxAgeHours>
           <LookbackHours>240</LookbackHours>
           <ExcludePattern></ExcludePattern>
           <DataTypes></DataTypes>
@@ -113,24 +112,23 @@
           <OperationalState ID="Obsolete" MonitorTypeStateID="Obsolete" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>3611</IntervalSeconds>
+          <IntervalSeconds>900</IntervalSeconds>
           <SyncTime></SyncTime>
-          <TimeoutSeconds>900</TimeoutSeconds>
+          <TimeoutSeconds>300</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <!-- <ResourceGroupId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService"]/ResourceGroup$</ResourceGroupId> -->
-          <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <ClientId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <ResourceURI>$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
           <OMSAPIVersion>$Target/Property[Type="QND.OMS.Workspace"]/OMSAPIVersion$</OMSAPIVersion>
           <MaxAgeHours>1</MaxAgeHours>
           <LookbackHours>240</LookbackHours>
           <ExcludePattern></ExcludePattern>
-          <DataTypes>^(SecurityEvent|Perf)$</DataTypes>
+          <DataTypes>^(SecurityEvent|Perf|CommonSecurityLog|LinuxAuditLog)$</DataTypes>
         </Configuration>
       </UnitMonitor>      
       <UnitMonitor ID="QND.OMS.Workspace.SysHeartbeat.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Workspace"
@@ -156,19 +154,19 @@
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <!-- <ResourceGroupId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ArmService"]/ResourceGroup$</ResourceGroupId> -->
-          <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <ClientId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
+          <ResourceURI>$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
           <OMSAPIVersion>$Target/Property[Type="QND.OMS.Workspace"]/OMSAPIVersion$</OMSAPIVersion>
           <MaxAgeMinutes>30</MaxAgeMinutes>
           <LookbackHours>120</LookbackHours>
           <ExcludePattern></ExcludePattern>
+          <Heartbeat>11</Heartbeat>
         </Configuration>
       </UnitMonitor>
       <UnitMonitor ID="QND.OMS.Workspace.Connectivity.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Workspace"
@@ -229,7 +227,7 @@
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+                    <Value Type="String">$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -277,7 +275,7 @@
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="String">$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</Value>
+                    <Value Type="String">$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -300,7 +298,7 @@
         </Configuration>
       </UnitMonitor>
 
-      <DependencyMonitor ID="QND.OMS.WorkspaceToSystem.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="QND.OMS.ManagedSystemLastData.Monitor" ParentMonitorID="Health!System.Health.AvailabilityState" Priority="Normal"
+      <DependencyMonitor ID="QND.OMS.WorkspaceToSystem.DepMonitor" Accessibility="Public" Enabled="true" MemberMonitor="Health!System.Health.AvailabilityState" ParentMonitorID="Health!System.Health.AvailabilityState" Priority="Normal"
                          RelationshipType="QND.OMS.WorkspaceContainsSystem" Remotable="true" Target="QND.OMS.Workspace">
         <Category>AvailabilityHealth</Category>
         <Algorithm>Percentage</Algorithm>
@@ -366,6 +364,9 @@
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Workspace.Connectivity.Monitor">
           <Name>Connectivity</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Workspace.API.Discovery">
+          <Name>QND - OMS Workspace API version discovery</Name>
         </DisplayString>
       </DisplayStrings>
     </LanguagePack>

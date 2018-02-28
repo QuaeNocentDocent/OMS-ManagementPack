@@ -49,7 +49,7 @@ param([int]$traceLevel=2,
 [Parameter (Mandatory=$true)][string]$ADUserName,
 [Parameter (Mandatory=$true)][string]$ADPassword,
 [Parameter (Mandatory=$true)][string]$resourceURI,
-[string]$OMSAPIVersion='2015-03-20',
+[string]$OMSAPIVersion,
 [int] $LookBackHours=24*7
 )
  
@@ -200,6 +200,7 @@ Function Import-ResourceModule
 	else {Throw [System.DllNotFoundException] ('{0} not found' -f $module)}
 }
 
+
 Function Discover-System
 {
 	param($obj)
@@ -207,12 +208,12 @@ Function Discover-System
 	if ([String]::IsNullOrEmpty($obj.Computer)) {return;}
 		$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.ManagedSystem']$")	
 		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)
-		$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric']/ServiceId$", $resourceURI)				
+		$objInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/ServiceId$", $resourceURI)				
 		$objInstance.AddProperty("$MPElement[Name='QND.OMS.ManagedSystem']/Computer$", $obj.Computer.ToLower())	
 		$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.Computer)	
 		$discoveryData.AddInstance($objInstance)	
 }
+
 #Start by setting up API object.
 	$P_TraceLevel = $TRACE_VERBOSE
 	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
@@ -241,7 +242,7 @@ try
 	$connection = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
 }
 catch {
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting{0}" -f $error[0]) $TRACE_ERROR
 	Throw-KeepDiscoveryInfo
 	exit 1	
 }
@@ -249,24 +250,10 @@ catch {
 try {
 	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
 
-	$uri = '{0}{1}/search?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$OMSAPIVersion
-	$query = 'ObjectName!="Advisor Metrics" ObjectName!=ManagedSpace | measure max(TimeGenerated) as lastdata by Computer'
-
+	$query='Heartbeat | summarize arg_max(TimeGenerated,Computer) by Computer'
 	Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ("About to query OMS with $query") $TRACE_VERBOSE
-
-	$QueryArray = @{Query=$Query}
-	$startDate=(Get-Date).AddHours(-$LookBackHours)
-	$endDate=Get-Date
-    $QueryArray+= @{start=('{0}Z' -f $startDate.GetDateTimeFormats('s'))}
-    $QueryArray+= @{end=('{0}Z' -f $endDate.GetDateTimeFormats('s'))}
-    $body = ConvertTo-Json -InputObject $QueryArray
-	$nextLink=$null
-	$systems=@()
-	do {
-		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb POST -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -data $body -TimeoutSeconds 300
-		$nextLink = $result.NextLink
-		$systems += $result.values	
-	} while ($nextLink)
+	$systems = Get-QNDKustoQueryResult -query $query -timespan ('PT{0}H' -f $LookBackHours) -timeout 300 -authToken ($connection.CreateAuthorizationHeader()) `
+		-ResourceBaseAddress $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion
 
 	foreach($sys in $systems) {
 		write-verbose $sys.Computer
