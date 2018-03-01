@@ -247,22 +247,29 @@ Function Discover-BackupProtectedItem
 		if ($obj) {
 			$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']$")	
 			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
-			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)
-			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric']/ServiceId$", $resourceURI)	
+			$objInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/ServiceId$", $resourceURI)	
 			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.Container']/Id$", $containerId)		
 
 			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/Id$", $obj.id)	
 			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/Name$", $obj.name)	
-			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/ItemType$", ('{0}-{1}-{2}' -f $obj.properties.protectedItemType,$obj.properties.backupManagementType,$obj.properties.workloadType))	
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/ManagementType$", $obj.properties.backupManagementType)	
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/WorkloadType$", $obj.properties.workloadType)	
+			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/ItemType$", $obj.properties.protectedItemType)	
 			$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $obj.properties.friendlyName)	
 
 #Write-Host $obj.properties
 			if($obj.properties.policyId) {
+				$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/PolicyId$", $obj.properties.policyId)
 				try {
-					$policyName=$obj.properties.policyId.Split(';')[1]
+					#$policyName=$obj.properties.policyId.Split(';')[1]
+					$policyName=$obj.properties.PolicyName
 					$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/PolicyName$", $policyName)	
 				}
 				catch {}
+			}
+			else {
+				$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/PolicyId$", '')
+				$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.ProtectedItem']/PolicyName$", '')	
 			}
 			$discoveryData.AddInstance($objInstance)	
 		}
@@ -315,8 +322,9 @@ try {
 	#don't have an API for optimized discovery so we must retrieve evrything and then filter epr container
 	#I chose this way so that the disocvery payload doen't become huge
 	$uris =@(
-		('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''AzureIaasVM'' and itemType eq ''VM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
-		('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''MAB'' and itemType eq ''FileFolder''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+		('{0}{1}/backupProtectedItems?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+		#('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''AzureIaasVM'' and itemType eq ''VM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
+		#('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''MAB'' and itemType eq ''FileFolder''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
 	)
 	Log-Event $SUCCESS_EVENT_ID $EVENT_TYPE_SUCCESS ("Getting items") $TRACE_VERBOSE
 

@@ -26,15 +26,15 @@
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>3</TraceLevel>
-          <ClientId>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <Proxy>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Host/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <ResourceURI>$Target/Host/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
 
           <LastNJobs>1</LastNJobs>
           <MaxFailures>0</MaxFailures>
@@ -72,15 +72,15 @@
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>3</TraceLevel>
-          <ClientId>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <Proxy>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Host/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <ResourceURI>$Target/Host/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
 
           <LastNJobs>-1</LastNJobs>
           <MaxFailures>0</MaxFailures>
@@ -118,15 +118,15 @@
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>3</TraceLevel>
-          <ClientId>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <Proxy>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Host/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <ResourceURI>$Target/Host/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
 
           <LastNJobs>5</LastNJobs>
           <MaxFailures>1</MaxFailures>
@@ -138,15 +138,157 @@
           <Tolerance>0.5</Tolerance>
 
         </Configuration>
+      </UnitMonitor>
+
+      <UnitMonitor ID="QND.OMS.Recovery.Item.ProtectionStatus.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Recovery.Vault.ProtectedItem"
+        ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Recovery.ItemStatusGeneric.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Recovery.Item.StatusGeneric.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="ProtectionStatus"]$</AlertParameter1>
+            <AlertParameter2>Protection Status</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="Unhealthy" MonitorTypeStateID="Unhealthy" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
+
+          <IntervalSeconds>86400</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>3</TraceLevel>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
+
+          <LastNJobs>5</LastNJobs>
+          <MaxFailures>1</MaxFailures>
+          <!--.net regex doesn't parse ^(?!Completed).*$ -->
+          <FailureCondition>Failed</FailureCondition>
+          <AutoMaxAgeHours>0</AutoMaxAgeHours>
+          <FixedMaxAgeHours>24</FixedMaxAgeHours>
+          <LookbackDays>15</LookbackDays>
+          <Tolerance>0.5</Tolerance>
+
+          <Property>ProtectionStatus</Property>
+          <HealthyValue>Healthy</HealthyValue>
+        </Configuration>
+      </UnitMonitor>
+      <UnitMonitor ID="QND.OMS.Recovery.Item.ProtectionState.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Recovery.Vault.ProtectedItem"
+        ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Recovery.ItemStatusGeneric.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Recovery.Item.StatusGeneric.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="ProtectionState"]$</AlertParameter1>
+            <AlertParameter2>Protection State</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="Unhealthy" MonitorTypeStateID="Unhealthy" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
+
+          <IntervalSeconds>86400</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>3</TraceLevel>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
+
+          <LastNJobs>5</LastNJobs>
+          <MaxFailures>1</MaxFailures>
+          <!--.net regex doesn't parse ^(?!Completed).*$ -->
+          <FailureCondition>Failed</FailureCondition>
+          <AutoMaxAgeHours>0</AutoMaxAgeHours>
+          <FixedMaxAgeHours>24</FixedMaxAgeHours>
+          <LookbackDays>15</LookbackDays>
+          <Tolerance>0.5</Tolerance>
+
+          <Property>ProtectionState</Property>
+          <HealthyValue>Protected</HealthyValue>
+        </Configuration>
+      </UnitMonitor>
+      <UnitMonitor ID="QND.OMS.Recovery.Item.HealthStatus.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Recovery.Vault.ProtectedItem"
+        ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Recovery.ItemStatusGeneric.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.OMS.Recovery.Item.StatusGeneric.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="HealthStatus"]$</AlertParameter1>
+            <AlertParameter2>Health Status</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="Unhealthy" MonitorTypeStateID="Unhealthy" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
+
+          <IntervalSeconds>86400</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>3</TraceLevel>
+          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ResourceURI>$Target/Host/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
+
+          <LastNJobs>5</LastNJobs>
+          <MaxFailures>1</MaxFailures>
+          <!--.net regex doesn't parse ^(?!Completed).*$ -->
+          <FailureCondition>Failed</FailureCondition>
+          <AutoMaxAgeHours>0</AutoMaxAgeHours>
+          <FixedMaxAgeHours>24</FixedMaxAgeHours>
+          <LookbackDays>15</LookbackDays>
+          <Tolerance>0.5</Tolerance>
+
+          <Property>HealthStatus</Property>
+          <HealthyValue>Passed</HealthyValue>
+        </Configuration>
       </UnitMonitor>      
-      
     </Monitors>
   </Monitoring>
   <Presentation>
     <StringResources>
       <StringResource ID="QND.OMS.Recovery.Item.LastJobStatus.Monitor.AlertMessage"/>
       <StringResource ID="QND.OMS.Recovery.Item.RecoveryPointAge.Monitor.AlertMessage"/>
-      <StringResource ID="QND.OMS.Recovery.Item.JobFailureRate.Monitor.AlertMessage"/>    
+      <StringResource ID="QND.OMS.Recovery.Item.JobFailureRate.Monitor.AlertMessage"/>
+      <StringResource ID="QND.OMS.Recovery.Item.StatusGeneric.Monitor.AlertMessage"/>
     </StringResources>
   </Presentation>
   <LanguagePacks>
@@ -183,6 +325,20 @@
           </Description>
         </DisplayString>
 
+        <DisplayString ElementID="QND.OMS.Recovery.Item.StatusGeneric.Monitor.AlertMessage">
+          <Name>QND - OMS Backup protected item is unhealthy</Name>
+          <Description>The current value for {1} is {0}</Description>
+        </DisplayString>
+
+        <DisplayString ElementID="QND.OMS.Recovery.Item.HealthStatus.Monitor">
+          <Name>Health Status</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Recovery.Item.ProtectionStatus.Monitor">
+          <Name>Protection Status</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Recovery.Item.ProtectionState.Monitor">
+          <Name>Protection State</Name>
+        </DisplayString>
       </DisplayStrings>
     </LanguagePack>
   </LanguagePacks>

@@ -284,8 +284,9 @@ try {
 
 
 	$uris =@(
-		('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''AzureIaasVM'' and itemType eq ''VM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
-		('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''MAB'' and itemType eq ''FileFolder''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+		('{0}{1}/backupProtectedItems?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+		#('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''AzureIaasVM'' and itemType eq ''VM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
+		#('{0}{1}/backupProtectedItems?api-version={2}&$filter=backupManagementType eq ''MAB'' and itemType eq ''FileFolder''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
 	)
 	$items = Get-OMSRecItems -uris $uris -connection $connection
 
@@ -423,7 +424,7 @@ scheduleRunTimes     : {2016-02-24T16:30:00}
 					'Microsoft.ClassicCompute/virtualMachines' { $ageMode='Auto'}	
 					'MabFileFolderProtectedItem' { $ageMode='Fixed' }
 					default { 
-						$ageMode='Fixed'
+						if ([String]::IsNullOrEmpty($item.properties.policyName)) {$ageMode='Fixed'} else {$ageMode='Auto'}
 						Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unrecognized Item Type {0}' -f $item.properties.protectedItemType) $TRACE_WARNING	
 					}
 				}
@@ -450,6 +451,9 @@ scheduleRunTimes     : {2016-02-24T16:30:00}
 				}
 				$bag = $g_api.CreatePropertyBag()
 				$bag.AddValue('ItemId', $item.Id)
+				$bad.AddValue('ProtectionStatus', $item.protectionStatus)
+				$bad.AddValue('ProtectionState', $item.protectionState)
+				$bad.AddValue('HealthStatus', $item.HealthStatus)
 				#return calculated status and input parameters
 				$execError=($failures -gt $MaxFailures).ToString()
 

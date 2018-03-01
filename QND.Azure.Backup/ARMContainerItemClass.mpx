@@ -13,6 +13,9 @@
           <Property ID="Name" Key="false" Type="string" />
           <Property ID="ItemType" Key="false" Type="string" />
           <Property ID="PolicyName" Key="false" Type="string" />
+          <Property ID="PolicyId" Key="false" Type="string" />
+          <Property ID="ManagementType" Key="false" Type="string" />
+          <Property ID="WorkloadType" Key="false" Type="string" />          
         </ClassType>      
       </ClassTypes>
       <RelationshipTypes>
@@ -37,16 +40,16 @@
         <DataSource ID="DS" TypeID="QND.OMS.Recovery.Container.Discovery.DS">
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <ResourceGroupId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</ResourceGroupId>
-          <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <ClientId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <ResourceGroupId>$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ResourceGroup$</ResourceGroupId>
+          <Proxy>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <ResourceURI>$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
         </DataSource>
       </Discovery>
       <Discovery ID="QND.OMS.Recovery.ProtectedItem.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="QND.OMS.Recovery.Vault.Container">
@@ -57,16 +60,16 @@
         <DataSource ID="DS" TypeID="QND.OMS.Recovery.ProtectedItem.Discovery.DS">
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>2</TraceLevel>
-          <ClientId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
-          <SubscriptionId>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
-          <ResourceGroupId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup"]/ResourceGroupId$</ResourceGroupId>
-          <Proxy>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
-          <AuthBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
-          <ResourceBaseAddress>$Target/Host/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <ResourceGroupId>$Target/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ResourceGroup$</ResourceGroupId>
+          <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
           <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
-          <ResourceURI>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric"]/ServiceId$</ResourceURI>
-          <APIVersion>$Target/Host/Property[Type="QNDA!QND.OMS.GenericService"]/ApiVersion$</APIVersion>
+          <ResourceURI>$Target/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</ResourceURI>
+          <APIVersion>$Target/Host/Property[Type="QNDA!QND.Azure.GenericService"]/ApiVersion$</APIVersion>
           <ContainerId>$Target/Property[Type="QND.OMS.Recovery.Vault.Container"]/Id$</ContainerId>
         </DataSource>
       </Discovery>
@@ -85,7 +88,7 @@
             <SourceName>OMS Discovery</SourceName>
             <EventId>1</EventId>
             <Message>QND</Message>
-            <Key>RecoveryContainer</Key>
+            <Key>RecoveryContainer $Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Key>
           </WriteAction>
         </WriteActions>
       </Rule>
@@ -102,7 +105,7 @@
             <SourceName>OMS Discovery</SourceName>
             <EventId>1</EventId>
             <Message>QND</Message>
-            <Key>RecoveryItem</Key>
+            <Key>RecoveryContainer $Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Key>
           </WriteAction>
         </WriteActions>
       </Rule>      
@@ -116,6 +119,10 @@
         <!-- QND.OMS.Backup.Conatiner -->
         <DisplayString ElementID="QND.OMS.Recovery.Vault.Container">
           <Name>QND - OMS Recovery Container</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Recovery.Vault.Container" SubElementID="Id">
+          <Name>Container Id</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Vault.Container" SubElementID="Name">
@@ -148,7 +155,18 @@
           <Name>Protection Policy Name</Name>
           <Description></Description>
         </DisplayString>
-
+        <DisplayString ElementID="QND.OMS.Recovery.Vault.ProtectedItem" SubElementID="ManagementType">
+          <Name>Management Type</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Recovery.Vault.ProtectedItem" SubElementID="WorkloadType">
+          <Name>Workload Type</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Recovery.Vault.ProtectedItem" SubElementID="PolicyId">
+          <Name>Policy Id</Name>
+          <Description></Description>
+        </DisplayString>
         <!-- Relkationships -->
 
         <DisplayString ElementID="QND.OMS.Recovery.VaultContainsContainer">

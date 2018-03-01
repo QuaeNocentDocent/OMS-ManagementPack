@@ -56,6 +56,25 @@
         </DataSource>
       </Discovery>
     </Discoveries>
+    <Rules>
+      <Rule ID="QND.OMS.Workspace.DiscoveryTrigger.Rule" ConfirmDelivery="false" DiscardLevel="100" Enabled="true" Priority="Normal" Remotable="true" Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription">
+        <Category>Discovery</Category>
+        <DataSources>
+          <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
+            <IntervalSeconds>1819</IntervalSeconds>
+          </DataSource>
+        </DataSources>
+        <WriteActions>
+          <WriteAction ID="WriteEvent" TypeID="QNDA!QND.DiscoveryEvent.WAT">
+            <LogName>Operations Manager</LogName>
+            <SourceName>QND Discovery</SourceName>
+            <EventId>1</EventId>
+            <Message>QND LAWorkspace</Message>
+            <Key>LAWorkspace $Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Key>
+          </WriteAction>
+        </WriteActions>
+      </Rule>
+    </Rules>
     <Monitors>
       <UnitMonitor ID="QND.OMS.WorkspaceLastData.Monitor" Accessibility="Public" Enabled="true" Target="QND.OMS.Workspace"
                    ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.OMS.Workspace.LastData.MT" ConfirmDelivery="false">
@@ -308,6 +327,7 @@
         </DependencyMonitor>
       
     </Monitors>
+  
   </Monitoring>
   <Presentation>
     <StringResources>
@@ -367,6 +387,10 @@
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Workspace.API.Discovery">
           <Name>QND - OMS Workspace API version discovery</Name>
+        </DisplayString>
+
+        <DisplayString ElementID="QND.OMS.Workspace.DiscoveryTrigger.Rule">
+          <Name>QND - OMS Workspace disocvery trigger</Name>
         </DisplayString>
       </DisplayStrings>
     </LanguagePack>

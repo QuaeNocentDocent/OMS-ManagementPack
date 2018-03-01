@@ -279,7 +279,7 @@ try {
 		}
 	}
 
-	$query='Alert | where SourceSystem=="OMS" | summarize arg_max(TimeGenerated,*) by AlertName'	
+	$query='Alert | where SourceSystem==\"OMS\" | summarize arg_max(TimeGenerated,*) by AlertName'	
 	$result = Get-QNDKustoQueryResult -query $query -timespan 'P3D' -timeout $timeout -authToken $connection `
 		-ResourceBaseAddress $ResourceBaseAddress -resourceURI $resourceURI -OMSAPIVersion $OMSAPIVersion
 	foreach($alert in $result) {

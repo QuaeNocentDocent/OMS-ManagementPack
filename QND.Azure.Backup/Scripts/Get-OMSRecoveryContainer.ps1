@@ -244,8 +244,7 @@ Function Discover-BackupContainer
 
 			$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Recovery.Vault.Container']$")	
 			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
-			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.ResourceGroup']/ResourceGroupId$", $ResourceGroupId)
-			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.AzureServiceGeneric']/ServiceId$", $resourceURI)	
+			$objInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/ServiceId$", $resourceURI)	
 
 			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.Container']/Id$", $id)		
 			$objInstance.AddProperty("$MPElement[Name='QND.OMS.Recovery.Vault.Container']/Name$", $name)		
