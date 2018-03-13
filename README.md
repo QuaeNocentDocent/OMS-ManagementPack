@@ -7,6 +7,7 @@ This management pack suite extends the Azure Monitoring Management Pack integrat
 - Azure Automation
 - Azure Storage
 - Azure Monitoring
+- Azure AD COnnect Health
 
 Version [1705](https://github.com/QuaeNocentDocent/OMS-ManagementPack/releases/tag/1705) is the latest with support of ASM workloads, starting from version [1712](https://github.com/QuaeNocentDocent/OMS-ManagementPack/releases/tag/1712) only ARM worklaods are supported. Version 1712 introduced significant changes and thus is not backward compatible. 
 While I know this is far from optimum, the breaking changes were needed to:
