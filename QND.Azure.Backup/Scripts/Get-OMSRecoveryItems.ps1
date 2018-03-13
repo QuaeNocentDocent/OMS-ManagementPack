@@ -79,6 +79,7 @@ $FAILURE_EVENT_ID = 4000		#errore generico nello script
 $SUCCESS_EVENT_ID = 1101
 $START_EVENT_ID = 1102
 $STOP_EVENT_ID = 1103
+$INFO_EVENT_ID = 1104
 
 #TypedPropertyBag
 $AlertDataType = 0
@@ -336,7 +337,7 @@ try {
 			if($result.gotValue) {	
 				foreach($item in $result.Values) {
 					if($item.id -imatch $containerId) {
-						write-verbose $item.properties.friendlyName
+						Log-Event -eventType $EVENT_TYPE_INFORMATION -level $TRACE_VERBOSE -msg ('Discoverying contaioner: {0}' -f $item.properties.friendlyName) -eventID $INFO_EVENT_ID
 						Discover-BackupProtectedItem -obj $item -containerId $containerId
 					}
 				}

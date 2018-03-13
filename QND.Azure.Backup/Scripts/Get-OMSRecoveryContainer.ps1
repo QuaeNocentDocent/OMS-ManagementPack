@@ -241,7 +241,7 @@ Function Discover-BackupContainer
 			$id=$obj.id
 			$name=$obj.Name
 			$displayName = $obj.properties.friendlyName
-
+			Log-Event $INFO_EVENT_ID $EVENT_TYPE_INFO ('Discovering {0} - {1}' -f $name, $Id) $TRACE_VERBOSE
 			$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.OMS.Recovery.Vault.Container']$")	
 			$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
 			$objInstance.AddProperty("$MPElement[Name='QNDA!QND.Azure.GenericService']/ServiceId$", $resourceURI)	
@@ -299,8 +299,12 @@ try {
 	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
 
 	$uris =@(
+#		('{0}{1}/backupProtectionContainers?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
 		('{0}{1}/backupProtectionContainers?api-version={2}&$filter=backupManagementType eq ''AzureIaasVM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
-		('{0}{1}/backupProtectionContainers?api-version={2}&$filter=backupManagementType eq ''MAB''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)		
+		('{0}{1}/backupProtectionContainers?api-version={2}&$filter=backupManagementType eq ''MAB''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
+		('{0}{1}/backupProtectionContainers?api-version={2}&$filter=backupManagementType eq ''AzureWorkload''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
+		('{0}{1}/backupProtectionContainers?api-version={2}&$filter=backupManagementType eq ''DPM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
+		('{0}{1}/backupProtectionContainers?api-version={2}&$filter=backupManagementType eq ''AzureBackupServer''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
 	)	
 
 	foreach($uri in $uris) {
