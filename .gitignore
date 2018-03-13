@@ -251,7 +251,8 @@ ModelManifest.xml
 /QND.Azure.Automation/Samples/Get-AutomationRunbookStatusBAD.ps1
 /QND.Azure.Automation/Samples/QND.Azure.Test.xml
 *MPResources.Resources
-/QND.OMS/Tests/PScript1.ps1
+/QND.OMS/Tests/*
 /ExternalHealthChecks/Tests/Tests.ps1
 /QND.Azure.AADConnect/Docs/Connect Health API - Guide.pdf
-/QND.Azure.AADConnect/Tests/Untitled3.ps1
+/QND.Azure.AADConnect/Tests/*
+/Tests
