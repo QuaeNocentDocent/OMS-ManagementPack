@@ -3,19 +3,35 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.LogAnalytics", "QND.OMS.LogAnalytics.mpproj", "{A5239F19-F154-4CD2-A3AD-679E8969286B}"
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.LogAnalytics", "QND.OMS\QND.OMS.LogAnalytics.mpproj", "{A5239F19-F154-4CD2-A3AD-679E8969286B}"
 EndProject
-Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.Backup", "..\QND.Azure.Backup\QND.OMS.Backup.mpproj", "{CC08C0C5-3EBA-43FF-844E-5397ED8CEDC7}"
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.Backup", "QND.Azure.Backup\QND.OMS.Backup.mpproj", "{CC08C0C5-3EBA-43FF-844E-5397ED8CEDC7}"
 EndProject
-Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.Automation", "..\QND.Azure.Automation\QND.OMS.Automation.mpproj", "{D83135FA-E78F-4EF6-955D-25EFE60135F8}"
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.Automation", "QND.Azure.Automation\QND.OMS.Automation.mpproj", "{D83135FA-E78F-4EF6-955D-25EFE60135F8}"
 EndProject
-Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.AzureMPIntegration", "..\AzureMPIntegration\QND.AzureMPIntegration.mpproj", "{E4A746E9-990D-4D17-8892-54D78C11538D}"
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.AzureMPIntegration", "AzureMPIntegration\QND.AzureMPIntegration.mpproj", "{E4A746E9-990D-4D17-8892-54D78C11538D}"
 EndProject
-Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.Backup.Server", "..\QND.OMS.Backup.Server\QND.OMS.Backup.Server.mpproj", "{A80179AC-7B16-4800-A43C-8D25F871A435}"
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.OMS.Backup.Server", "QND.OMS.Backup.Server\QND.OMS.Backup.Server.mpproj", "{A80179AC-7B16-4800-A43C-8D25F871A435}"
 EndProject
-Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.Azure.StorageAccount", "..\QND.Azure.StorageAccount\QND.Azure.StorageAccount.mpproj", "{DB0120B9-00CF-4E43-B9E3-9C12970A39AF}"
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.Azure.StorageAccount", "QND.Azure.StorageAccount\QND.Azure.StorageAccount.mpproj", "{DB0120B9-00CF-4E43-B9E3-9C12970A39AF}"
 EndProject
-Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.Azure.AADConnect", "..\QND.Azure.AADConnect\QND.Azure.AADConnect.mpproj", "{CD660E24-8875-4372-A0F3-0884DF56546A}"
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.Azure.AADConnect", "QND.Azure.AADConnect\QND.Azure.AADConnect.mpproj", "{CD660E24-8875-4372-A0F3-0884DF56546A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{CED3285A-E6F4-4C8E-A556-BCE72350494D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{FFB38A2E-A51A-43F9-B95F-4B10FD14346F}"
+	ProjectSection(SolutionItems) = preProject
+		Tests\PScript1.ps1 = Tests\PScript1.ps1
+		Tests\Untitled2.ps1 = Tests\Untitled2.ps1
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SquaredUp", "SquaredUp", "{BC167D0A-8BFC-4E9F-AD53-DA5AC7E34FED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OMS Workloads", "OMS Workloads", "{6D7A0059-AB12-42B8-AD38-1C98C5C862A5}"
+	ProjectSection(SolutionItems) = preProject
+		SquaredUp\OMS Workloads\Manifest.xml = SquaredUp\OMS Workloads\Manifest.xml
+		SquaredUp\OMS Workloads\View.xml = SquaredUp\OMS Workloads\View.xml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -70,6 +86,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6D7A0059-AB12-42B8-AD38-1C98C5C862A5} = {BC167D0A-8BFC-4E9F-AD53-DA5AC7E34FED}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C3048C10-7B85-4EC4-88AA-1296918ACBCC}

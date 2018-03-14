@@ -1,0 +1,219 @@
+<?xml version="1.0"?>
+<View xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" MajorVersion="1" MinorVersion="0">
+  <Title>OMS Workloads</Title>
+  <Scope>
+    <Inheritance>Replace</Inheritance>
+    <Filters />
+    <Objects />
+  </Scope>
+  <Sharing>
+    <InitialId>579caf92-bd2e-43f7-b299-306a41add81d</InitialId>
+    <RevisionId>04b396c5-0c0b-433d-a9cd-029b35e40959</RevisionId>
+  </Sharing>
+  <Sections>
+    <Section>
+      <Id>1464191331423</Id>
+      <Plugin>alertlist</Plugin>
+      <RequiredPluginVersion>
+        <Major>2</Major>
+        <Minor>5</Minor>
+      </RequiredPluginVersion>
+      <ScomData>
+        <DataType>alert</DataType>
+        <Scope>
+          <Inheritance>Replace</Inheritance>
+          <Criteria>Name Like 'QND - OMS%' AND ResolutionState &lt; 255</Criteria>
+          <Filters />
+          <Objects />
+        </Scope>
+        <ExtendedProperties>false</ExtendedProperties>
+      </ScomData>
+      <Settings>
+        <NameValueSetting>
+          <Name>age-filter</Name>
+          <Value>last24hours</Value>
+        </NameValueSetting>
+        <NameValueSetting>
+          <Name>source-filter</Name>
+          <Value>all</Value>
+        </NameValueSetting>
+        <NameValueSetting>
+          <Name>owner-filter</Name>
+          <Value>all</Value>
+        </NameValueSetting>
+        <NameValueSetting>
+          <Name>state-filter</Name>
+          <Value>all</Value>
+        </NameValueSetting>
+        <NameValueSetting>
+          <Name>severity-filter</Name>
+          <Value>error,warning,info</Value>
+        </NameValueSetting>
+        <NameValueSetting>
+          <Name>maxitemsenabled</Name>
+          <Value>true</Value>
+        </NameValueSetting>
+        <NameValueSetting>
+          <Name>maxitems</Name>
+          <Value>10</Value>
+        </NameValueSetting>
+        <NameValueSetting>
+          <Name>columns</Name>
+          <Value>["name","objectName","objectPath","timeRaised","owner","resolutionStateName"]</Value>
+        </NameValueSetting>
+      </Settings>
+    </Section>
+    <Split>
+      <Width>50</Width>
+      <Left>
+        <Section>
+          <Id>1464190200384</Id>
+          <Title>Backup Vaults (Legacy)</Title>
+          <Plugin>status</Plugin>
+          <RequiredPluginVersion>
+            <Major>2</Major>
+            <Minor>5</Minor>
+          </RequiredPluginVersion>
+          <ScomData>
+            <DataType>object</DataType>
+            <Scope>
+              <Inheritance>Replace</Inheritance>
+              <Class>10dcb3b3-256b-dba7-c97c-ccd9d423610c</Class>
+              <Filters />
+              <Objects />
+            </Scope>
+            <ExtendedProperties>false</ExtendedProperties>
+          </ScomData>
+          <Settings>
+            <NameValueSetting>
+              <Name>labeltemplate</Name>
+              <Value>labelname</Value>
+            </NameValueSetting>
+            <NameValueSetting>
+              <Name>sortproperty</Name>
+              <Value>Name</Value>
+            </NameValueSetting>
+          </Settings>
+        </Section>
+        <Section>
+          <Id>1464190748899</Id>
+          <Title>Recovery Vaults</Title>
+          <Plugin>status</Plugin>
+          <RequiredPluginVersion>
+            <Major>2</Major>
+            <Minor>5</Minor>
+          </RequiredPluginVersion>
+          <ScomData>
+            <DataType>object</DataType>
+            <Scope>
+              <Inheritance>Replace</Inheritance>
+              <Class>3871d409-1297-2247-3a3b-f44356f53444</Class>
+              <Filters />
+              <Objects />
+            </Scope>
+            <ExtendedProperties>false</ExtendedProperties>
+          </ScomData>
+          <Settings>
+            <NameValueSetting>
+              <Name>labeltemplate</Name>
+              <Value>labelname</Value>
+            </NameValueSetting>
+            <NameValueSetting>
+              <Name>sortproperty</Name>
+              <Value>Name</Value>
+            </NameValueSetting>
+          </Settings>
+        </Section>
+      </Left>
+      <Right>
+        <Section>
+          <Id>1464190809142</Id>
+          <Title>Log Analytics</Title>
+          <Plugin>status</Plugin>
+          <RequiredPluginVersion>
+            <Major>2</Major>
+            <Minor>5</Minor>
+          </RequiredPluginVersion>
+          <ScomData>
+            <DataType>object</DataType>
+            <Scope>
+              <Inheritance>Replace</Inheritance>
+              <Class>1fa1b6ec-f20c-ea94-1b87-47b9e67cb43f</Class>
+              <Filters />
+              <Objects />
+            </Scope>
+            <ExtendedProperties>false</ExtendedProperties>
+          </ScomData>
+          <Settings>
+            <NameValueSetting>
+              <Name>labeltemplate</Name>
+              <Value>labelname</Value>
+            </NameValueSetting>
+            <NameValueSetting>
+              <Name>sortproperty</Name>
+              <Value>Name</Value>
+            </NameValueSetting>
+          </Settings>
+        </Section>
+        <Section>
+          <Id>1464191032425</Id>
+          <Title>OMS Alert Rules</Title>
+          <Plugin>status</Plugin>
+          <RequiredPluginVersion>
+            <Major>2</Major>
+            <Minor>5</Minor>
+          </RequiredPluginVersion>
+          <ScomData>
+            <DataType>object</DataType>
+            <Scope>
+              <Inheritance>Replace</Inheritance>
+              <Class>60e4dae6-0201-a6c0-cbe7-624a4b22d37f</Class>
+              <Filters />
+              <Objects />
+            </Scope>
+            <ExtendedProperties>true</ExtendedProperties>
+          </ScomData>
+          <Settings>
+            <NameValueSetting>
+              <Name>labeltemplate</Name>
+              <Value>labelname</Value>
+            </NameValueSetting>
+            <NameValueSetting>
+              <Name>sortproperty</Name>
+              <Value>Name</Value>
+            </NameValueSetting>
+          </Settings>
+        </Section>
+        <Section>
+          <Id>1464944588578</Id>
+          <Title>OMS Automation Accounts</Title>
+          <Plugin>status</Plugin>
+          <RequiredPluginVersion>
+            <Major>2</Major>
+            <Minor>5</Minor>
+          </RequiredPluginVersion>
+          <ScomData>
+            <DataType>object</DataType>
+            <Scope>
+              <Inheritance>Replace</Inheritance>
+              <Class>433c7721-b4f1-ccc2-ddc1-99a8471e48b0</Class>
+              <Filters />
+              <Objects />
+            </Scope>
+            <ExtendedProperties>false</ExtendedProperties>
+          </ScomData>
+          <Settings>
+            <NameValueSetting>
+              <Name>labeltemplate</Name>
+              <Value>labelname</Value>
+            </NameValueSetting>
+            <NameValueSetting>
+              <Name>sortproperty</Name>
+              <Value>Name</Value>
+            </NameValueSetting>
+          </Settings>
+        </Section>
+      </Right>
+    </Split>
+  </Sections>
+</View>

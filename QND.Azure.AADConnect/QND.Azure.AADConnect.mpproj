@@ -64,11 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Docs" />
-    <Folder Include="Tests" />
     <Folder Include="Scripts" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Tests\Test.ps1" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AADConnectHealth.mpx">

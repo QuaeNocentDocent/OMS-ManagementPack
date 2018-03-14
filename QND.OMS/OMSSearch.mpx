@@ -1,0 +1,6 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Resources>
+    <DeployableResource ID="OMSSearchModule.Res" Accessibility="Internal" FileName="OMSSearch.psm1" HasNullStream="false"/>
+    <DeployableAssembly ID="Res.AADClient" Accessibility="Public" FileName="Microsoft.IdentityModel.Clients.ActiveDirectory.dll" QualifiedName="Microsoft.IdentityModel.Clients.ActiveDirectory, Version=2.14.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" HasNullStream="false" />
+  </Resources> 
+</ManagementPackFragment>

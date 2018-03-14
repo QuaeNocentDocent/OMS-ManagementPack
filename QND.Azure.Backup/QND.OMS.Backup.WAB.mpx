@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"><TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="QND.OMS.Backup.Agent" Accessibility="Public" Abstract="false" Base="Windows!Microsoft.Windows.LocalApplication" Hosted="true" Singleton="false" Extension="false" />
+        <ClassType ID="QND.OMS.Backup.Agent.Policy" Accessibility="Public" Abstract="false" Base="Windows!Microsoft.Windows.ApplicationComponent" Hosted="true" Singleton="false" Extension="false">
+          <Property ID="PolicyName" Type="string" AutoIncrement="false" Key="true" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="RetentionDays" Type="int" AutoIncrement="false" Key="false" CaseSensitive="false" Required="false" Scale="0" />
+        </ClassType>
+      </ClassTypes>
+      <RelationshipTypes>
+        <RelationshipType ID="QND.OMS.BackupAgentHostsPolicy" Abstract="false" Base="System!System.Hosting" Accessibility="Public">
+          <Source ID="Source" Type="QND.OMS.Backup.Agent" />
+          <Target ID="Target" Type="QND.OMS.Backup.Agent.Policy" />
+        </RelationshipType>
+      </RelationshipTypes>
+    </EntityTypes>
+    <ModuleTypes>
+      <DataSourceModuleType ID="QND.OMS.Backup.Policy.Discovery.DS" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="TraceLevel" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TargetComputer" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScriptTimeout" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="ScriptTimeout" Selector="$Config/ScriptTimeout$" ParameterType="int" />
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.TimedPowerShell.DiscoveryProvider">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+                <ScriptName>OBPolicyDiscovery.ps1</ScriptName>
+                <ScriptBody>
+                  $IncludeFileContent/Scripts/OBPolicyDiscovery.ps1$
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>traceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>computerName</Name>
+                    <Value>$config/TargetComputer$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>sourceID</Name>
+                    <Value>$MPElement$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>ManagedEntityId</Name>
+                    <Value>$Target/Id$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/ScriptTimeout$</TimeoutSeconds>
+                <StrictErrorHandling>false</StrictErrorHandling>
+              </DataSource>
+            </MemberModules>
+            <Composition>
+              <Node ID="DS" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
+    </ModuleTypes>
+  </TypeDefinitions><Monitoring>
+    <Discoveries>
+      <Discovery ID="QND.OMS.Backup.Agent.Discovery" Enabled="true" Target="Windows!Microsoft.Windows.Computer" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.Backup.Agent" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.FilteredRegistryDiscoveryProvider">
+          <ComputerName>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/NetworkName$</ComputerName>
+          <RegistryAttributeDefinitions>
+            <RegistryAttributeDefinition>
+              <AttributeName>Start</AttributeName>
+              <Path>SYSTEM\CurrentControlSet\Services\obengine\Start</Path>
+              <PathType>1</PathType>
+              <AttributeType>2</AttributeType>
+            </RegistryAttributeDefinition>
+          </RegistryAttributeDefinitions>
+          <Frequency>86400</Frequency>
+          <ClassId>$MPElement[Name="QND.OMS.Backup.Agent"]$</ClassId>
+          <InstanceSettings>
+            <Settings>
+              <Setting>
+                <Name>$MPElement[Name="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Name>
+                <Value>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name='System!System.Entity']/DisplayName$</Name>
+                <Value>Windows Azure Backup Agent ($Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$)</Value>
+              </Setting>
+            </Settings>
+          </InstanceSettings>
+          <Expression>
+            <SimpleExpression>
+              <ValueExpression>
+                <XPathQuery Type="Integer">Values/Start</XPathQuery>
+              </ValueExpression>
+              <Operator>Equal</Operator>
+              <ValueExpression>
+                <Value Type="Integer">3</Value>
+              </ValueExpression>
+            </SimpleExpression>
+          </Expression>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="QND.OMS.Backup.Policy.Discovery" Enabled="true" Target="QND.OMS.Backup.Agent" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.OMS.Backup.Agent.Policy">
+            <Property PropertyID="PolicyName" />
+            <Property PropertyID="RetentionDays" />
+          </DiscoveryClass>
+          <DiscoveryRelationship TypeID="QND.OMS.BackupAgentHostsPolicy" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.OMS.Backup.Policy.Discovery.DS">
+          <TraceLevel>2</TraceLevel>
+          <TargetComputer>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</TargetComputer>
+          <ScriptTimeout>300</ScriptTimeout>
+          <IntervalSeconds>86400</IntervalSeconds>
+          <SyncTime />
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+  </Monitoring><LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="QND.OMS.Backup.Agent">
+          <Name>QND - OMS Azure Backup Monitor</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Backup.Agent.Discovery">
+          <Name>Discovery For OMS Azure Backup Agent</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Backup.Agent.Policy">
+          <Name>QND - OMS Azure Backup Policy</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Backup.Agent.Policy" SubElementID="PolicyName">
+          <Name>PolicyName</Name>
+        </DisplayString>
+        <DisplayString ElementID="QND.OMS.Backup.Agent.Policy" SubElementID="RetentionDays">
+          <Name>RetentionDays</Name>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks></ManagementPackFragment>

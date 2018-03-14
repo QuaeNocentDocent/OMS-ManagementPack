@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Manifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SharingId>579caf92-bd2e-43f7-b299-306a41add81d</SharingId>
+  <SharingRevision>04b396c5-0c0b-433d-a9cd-029b35e40959</SharingRevision>
+  <Title>OMS Workloads</Title>
+  <SchemaVersion>
+    <Major>1</Major>
+    <Minor>0</Minor>
+  </SchemaVersion>
+  <PluginRefs>
+    <PluginRef>
+      <Name>alertlist</Name>
+      <Version>
+        <Major>2</Major>
+        <Minor>5</Minor>
+      </Version>
+    </PluginRef>
+    <PluginRef>
+      <Name>status</Name>
+      <Version>
+        <Major>2</Major>
+        <Minor>5</Minor>
+      </Version>
+    </PluginRef>
+  </PluginRefs>
+  <ManagementPackRefs>
+    <ManagementPackRef>
+      <Id>32b7c46d-7400-233b-45f7-343a8a1236b8</Id>
+      <Version>2.0.0.11</Version>
+      <VersionId>48d74655-a779-ed96-d37d-82374ed60b0a</VersionId>
+      <Name>QND.OMS.Backup</Name>
+      <FriendlyName>QND.OMS.Backup</FriendlyName>
+      <DisplayName>QND - Azure OMS Backup</DisplayName>
+      <Description>Community based Azure OMS Backup monitoring</Description>
+    </ManagementPackRef>
+    <ManagementPackRef>
+      <Id>21ea9217-9b56-43ff-0fb8-19a53a43e027</Id>
+      <Version>2.0.0.18</Version>
+      <VersionId>c2fdb37d-1abf-41ee-a2ed-103a2b88fde5</VersionId>
+      <Name>QND.OMS.LogAnalytics</Name>
+      <FriendlyName>QND.OMS.LogAnalytics</FriendlyName>
+      <DisplayName>QND - OMS Log Analytics</DisplayName>
+      <Description>QND Community Management Pack for monitoring Microsoft Operations Management Suite #MSOMS</Description>
+    </ManagementPackRef>
+    <ManagementPackRef>
+      <Id>2306e79c-a872-3c1c-619d-70861d4b0cad</Id>
+      <Version>2.0.0.41</Version>
+      <VersionId>09bc226b-b57d-1a47-e0e2-9f7a5ba4c774</VersionId>
+      <Name>QND.OMS.Automation</Name>
+      <FriendlyName>QND.OMS.Automation</FriendlyName>
+      <DisplayName>QND - OMS Automation</DisplayName>
+      <Description>Community based monitoring for Azure OMS Automation</Description>
+    </ManagementPackRef>
+  </ManagementPackRefs>
+</Manifest>
