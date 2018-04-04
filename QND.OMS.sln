@@ -18,6 +18,9 @@ EndProject
 Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.Azure.AADConnect", "QND.Azure.AADConnect\QND.Azure.AADConnect.mpproj", "{CD660E24-8875-4372-A0F3-0884DF56546A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{CED3285A-E6F4-4C8E-A556-BCE72350494D}"
+	ProjectSection(SolutionItems) = preProject
+		QND.OMS.Automation.Runbook.ExecStatus.Monitor.md = QND.OMS.Automation.Runbook.ExecStatus.Monitor.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{FFB38A2E-A51A-43F9-B95F-4B10FD14346F}"
 	ProjectSection(SolutionItems) = preProject

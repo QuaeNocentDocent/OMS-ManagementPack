@@ -87,9 +87,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Docs\Connect Health API - Guide.pdf">
+    <None Include="Docs\Connect Health API - Guide.pdf">
       <SubType>Content</SubType>
-    </Content>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>
