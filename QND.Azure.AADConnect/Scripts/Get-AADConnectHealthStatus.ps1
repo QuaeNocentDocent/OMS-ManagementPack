@@ -276,6 +276,15 @@ try {
 		$nextLink = $null
 		Log-Event $INFO_EVENT_ID $EVENT_TYPE_SUCCESS ("About to query AAD Connect Health $uri") $TRACE_VERBOSE
 		$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -data $body -TimeoutSeconds 300 -ErrorAction SilentlyContinue
+		if ($result.StatusCode -ne 200) {
+			#check for not onboarded services
+			if ($result.Values[0].Message -imatch 'not onboarded') { #just continue with next service
+				continue
+			}
+			else {
+				throw $result.Values.Message
+			}
+		}
 		foreach($value in $result.Values) {
 			$value=$result.Values
 			$returnValue=@{
@@ -285,7 +294,7 @@ try {
 				'LastUpload'=[datetime]$value.lastDataUploadDateTime
 				'AgeMinutes'= [int] ((get-date) - [datetime]$value.lastDataUploadDateTime).TotalMinutes
 			}
-			Return-Bag -object $returnValue -key 'Id'
+		Return-Bag -object $returnValue -key 'Id'
 		}
 	}
 

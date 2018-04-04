@@ -21,6 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{CED3285A-E
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{FFB38A2E-A51A-43F9-B95F-4B10FD14346F}"
 	ProjectSection(SolutionItems) = preProject
+		Tests\AzureMonitor.ps1 = Tests\AzureMonitor.ps1
 		Tests\PScript1.ps1 = Tests\PScript1.ps1
 		Tests\Untitled2.ps1 = Tests\Untitled2.ps1
 	EndProjectSection
