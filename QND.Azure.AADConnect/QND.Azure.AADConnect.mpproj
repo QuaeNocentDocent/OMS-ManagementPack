@@ -64,11 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Docs" />
-    <Folder Include="Tests" />
     <Folder Include="Scripts" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Tests\Test.ps1" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AADConnectHealth.mpx">
@@ -91,9 +87,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Docs\Connect Health API - Guide.pdf">
+    <None Include="Docs\Connect Health API - Guide.pdf">
       <SubType>Content</SubType>
-    </Content>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>

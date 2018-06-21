@@ -105,9 +105,9 @@
     <Compile Include="AutomationAccountAndRunbookClass.mpx">
       <SubType>Code</SubType>
     </Compile>
-    <None Include="KBArticles.mpx">
+    <Compile Include="KBArticles.mpx">
       <SubType>Code</SubType>
-    </None>
+    </Compile>
     <Compile Include="ManagementPack.mpx">
       <SubType>Code</SubType>
     </Compile>

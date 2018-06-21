@@ -1,0 +1,225 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <ModuleTypes>
+      <!-- I'm using the same data source for backup age and size. This can work as far as we have a 1:1 relationship between agent and policy
+      if a future agent version will adopt a 1:n relationhip between agent and policies this must be reviewed -->
+      <DataSourceModuleType ID="Progel.Windows.Azure.Backup.Policy.Status.DS" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="TraceLevel" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScriptTimeout" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdAgeHours" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdSizeMB" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="ScriptTimeout" Selector="$Config/ScriptTimeout$" ParameterType="int" />
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="ThresholdAgeHours" Selector="$Config/ThresholdAgeHours$" ParameterType="int" />
+          <OverrideableParameter ID="ThresholdSizeMB" Selector="$Config/ThresholdSizeMB$" ParameterType="int" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+              </DataSource>
+              <ProbeAction ID="Script" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+                <ScriptName>WABStatus.ps1</ScriptName>
+                <ScriptBody>$IncludeFileContent/Scripts/WABStatus.ps1$</ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>traceLevel</Name>
+                    <Value>$Config/TraceLevel$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>thresholdHours</Name>
+                    <Value>$Config/ThresholdAgeHours$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>thresholdSizeMB</Name>
+                    <Value>$Config/ThresholdSizeMB$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/ScriptTimeout$</TimeoutSeconds>
+              </ProbeAction>              
+            </MemberModules>
+            <Composition>
+              <Node ID="Script">
+                <Node ID="Scheduler" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>
+    </ModuleTypes>
+    <MonitorTypes>
+      <UnitMonitorType ID="QND.OMS.Backup.Policy.Age.MT" Accessibility="Internal">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="UpToDate" NoDetection="false"/>
+          <MonitorTypeState ID="TooOld" NoDetection="false"/>
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="TraceLevel" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScriptTimeout" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdAgeHours" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdSizeMB" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="PolicyName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="ScriptTimeout" Selector="$Config/ScriptTimeout$" ParameterType="int" />
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="ThresholdAgeHours" Selector="$Config/ThresholdAgeHours$" ParameterType="int" />
+          <OverrideableParameter ID="ThresholdSizeMB" Selector="$Config/ThresholdSizeMB$" ParameterType="int" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="Status" TypeID="Progel.Windows.Azure.Backup.Policy.Status.DS">
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <ScriptTimeout>$Config/ScriptTimeout$</ScriptTimeout>
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <ThresholdAgeHours>$Config/ThresholdAgeHours$</ThresholdAgeHours>
+              <ThresholdSizeMB>$Config/ThresholdSizeMB$</ThresholdSizeMB>
+            </DataSource>
+            <ConditionDetection ID="NormalCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='BackupStatus']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">UpToDate</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="TooOldCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='BackupStatus']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>NotEqual</Operator>
+                  <ValueExpression>
+                    <Value Type="String">UpToDate</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="FilterCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='PolicyName']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">$Config/PolicyName$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="UpToDate">
+              <Node ID="NormalCD">
+                <Node ID="FilterCD">
+                  <Node ID="Status" />
+                </Node>
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="TooOld">
+              <Node ID="TooOldCD">
+                <Node ID="FilterCD">
+                <Node ID="Status" />
+                </Node>
+              </Node>
+            </RegularDetection>
+          </RegularDetections>        
+        </MonitorImplementation>
+      </UnitMonitorType>
+      <UnitMonitorType ID="QND.OMS.Backup.Size.MT" Accessibility="Internal">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="WithinLimits" NoDetection="false"/>
+          <MonitorTypeState ID="TooBig" NoDetection="false"/>
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="TraceLevel" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScriptTimeout" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdAgeHours" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ThresholdSizeMB" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TraceLevel" Selector="$Config/TraceLevel$" ParameterType="int" />
+          <OverrideableParameter ID="ScriptTimeout" Selector="$Config/ScriptTimeout$" ParameterType="int" />
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="ThresholdAgeHours" Selector="$Config/ThresholdAgeHours$" ParameterType="int" />
+          <OverrideableParameter ID="ThresholdSizeMB" Selector="$Config/ThresholdSizeMB$" ParameterType="int" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="Status" TypeID="Progel.Windows.Azure.Backup.Policy.Status.DS">
+              <TraceLevel>$Config/TraceLevel$</TraceLevel>
+              <ScriptTimeout>$Config/ScriptTimeout$</ScriptTimeout>
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <ThresholdAgeHours>$Config/ThresholdAgeHours$</ThresholdAgeHours>
+              <ThresholdSizeMB>$Config/ThresholdSizeMB$</ThresholdSizeMB>
+            </DataSource>
+            <ConditionDetection ID="NormalCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='SizeStatus']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">OK</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="TooBigCD" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='SizeStatus']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>NotEqual</Operator>
+                  <ValueExpression>
+                    <Value Type="String">OK</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="WithinLimits">
+              <Node ID="NormalCD">
+                  <Node ID="Status" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="TooBig">
+              <Node ID="TooBigCD">
+                  <Node ID="Status" />
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>      
+    </MonitorTypes>
+  </TypeDefinitions>
+</ManagementPackFragment>

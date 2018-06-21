@@ -1,0 +1,406 @@
+﻿<?xml version="1.0" encoding="utf-8"?><ManagementPack ContentReadable="true" SchemaVersion="2.0" OriginalSchemaVersion="1.1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <Manifest>
+    <Identity>
+      <ID>Progel.Azure.Backup</ID>
+      <Version>1.0.0.0</Version>
+    </Identity>
+    <Name>Progel Azure Backup</Name>
+    <References>
+      <Reference Alias="SCInternal">
+        <ID>Microsoft.SystemCenter.Internal</ID>
+        <Version>7.0.8427.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="SC">
+        <ID>Microsoft.SystemCenter.Library</ID>
+        <Version>7.0.8427.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Windows">
+        <ID>Microsoft.Windows.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Alias3">
+        <ID>System.AdminItem.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="AppLog">
+        <ID>System.ApplicationLog.Library</ID>
+        <Version>7.0.8427.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="SystemHealth">
+        <ID>System.Health.Library</ID>
+        <Version>7.0.8427.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="System">
+        <ID>System.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="SystemPerf">
+        <ID>System.Performance.Library</ID>
+        <Version>7.0.8427.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="SNMP">
+        <ID>System.Snmp.Library</ID>
+        <Version>7.0.8427.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Alias9">
+        <ID>System.Software.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="Progel.Azure.Backup.Agent" Accessibility="Public" Abstract="false" Base="Windows!Microsoft.Windows.LocalApplication" Hosted="true" Singleton="false" Extension="false" />
+        <ClassType ID="Progel.Azure.Backup.OBPolicy" Accessibility="Public" Abstract="false" Base="Windows!Microsoft.Windows.LocalApplication" Hosted="true" Singleton="false" Extension="false">
+          <Property ID="PolicyName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="RetentionDays" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+        </ClassType>
+        <ClassType ID="Progel.Azure.Backup.Policy" Accessibility="Public" Abstract="false" Base="Windows!Microsoft.Windows.LocalApplication" Hosted="true" Singleton="false" Extension="false">
+          <Property ID="PolicyName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="RetentionDays" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+        </ClassType>
+        <ClassType ID="Progel.Azure.Backup.OBPolicyDiscovery.ps1.Application" Accessibility="Public" Abstract="false" Base="Windows!Microsoft.Windows.LocalApplication" Hosted="true" Singleton="false" Extension="false">
+          <Property ID="PolicyName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="RetentionDays" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+        </ClassType>
+      </ClassTypes>
+    </EntityTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="Progel.Azure.Backup.Agent.Discovery" Enabled="true" Target="Windows!Microsoft.Windows.Computer" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="Progel.Azure.Backup.Agent">
+            <Property TypeID="System!System.ConfigItem" PropertyID="ObjectStatus" />
+            <Property TypeID="System!System.ConfigItem" PropertyID="AssetStatus" />
+            <Property TypeID="System!System.ConfigItem" PropertyID="Notes" />
+            <Property TypeID="System!System.Entity" PropertyID="DisplayName" />
+          </DiscoveryClass>
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.RegistryDiscoveryProvider">
+          <ComputerName>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/NetworkName$</ComputerName>
+          <RegistryAttributeDefinitions>
+            <RegistryAttributeDefinition>
+              <AttributeName>Start</AttributeName>
+              <Path>SYSTEM\CurrentControlSet\Services\3ware\Start</Path>
+              <PathType>1</PathType>
+              <AttributeType>2</AttributeType>
+            </RegistryAttributeDefinition>
+          </RegistryAttributeDefinitions>
+          <Frequency>86400</Frequency>
+          <ClassId>$MPElement[Name="Progel.Azure.Backup.Agent"]$</ClassId>
+          <InstanceSettings>
+            <Settings>
+              <Setting>
+                <Name>$MPElement[Name="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Name>
+                <Value>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+            </Settings>
+          </InstanceSettings>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="Discovery.For.Progel.Azure.Backup.OBPolicyDiscovery.ps1.Application" Enabled="true" Target="Windows!Microsoft.Windows.Computer" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="Progel.Azure.Backup.OBPolicyDiscovery.ps1.Application">
+            <Property PropertyID="PolicyName" />
+            <Property PropertyID="RetentionDays" />
+            <Property TypeID="System!System.ConfigItem" PropertyID="ObjectStatus" />
+            <Property TypeID="System!System.ConfigItem" PropertyID="AssetStatus" />
+            <Property TypeID="System!System.ConfigItem" PropertyID="Notes" />
+            <Property TypeID="System!System.Entity" PropertyID="DisplayName" />
+          </DiscoveryClass>
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.TimedPowerShell.DiscoveryProvider">
+          <IntervalSeconds>86400</IntervalSeconds>
+          <SyncTime />
+          <ScriptName>OBPolicyDiscovery.ps1</ScriptName>
+          <ScriptBody>
+
+#Template Notes
+#basic error handling with -ErrorVariable -ErrorAction
+#EV is myErr set to null/cleared before any critical code section and tested for Count -eq 0 after, if different we have an error
+#plain and simple waiting for try/ctach in powershell 2.0
+#then every sensitive function should have a trap statement see http://huddledmasses.org/trap-exception-in-powershell/
+
+#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
+#SET ErrorLevel to 5 so show discovery info
+
+#*************************************************************************
+# Script Name - 
+# Author	  -  - Progel srl
+# Version	  - 1.1 24.09.2007
+# Purpose     - 
+#               
+# Assumptions - 
+#				
+#               
+# Parameters  - TraceLevel
+#             - ComputerName
+#				- SourceId
+#				- ManagedEntityId
+# Command Line - .\test.ps1 4 "serverName" '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}' '{1860E0EB-8C21-41DA-9F35-2FE9343CCF36}'
+# If discovery must be added the followinf parameters
+#				SourceId ($MPElement$ )
+#				ManagedEntityId ($Target/Id$)
+#
+# Output properties
+#
+# Status
+#
+# Version History
+#	  1.0 06.08.2010 DG First Release
+#     1.5 15.02.2014 DG minor cosmetics
+#
+# (c) Copyright 2010, Progel srl, All Rights Reserved
+# Proprietary and confidential to Progel srl              
+#
+#*************************************************************************
+
+
+# Get the named parameters
+param([int]$traceLevel=$(throw 'must have a value'),
+[string]$computerName=$(throw 'must have a value'),
+[string]$sourceID=$(throw 'must have a value'),
+[string]$ManagedEntityId=$(throw 'must have a value'))
+
+	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
+    [Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
+	
+#Constants used for event logging
+$SCRIPT_NAME			= "Progel.Azure.Backup.GetPolicies"
+$SCRIPT_ARGS = 4
+
+$SCRIPT_STARTED			= 831
+$PROPERTYBAG_CREATED	= 832
+$SCRIPT_ENDED			= 835
+
+$SCRIPT_VERSION = "1.0"
+
+#Trace Level Costants
+$TRACE_NONE 	= 0
+$TRACE_ERROR 	= 1
+$TRACE_WARNING = 2
+$TRACE_INFO 	= 3
+$TRACE_VERBOSE = 4
+$TRACE_DEBUG = 5
+
+#Event Type Constants
+$EVENT_TYPE_SUCCESS      = 0
+$EVENT_TYPE_ERROR        = 1
+$EVENT_TYPE_WARNING      = 2
+$EVENT_TYPE_INFORMATION  = 4
+$EVENT_TYPE_AUDITSUCCESS = 8
+$EVENT_TYPE_AUDITFAILURE = 16
+
+#Standard Event IDs
+$FAILURE_EVENT_ID = 4000		#errore generico nello script
+$SUCCESS_EVENT_ID = 1101
+$START_EVENT_ID = 1102
+$STOP_EVENT_ID = 1103
+
+#TypedPropertyBag
+$AlertDataType = 0
+$EventDataType	= 2
+$PerformanceDataType = 2
+$StateDataType       = 3
+
+function Log-Params
+{
+	param([string] $CmdLine)	
+	trap { continue; }
+	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. " + $CmdLine) $TRACE_INFO
+}
+
+function Log-Event
+{
+	param($eventID, $eventType, $msg, $level)
+	
+	Write-Verbose ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --&gt; " + $msg)
+	if($level -le $P_TraceLevel)
+	{
+		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --&gt; " + $msg)
+		$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
+	}
+}
+
+Function Throw-EmptyDiscovery
+{
+	param($SourceId, $ManagedEntityId)
+
+	$oDiscoveryData = $g_API.CreateDiscoveryData(0, $SourceId, $ManagedEntityId)
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
+	$oDiscoveryData
+	If($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent
+		$g_API.Return($oDiscoveryData)
+	}
+}
+
+Function Throw-KeepDiscoveryInfo
+{
+param($SourceId, $ManagedEntityId)
+	$oDiscoveryData = $g_API.CreateDiscoveryData(0,$SourceId,$ManagedEntityId)
+	#Instead of Snapshot discovery, submit Incremental discovery data
+	$oDiscoveryData.IsSnapshot = $false
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
+	$oDiscoveryData    
+	If($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
+		$g_API.Return($oDiscoveryData)
+	}
+}
+
+
+
+#Start by setting up API object.
+	$P_TraceLevel = $TRACE_VERBOSE
+	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
+	#$g_RegistryStatePath = "HKLM\" + $g_API.GetScriptStateKeyPath($SCRIPT_NAME)
+
+	$dtStart = Get-Date
+#if we use named parameters then $Args is always 0, so the erroc hecking must be done differently
+
+#v2
+#if ($PsBoundParameters.Count -ne $SCRIPT_ARGS)
+#at the momento we must do specific command line validation or use the syntax
+#Param([string]$a=$(throw 'My exception - parameter a needed')
+#	If ($Args.Count -ne $SCRIPT_ARGS)
+#	{
+#		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR "called without proper arguments and was not executed."  $TRACE_ERROR
+#		exit -1
+#	}
+
+	$P_TraceLevel = $traceLevel
+#same story for dumping the command line	
+#manul stuff today in v2 we could use $PSBoundParameters
+	Log-Params ([string]$traceLevel + " " + $computerName + " " + $sourceID + " " + $ManagedEntityId)
+try
+{
+    Import-Module MSOnlineBackup
+    $policies = Get-OBPolicy | Where {$_.State -eq 'Existing'}
+    if ($policies)
+    {
+        $discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
+        foreach ($pol in $policies)
+        {
+			$PInstance = $discoveryData.CreateClassInstance("$MPElement[Name='Progel.Azure.Backup.Policy']$")
+			$PInstance.AddProperty("$MPElement[Name='Windows!Microsoft.Windows.Computer']/PrincipalName$", $computerName)
+			$PInstance.AddProperty("$MPElement[Name='Progel.Azure.Backup.Policy']/PolicyName$", $pol.PolicyName)
+			$PInstance.AddProperty("$MPElement[Name='Progel.Azure.Backup.Policy']/RetentionDays$", $pol.RetentionPolicy.RetentionDays)
+			$discoveryData.AddInstance($PInstance)
+        }
+        $discoveryData
+    }
+    else
+    {
+        Throw-EmptyDiscovery $sourceID $ManagedEntityId
+    }
+
+	If ($traceLevel -eq $TRACE_DEBUG)
+	{
+		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent		
+		$g_API.Return($discoveryData)
+	}
+	Log-Event $STOP_EVENT_ID $EVENT_TYPE_SUCCESS ("has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+}
+Catch [Exception] {
+	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
+	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
+	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
+}
+
+</ScriptBody>
+          <Parameters>
+            <Parameter>
+              <Name>sourceId</Name>
+              <Value>$MPElement$</Value>
+            </Parameter>
+            <Parameter>
+              <Name>managedEntityId</Name>
+              <Value>$Target/Id$</Value>
+            </Parameter>
+            <Parameter>
+              <Name>computerName</Name>
+              <Value>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+            </Parameter>
+          </Parameters>
+          <TimeoutSeconds>300</TimeoutSeconds>
+          <StrictErrorHandling>false</StrictErrorHandling>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+  </Monitoring>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="Progel.Azure.Backup">
+          <Name>Progel Azure Backup</Name>
+          <Description>The Progel Azure backup management pack monitors for Windows Azure Backup health</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Agent">
+          <Name>Progel Azure Backup Agent</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Agent.Discovery">
+          <Name>Discovery For Progel Azure Backup Agent</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.OBPolicy">
+          <Name>Progel Azure Backup Policy</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.OBPolicy" SubElementID="PolicyName">
+          <Name>PolicyName</Name>
+          <Description>Created by PROGEL.IT\grandinid at 2/15/2014 3:11:44 PM using MP Author</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.OBPolicy" SubElementID="RetentionDays">
+          <Name>RetentionDays</Name>
+          <Description>Created by PROGEL.IT\grandinid at 2/15/2014 3:12:03 PM using MP Author</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Policy">
+          <Name>Progel Azure Backup Policy</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Policy" SubElementID="PolicyName">
+          <Name>PolicyName</Name>
+          <Description>Created by PROGEL.IT\grandinid at 2/15/2014 3:11:44 PM using MP Author</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.Policy" SubElementID="RetentionDays">
+          <Name>RetentionDays</Name>
+          <Description>Created by PROGEL.IT\grandinid at 2/15/2014 3:12:03 PM using MP Author</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.OBPolicyDiscovery.ps1.Application">
+          <Name>Progel Azure Backup OBPolicyDiscovery ps1 Application</Name>
+          <Description>Created by PROGEL.IT\grandinid at 2/15/2014 3:15:22 PM using MP Author</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.OBPolicyDiscovery.ps1.Application" SubElementID="PolicyName">
+          <Name>PolicyName</Name>
+          <Description>Created by PROGEL.IT\grandinid at 2/15/2014 3:11:44 PM using MP Author</Description>
+        </DisplayString>
+        <DisplayString ElementID="Progel.Azure.Backup.OBPolicyDiscovery.ps1.Application" SubElementID="RetentionDays">
+          <Name>RetentionDays</Name>
+          <Description>Created by PROGEL.IT\grandinid at 2/15/2014 3:12:03 PM using MP Author</Description>
+        </DisplayString>
+        <DisplayString ElementID="Discovery.For.Progel.Azure.Backup.OBPolicyDiscovery.ps1.Application">
+          <Name>Discovery For Progel Azure Backup OBPolicyDiscovery ps1 Application</Name>
+          <Description>Created by PROGEL.IT\grandinid at 2/15/2014 3:15:22 PM using MP Author</Description>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPack>
