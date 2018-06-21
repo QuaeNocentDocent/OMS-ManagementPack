@@ -37,6 +37,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OMS Workloads", "OMS Worklo
 		SquaredUp\OMS Workloads\View.xml = SquaredUp\OMS Workloads\View.xml
 	EndProjectSection
 EndProject
+Project("{D4B43EB3-688B-4EEE-86BD-088F0B28ABB3}") = "QND.Azure.Monitor", "QND.Azure.Monitor\QND.Azure.Monitor.mpproj", "{EEE3DED2-DFA8-426B-814F-35188343F40D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,12 @@ Global
 		{CD660E24-8875-4372-A0F3-0884DF56546A}.Release|Any CPU.ActiveCfg = Release|x86
 		{CD660E24-8875-4372-A0F3-0884DF56546A}.Release|x86.ActiveCfg = Release|x86
 		{CD660E24-8875-4372-A0F3-0884DF56546A}.Release|x86.Build.0 = Release|x86
+		{EEE3DED2-DFA8-426B-814F-35188343F40D}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{EEE3DED2-DFA8-426B-814F-35188343F40D}.Debug|x86.ActiveCfg = Debug|x86
+		{EEE3DED2-DFA8-426B-814F-35188343F40D}.Debug|x86.Build.0 = Debug|x86
+		{EEE3DED2-DFA8-426B-814F-35188343F40D}.Release|Any CPU.ActiveCfg = Release|x86
+		{EEE3DED2-DFA8-426B-814F-35188343F40D}.Release|x86.ActiveCfg = Release|x86
+		{EEE3DED2-DFA8-426B-814F-35188343F40D}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
