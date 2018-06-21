@@ -82,6 +82,7 @@ $FAILURE_EVENT_ID = 4000		#errore generico nello script
 $SUCCESS_EVENT_ID = 1101
 $START_EVENT_ID = 1102
 $STOP_EVENT_ID = 1103
+$INFO_EVENT_ID = 1105
 
 #TypedPropertyBag
 $AlertDataType = 0
