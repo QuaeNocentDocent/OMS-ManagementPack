@@ -1,0 +1,107 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <TypeDefinitions>
+      <EntityTypes>
+        <ClassTypes>
+
+          <ClassType ID="QND.Azure.Monitor.AlertRule.Class" Base="System!System.ApplicationComponent" Accessibility="Public" Abstract="false"
+                    Hosted="true" Singleton="false">
+            <Property ID="Id" Type="string" Key="true" CaseSensitive="false" Required="true" MaxLength="2083"/>
+            <Property ID="Type" Type="string" Key="false" CaseSensitive="false" Required="true" />
+            <Property ID="Name" Type="string" Key="false" CaseSensitive="false" Required="true" />
+            <Property ID="Location" Type="string" Key="false" CaseSensitive="false" Required="false" />
+            <Property ID="Kind" Type="string" Key="false" CaseSensitive="false" Required="false" />
+            <Property ID="Description" Type="string" Key="false" CaseSensitive="false" Required="false" MaxLength="2083" />
+          </ClassType>
+
+        </ClassTypes>
+        <RelationshipTypes>
+          <RelationshipType ID="QND.Azure.Monitor.Hosts.AlertRule" Accessibility="Public" Abstract="false" Base="System!System.Hosting">
+            <Source ID="Source" MinCardinality="0" MaxCardinality="1" Type="QND.Azure.Monitor.Class" />
+            <Target ID="Target" MinCardinality="0" Type="QND.Azure.Monitor.AlertRule.Class" />
+          </RelationshipType>
+        </RelationshipTypes>
+      </EntityTypes>
+    </TypeDefinitions>
+
+    <Monitoring>
+      <Discoveries>
+        <Discovery ID="QND.Azure.Monitor.AlertRule.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="QND.Azure.Monitor.Class">
+          <Category>Discovery</Category>
+          <DiscoveryTypes>
+            <DiscoveryClass TypeID="QND.Azure.Monitor.AlertRule.Class" />
+            <DiscoveryRelationship TypeID="QND.Azure.Monitor.Hosts.AlertRule" />
+          </DiscoveryTypes>
+          <DataSource ID="DS" TypeID="QND.Azure.Monitor.AlertRule.Discovery.DS">
+            <TimeoutSeconds>600</TimeoutSeconds>
+            <TraceLevel>2</TraceLevel>
+            <ClientId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+            <SubscriptionId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>            
+            <Proxy>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+            <AuthBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+            <ResourceBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+            <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+            <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+            <Exclusions></Exclusions>
+            <EventID>2</EventID>
+            <EventPublisher>QND Discovery</EventPublisher>
+            <EventParam>Monitor Alert $Target/Property[Type="QND.Azure.Monitor.Class"]/SubscriptionId$</EventParam>
+          </DataSource>
+        </Discovery>
+      </Discoveries>
+      <Rules>
+        <Rule ID="QND.Azure.Monitor.AlertRule.DiscoveryTrigger.Rule" ConfirmDelivery="false" DiscardLevel="100" Enabled="true" Priority="Normal" Remotable="true" Target="QND.Azure.Monitor.Class">
+          <Category>Discovery</Category>
+          <DataSources>
+            <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
+              <IntervalSeconds>120</IntervalSeconds>
+            </DataSource>
+          </DataSources>
+          <WriteActions>
+            <WriteAction ID="WriteEvent" TypeID="QNDA!QND.DiscoveryEvent.WAT">
+              <LogName>Operations Manager</LogName>
+              <SourceName>QND Discovery</SourceName>
+              <EventId>2</EventId>
+              <Message>QND Monitor Alert Rules</Message>
+              <Key>Monitor Alert $Target/Property[Type="QND.Azure.Monitor.Class"]/SubscriptionId$</Key>
+            </WriteAction>
+          </WriteActions>
+        </Rule>
+      </Rules>
+    </Monitoring>
+
+    <LanguagePacks>
+      <LanguagePack ID="ENU" IsDefault="true">
+        <DisplayStrings>
+
+          <DisplayString ElementID="QND.Azure.Monitor.AlertRule.Class">
+            <Name>Azure Monitor Alert Rule Class</Name>
+            <Description></Description>
+          </DisplayString>
+          <DisplayString ElementID="QND.Azure.Monitor.AlertRule.Class" SubElementID="Id">
+            <Name>Id</Name>
+            <Description></Description>
+          </DisplayString>
+          <DisplayString ElementID="QND.Azure.Monitor.AlertRule.Class" SubElementID="Type">
+            <Name>Type</Name>
+            <Description></Description>
+          </DisplayString>
+          <DisplayString ElementID="QND.Azure.Monitor.AlertRule.Class" SubElementID="Name">
+            <Name>Name</Name>
+            <Description></Description>
+          </DisplayString>
+          <DisplayString ElementID="QND.Azure.Monitor.AlertRule.Class" SubElementID="Location">
+            <Name>Location</Name>
+            <Description></Description>
+          </DisplayString>
+          <DisplayString ElementID="QND.Azure.Monitor.AlertRule.Class" SubElementID="Kind">
+            <Name>Kind</Name>
+            <Description></Description>
+          </DisplayString>
+          <DisplayString ElementID="QND.Azure.Monitor.AlertRule.Class" SubElementID="Description">
+            <Name>Description</Name>
+            <Description></Description>
+          </DisplayString>
+        </DisplayStrings>
+      </LanguagePack>
+    </LanguagePacks>
+</ManagementPackFragment>

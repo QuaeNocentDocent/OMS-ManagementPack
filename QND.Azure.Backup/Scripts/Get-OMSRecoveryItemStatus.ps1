@@ -464,6 +464,7 @@ scheduleRunTimes     : {2016-02-24T16:30:00}
 				'Microsoft.ClassicCompute/virtualMachines' { $ageMode='Auto'}	
 				'MabFileFolderProtectedItem' { $ageMode='Fixed' }
 				'DPMProtectedItem' {$ageMode='Fixed';}
+				#AzureVmWorkloadSQLDatabase
 				default { 
 					if ([String]::IsNullOrEmpty($item.properties.policyName)) {$ageMode='Fixed'} else {$ageMode='Auto'}
 					Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unrecognized Item Type {0}' -f $item.properties.protectedItemType) $TRACE_WARNING	

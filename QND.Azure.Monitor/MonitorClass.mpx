@@ -1,0 +1,89 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        
+        <ClassType ID="QND.Azure.Monitor.Class" Base="System!System.LogicalEntity" Accessibility="Public" Abstract="false"
+                  Hosted="true" Singleton="false">
+          <Property ID="SubscriptionId" Type="string" Key="true" CaseSensitive="false" /> <!-- we identify a monitor instance by the subscription it lives in -->
+          <Property ID="ApiVersion" Key="false" Type="string" />
+        </ClassType>
+
+      </ClassTypes>
+      <RelationshipTypes>
+        <RelationshipType ID="QND.Azure.Subscription.Hosts.Monitor" Accessibility="Public" Abstract="false" Base="System!System.Hosting">
+          <Source ID="Source" MinCardinality="0" MaxCardinality="1" Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription" />
+          <Target ID="Target" MinCardinality="0" MaxCardinality="1" Type="QND.Azure.Monitor.Class" />
+        </RelationshipType>
+      </RelationshipTypes>
+    </EntityTypes>
+  </TypeDefinitions>
+  
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="QND.Azure.Monitor.Discovery" ConfirmDelivery="true" Enabled="true" Priority="Normal" Remotable="true" Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="QND.Azure.Monitor.Class" />
+          <DiscoveryRelationship TypeID="QND.Azure.Subscription.Hosts.Monitor" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="QND.Azure.Monitor.Discovery.DS">
+          <ClientId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ManagementServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+          <ClassId>$MPElement[Name="QND.Azure.Monitor.Class"]$</ClassId>
+          <ApiVersion>2018-05-05-preview</ApiVersion>
+          <DisplayName>$Target/Property[Type="System!System.Entity"]/DisplayName$</DisplayName>          
+          <EventID>2</EventID>
+          <EventPublisher>QND Discovery</EventPublisher>
+          <EventParam>Monitor $Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</EventParam>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+    <Rules>
+      <Rule ID="QND.Azure.Monitor.DiscoveryTrigger.Rule" ConfirmDelivery="false" DiscardLevel="100" Enabled="true" Priority="Normal" Remotable="true" Target="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription">
+        <Category>Discovery</Category>
+        <DataSources>
+          <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
+            <IntervalSeconds>120</IntervalSeconds>
+          </DataSource>
+        </DataSources>
+        <WriteActions>
+          <WriteAction ID="WriteEvent" TypeID="QNDA!QND.DiscoveryEvent.WAT">
+            <LogName>Operations Manager</LogName>
+            <SourceName>QND Discovery</SourceName>
+            <EventId>2</EventId>
+            <Message>QND Monitor</Message>
+            <Key>Monitor $Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</Key>
+          </WriteAction>
+        </WriteActions>
+      </Rule>
+    </Rules>
+  </Monitoring>
+  
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        
+        <DisplayString ElementID="QND.Azure.Monitor.Class">
+          <Name>Azure Monitor Class</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.Azure.Monitor.Class" SubElementID="SubscriptionId">
+          <Name>Subscription Id</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="QND.Azure.Monitor.Class" SubElementID="ApiVersion">
+          <Name>API Version</Name>
+          <Description></Description>
+        </DisplayString>
+
+
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

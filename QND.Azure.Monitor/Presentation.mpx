@@ -5,7 +5,7 @@
       <!-- In this section, you can create more folders. Edit the DisplayString for this folder 
            to change the name the user sees in the console. More information can be found in 
            the Management Pack Development Kit: http://msdn.microsoft.com/en-us/library/ee533810.aspx -->
-      <Folder ID="QND.OMS.Folders" Accessibility="Public" ParentFolder="SC!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
+      <Folder ID="QND.Azure.Monitor.Folder" Accessibility="Internal" ParentFolder="QNDA!QND.OMS.Folders" />
     
     </Folders>
 
@@ -17,7 +17,7 @@
            is used and shown to the user. More information can be found in the Management 
            Pack Development Kit: http://msdn.microsoft.com/en-us/library/ee533579.aspx -->
       <!--
-      <FolderItem ID="QND.OMS.FolderItem1" ElementID="" Folder="QND.OMS.Folders" />
+      <FolderItem ID="QND.Azure.Monitor.FolderItem1" ElementID="" Folder="QND.Azure.Monitor.Presentation" />
       -->
     </FolderItems>
     
@@ -26,8 +26,8 @@
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
         
-        <DisplayString ElementID="QND.OMS.Folders">
-          <Name>QND - Azure</Name>
+        <DisplayString ElementID="QND.Azure.Monitor.Folder">
+          <Name>Azure Monitor</Name>
           <Description></Description>
         </DisplayString>
         

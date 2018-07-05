@@ -47,7 +47,7 @@
       </Discovery>    
     </Discoveries>
     <Rules>
-      <Rule ID="QND.OMS.AlertRule.DiscoveryTrigger.Rule" ConfirmDelivery="false" DiscardLevel="100" Enabled="true" Priority="Normal" Remotable="true" Target="QND.OMS.Workspace">
+      <Rule ID="QND.OMS.AlertRule.DiscoveryTrigger.Rule" ConfirmDelivery="false" DiscardLevel="100" Enabled="false" Priority="Normal" Remotable="true" Target="QND.OMS.Workspace">
         <Category>Discovery</Category>
         <DataSources>
           <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
