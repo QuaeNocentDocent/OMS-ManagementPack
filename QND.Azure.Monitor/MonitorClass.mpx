@@ -63,8 +63,46 @@
         </WriteActions>
       </Rule>
     </Rules>
+    <Monitors>
+      <UnitMonitor ID="QND.Azure.Monitor.Summary.Monitor" Accessibility="Public" Enabled="true" Target="QND.Azure.Monitor.Class"
+                         ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.Azure.Monitor.Summary.MT" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="QND.Azure.Monitor.Summary.AlertMessage">
+          <AlertOnState>Warning</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name="sev0"]$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name="sev1"]$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Sev0" MonitorTypeStateID="Sev0" HealthState="Error" />
+          <OperationalState ID="Sev1" MonitorTypeStateID="Sev1" HealthState="Warning" />
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />          
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>127</IntervalSeconds>
+          <SyncTime></SyncTime>
+          <TimeoutSeconds>900</TimeoutSeconds>
+          <TraceLevel>2</TraceLevel>
+          <ClientId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+          <SubscriptionId>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+          <Proxy>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+          <AuthBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+          <ResourceBaseAddress>$Target/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+          <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+          <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+        </Configuration>
+      </UnitMonitor>      
+    </Monitors>
   </Monitoring>
-  
+  <Presentation>
+    <StringResources>
+      <StringResource ID="QND.Azure.Monitor.Summary.AlertMessage"/>
+    </StringResources>
+  </Presentation>
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
@@ -82,7 +120,15 @@
           <Description></Description>
         </DisplayString>
 
+        <DisplayString ElementID="QND.Azure.Monitor.Summary.AlertMessage">
+          <Name>QND Azure Monitor - Monitor reports alerts</Name>
+          <Description>{0} alerts at sev0 and {1} alerts at sev1 are in a new state</Description>
+        </DisplayString>
 
+        <DisplayString ElementID="QND.Azure.Monitor.Summary.Monitor">
+          <Name>Alerts Summary</Name>
+        </DisplayString>
+        
       </DisplayStrings>
     </LanguagePack>
   </LanguagePacks>
