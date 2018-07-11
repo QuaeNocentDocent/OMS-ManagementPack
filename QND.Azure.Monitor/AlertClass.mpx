@@ -53,7 +53,7 @@
           <Category>Discovery</Category>
           <DataSources>
             <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
-              <IntervalSeconds>120</IntervalSeconds>
+              <IntervalSeconds>14400</IntervalSeconds>
             </DataSource>
           </DataSources>
           <WriteActions>
@@ -67,8 +67,47 @@
           </WriteActions>
         </Rule>
       </Rules>
+      <Monitors>
+        <UnitMonitor ID="QND.Azure.Monitor.AlertStatus.Monitor" Accessibility="Public" Enabled="true" Target="QND.Azure.Monitor.AlertRule.Class"
+                         ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.Azure.Monitor.AlertStatus.MT" ConfirmDelivery="false">
+          <Category>AvailabilityHealth</Category>
+          <AlertSettings AlertMessage="QND.Azure.Monitor.AlertStatus.AlertMessage">
+            <AlertOnState>Warning</AlertOnState>
+            <AutoResolve>true</AutoResolve>
+            <AlertPriority>Normal</AlertPriority>
+            <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+            <AlertParameters>
+              <AlertParameter1>$Data/Context/Property[@Name="AlertState"]$</AlertParameter1>
+              <AlertParameter2>$Data/Context/Property[@Name="State"]$</AlertParameter2>
+              <AlertParameter3>$Target/Property[Type="QND.Azure.Monitor.AlertRule.Class"]/Description$</AlertParameter3>
+            </AlertParameters>
+          </AlertSettings>
+          <OperationalStates>
+            <OperationalState ID="Active" MonitorTypeStateID="Active" HealthState="Error" />
+            <OperationalState ID="NotActive" MonitorTypeStateID="NotActive" HealthState="Success" />
+          </OperationalStates>
+          <Configuration>
+            <IntervalSeconds>127</IntervalSeconds>
+            <SyncTime></SyncTime>
+            <TimeoutSeconds>900</TimeoutSeconds>
+            <TraceLevel>2</TraceLevel>
+            <ClientId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ClientId$</ClientId>
+            <SubscriptionId>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</SubscriptionId>
+            <Proxy>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ProxyServerAddress$</Proxy>
+            <AuthBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/Authority$</AuthBaseAddress>
+            <ResourceBaseAddress>$Target/Host/Host/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/ArmServiceUri$</ResourceBaseAddress>
+            <AADUserName>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/UserName$</AADUserName>
+            <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
+            <RuleId>$Target/Property[Type="QND.Azure.Monitor.AlertRule.Class"]/Id$</RuleId>
+          </Configuration>
+        </UnitMonitor>
+      </Monitors>
     </Monitoring>
-
+  <Presentation>
+    <StringResources>
+      <StringResource ID="QND.Azure.Monitor.AlertStatus.AlertMessage"/>
+    </StringResources>
+  </Presentation>
     <LanguagePacks>
       <LanguagePack ID="ENU" IsDefault="true">
         <DisplayStrings>
@@ -100,6 +139,15 @@
           <DisplayString ElementID="QND.Azure.Monitor.AlertRule.Class" SubElementID="Description">
             <Name>Description</Name>
             <Description></Description>
+          </DisplayString>
+
+          <DisplayString ElementID="QND.Azure.Monitor.AlertStatus.Monitor">
+            <Name>Status</Name>
+          </DisplayString>
+          
+          <DisplayString ElementID="QND.Azure.Monitor.AlertStatus.AlertMessage">
+            <Name>QND Azure Monitor - Alert fired</Name>
+            <Description>Alert State:{0} General State:{1} - {2}</Description>
           </DisplayString>
         </DisplayStrings>
       </LanguagePack>

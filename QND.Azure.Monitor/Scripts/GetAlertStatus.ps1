@@ -1,13 +1,10 @@
-﻿## This discovery needs to be splitted 'cause potentially can discover a huge number of entities, the disocvery rule is disabled by default
-## Gorup memeberhsip must be changed and split in diffrent rules using the properties we're setting
 
-#TO SHOW VERBOSE MESSAGES SET $VerbosePreference="continue"
 #SET ErrorLevel to 5 so show discovery info
-#https://azure.microsoft.com/en-us/documentation/articles/operational-insights-api-log-search/
+
 #*************************************************************************
 # Script Name - 
-# Author	  -  Daniele Grandini - QND
-# Version	  - 1.0 30-04-2016
+# Author	  -  - Progel spa
+# Version	  - 1.1 24.09.2007
 # Purpose     - 
 #               
 # Assumptions - 
@@ -27,34 +24,34 @@
 # Status
 #
 # Version History
-#	  1.0 06.08.2010 DG First Release
-#     1.5 15.02.2014 DG minor cosmetics
 #
-# (c) Copyright 2010, Progel srl, All Rights Reserved
-# Proprietary and confidential to Progel srl              
+# (c) Copyright 2016, Progel spa, All Rights Reserved
+# Proprietary and confidential to Progel spa              
 #
 #*************************************************************************
 
 
 # Get the named parameters
-param([int]$traceLevel=2,
-[Parameter (Mandatory=$true)] [string]$sourceID,
-[Parameter (Mandatory=$true)] [string]$ManagedEntityId,
+param(
+[Parameter(Mandatory=$true)]
+[ValidateRange(0,5)]
+[int]$traceLevel,
 [Parameter (Mandatory=$true)][string]$clientId,
 [Parameter (Mandatory=$true)][string]$SubscriptionId,
 [string]$Proxy,
 [Parameter (Mandatory=$true)][string]$AuthBaseAddress,
 [Parameter (Mandatory=$true)][string]$ResourceBaseAddress,
 [Parameter (Mandatory=$true)][string]$ADUserName,
-[Parameter (Mandatory=$true)][string]$ADPassword,
-[string]$Exclusions=$null
+[Parameter (Mandatory=$true)][string]$ADPassword
 )
+
+
 	[Threading.Thread]::CurrentThread.CurrentCulture = "en-US"        
     [Threading.Thread]::CurrentThread.CurrentUICulture = "en-US"
 
 #region Constants	
 #Constants used for event logging
-$SCRIPT_NAME			= "QND.Get-MonitorAlertRules"
+$SCRIPT_NAME	= "GetAzureMonitorAlertStatus"
 $SCRIPT_VERSION = "1.0"
 
 #Trace Level Costants
@@ -74,11 +71,11 @@ $EVENT_TYPE_AUDITSUCCESS = 8
 $EVENT_TYPE_AUDITFAILURE = 16
 
 #Standard Event IDs
-$FAILURE_EVENT_ID = 4000		#errore generico nello script
-$SUCCESS_EVENT_ID = 1101
-$START_EVENT_ID = 1102
-$STOP_EVENT_ID = 1103
-$INFO_EVENT_ID = 1105
+$EVENT_ID_FAILURE = 4000		#errore generico nello script
+$EVENT_ID_SUCCESS = 1101
+$EVENT_ID_START = 1102
+$EVENT_ID_STOP = 1103
+$EVENT_ID_DETAILS = 1104
 
 #TypedPropertyBag
 $AlertDataType = 0
@@ -100,8 +97,13 @@ function Log-Params
 {
     param($Invocation)
     $line=''
-    foreach($key in $Invocation.BoundParameters.Keys) {$line += "$key=$($Invocation.BoundParameters[$key])  "}
-	Log-Event $START_EVENT_ID $EVENT_TYPE_INFORMATION  ("Starting script. Invocation Name:$($Invocation.InvocationName)`n Parameters`n $line") $TRACE_INFO
+	$obfuscate='pass|cred'
+    foreach($key in $Invocation.BoundParameters.Keys) {
+		if($key -imatch $obfuscate -and $TraceLevel -le $TRACE_INFO) {$line += ('-{0} [{1}] ' -f $key, 'omissis')}
+		else {$line += ('-{0} {1} ' -f $key, $Invocation.BoundParameters[$key])}
+	}
+	$line += ('- running as {0}' -f (whoami))
+	Log-Event -eventID $EVENT_ID_START -eventType $EVENT_TYPE_INFORMATION -msg ("Starting script [{0}]. Invocation Name:{1}`n Parameters`n{2}" -f $SCRIPT_NAME, $Invocation.InvocationName, $line) -level $TRACE_INFO
 }
 
 function Create-Event
@@ -136,11 +138,12 @@ function Create-Event
 
 function Log-Event
 {
-	param($eventID, $eventType, $msg, $level)
+	param($eventID, $eventType, $msg, $level, [switch] $includeName=$true)
 	
 	Write-Verbose ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
 	if($level -le $P_TraceLevel)
 	{
+		if ($includeName) {$msg='[{0}] {1}' -f $SCRIPT_NAME, $msg.toString()}
 		Write-Host ("Logging event. " + $SCRIPT_NAME + " EventID: " + $eventID + " eventType: " + $eventType + " Version:" + $SCRIPT_VERSION + " --> " + $msg)
         Create-Event -eventID $eventID -eventType $eventType -msg ($msg + "`n" + "Version :" + $SCRIPT_VERSION) -parameters @($SCRIPT_NAME,$SCRIPT_VERSION)
 		#$g_API.LogScriptEvent($SCRIPT_NAME,$eventID,$eventType, ($msg + "`n" + "Version :" + $SCRIPT_VERSION))
@@ -154,7 +157,7 @@ Function Throw-EmptyDiscovery
 	param($SourceId, $ManagedEntityId)
 
 	$oDiscoveryData = $g_API.CreateDiscoveryData(0, $SourceId, $ManagedEntityId)
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
+	Log-Event $EVENT_ID_FAILURE $EVENT_TYPE_WARNING "Exiting with empty discovery data" $TRACE_INFO
 	$oDiscoveryData
 	If($traceLevel -eq $TRACE_DEBUG)
 	{
@@ -169,7 +172,7 @@ param($SourceId, $ManagedEntityId)
 	$oDiscoveryData = $g_API.CreateDiscoveryData(0,$SourceId,$ManagedEntityId)
 	#Instead of Snapshot discovery, submit Incremental discovery data
 	$oDiscoveryData.IsSnapshot = $false
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
+	Log-Event $EVENT_ID_FAILURE $EVENT_TYPE_WARNING "Exiting with null non snapshot discovery data" $TRACE_INFO
 	$oDiscoveryData    
 	If($traceLevel -eq $TRACE_DEBUG)
 	{
@@ -180,6 +183,40 @@ param($SourceId, $ManagedEntityId)
 
 #endregion
 
+#region Property Bags
+Function Return-Bag
+{
+    param($object, $key)
+    try {    
+		$bag = $g_api.CreatePropertyBag()
+        foreach($property in $object.Keys) {
+		    $bag.AddValue($property, $object[$property])
+        }
+        $bag
+
+		if($traceLevel -eq $TRACE_DEBUG) {
+			$g_API.AddItem($bag)
+			$object.Keys | %{write-verbose ('{0}={1}' -f $_,$object[$_]) -Verbose}
+		}
+		
+
+		$bag=''
+		$object.Keys | %{$bag+=('{0}={1}///' -f $_,$object[$_])}
+		Log-Event -eventID $EVENT_ID_DETAILS -eventType $EVENT_TYPE_INFORMATION `
+			-msg ('Returned status bag: {0} ' `
+				-f $bag) `
+			-level $TRACE_VERBOSE 	
+    }
+    catch {
+		Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_WARNING `
+			-msg ('{0} - error creating status bag {1}' `
+				-f $object[$key]), $_.Message `
+			-level $TRACE_VERBOSE 
+    }
+}
+#endregion
+
+#region common utilities
 Function Import-ResourceModule
 {
 	param($moduleName, $ArgumentList=$null)
@@ -197,26 +234,26 @@ Function Import-ResourceModule
 	else {Throw [System.DllNotFoundException] ('{0} not found' -f $module)}
 }
 
-Function Discover-AlertRule
+function ConvertTo-HashTable
 {
-	param($Id, $AlertName, $AlertDescription, $AlertType, $Location, $AlertKind, $SubscriptionId)
+  param([object] $object)
 
-	$displayName=('{0}' -f $AlertName)
-	if([String]::IsNullOrEmpty($AlertDescription)) {$AlertDescription='n.a.'}
-	$objInstance = $discoveryData.CreateClassInstance("$MPElement[Name='QND.Azure.Monitor.AlertRule.Class']$")	
-	$objInstance.AddProperty("$MPElement[Name='Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription']/SubscriptionId$", $SubscriptionId)
-	$objInstance.AddProperty("$MPElement[Name='QND.Azure.Monitor.Class']/SubscriptionId$", $SubscriptionId)	
-	$decodedId=[System.Web.HttpUtility]::UrlDecode($Id) #try not to use this
-	$objInstance.AddProperty("$MPElement[Name='QND.Azure.Monitor.AlertRule.Class']/Id$", $Id)	
-	$objInstance.AddProperty("$MPElement[Name='QND.Azure.Monitor.AlertRule.Class']/Type$", $AlertType)	
-	$objInstance.AddProperty("$MPElement[Name='QND.Azure.Monitor.AlertRule.Class']/Name$", $AlertName)	
-	$objInstance.AddProperty("$MPElement[Name='QND.Azure.Monitor.AlertRule.Class']/Location$", $Location)	
-	$objInstance.AddProperty("$MPElement[Name='QND.Azure.Monitor.AlertRule.Class']/Kind$", $AlertKind)	
-	$objInstance.AddProperty("$MPElement[Name='QND.Azure.Monitor.AlertRule.Class']/Description$", $AlertDescription)	
-	$objInstance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $DisplayName)	
-	$discoveryData.AddInstance($objInstance)	
-    Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION -level $TRACE_VERBOSE -msg ('Posting discovery data for ''{0}'' type {2} for subscription {1} with id {3}' -f $AlertName, $SubscriptionId, $AlertType, $Id)
+  $retHash=@{}
+  try {
+    $props = $object | gm | where {$_.MemberType -match 'Property'}
+    foreach($p in $props) {
+      $retHash.Add($p.Name, $object.($p.name))
+    }
+  }
+  catch {
+    # do nothing
+  }
+  return $retHash
 }
+#endregion
+
+#region specifics
+#same code base of Get-MonitorAlertRules.ps1
 
 Function GetMetricsRule
 {
@@ -235,7 +272,7 @@ Function GetMetricsRule
 		write-verbose ('Got {0} metric rules' -f $result.values.count)
 		foreach($rule in $result.Values) {
 			if($rule.properties.Enabled) {
-				$rules+= New-Object -TypeName [PSCustomObject] -Property @{
+				$rules+= New-Object -TypeName PSCustomObject -Property @{
 					Id = $rule.Id
 					Name=$rule.Name
 					Type=$rule.Type
@@ -269,7 +306,7 @@ Function GetActivityLogRules
 		write-verbose ('Got {0} activity log rules' -f $result.values.count)
 		foreach($rule in $result.Values) {
 			if($rule.properties.Enabled) {
-				$rules+= New-Object -TypeName [PSCustomObject] -Property @{
+				$rules+= New-Object -TypeName PSCustomObject -Property @{
 					Id = $rule.Id
 					Name=$rule.Name
 					Type=$rule.Type
@@ -327,7 +364,7 @@ Function GetLogRules
 									$alertType='Standard'
 									try { if($action.properties.Threshold.MetricsTrigger) {$alertType='MetricBased'}} catch {}
 									if ([String]::IsNullOrEmpty($action.properties.Description)) {$AlertDescription='n.a.'} else {$alertDescription=$action.properties.Description}
-									$rules+= New-Object -TypeName [PSCustomObject] -Property @{
+									$rules+= New-Object -TypeName PSCustomObject -Property @{
 										Id = $schedule.Values[0].id
 										Name=$action.properties.Name
 										Type='Microsoft.OperationalInsights'
@@ -345,6 +382,8 @@ Function GetLogRules
 		}
 		return $rules
 }
+#endregion
+
 #Start by setting up API object.
 	$P_TraceLevel = $TRACE_VERBOSE
 	$g_Api = New-Object -comObject 'MOM.ScriptAPI'
@@ -352,8 +391,9 @@ Function GetLogRules
 
 	$dtStart = Get-Date
 	$P_TraceLevel = $traceLevel
-	Log-Params $MyInvocation
-
+    Log-Params $MyInvocation
+    
+    
 	try {
 		Import-ResourceModule -moduleName QNDAdal -ArgumentList @($false)
 		Import-ResourceModule -moduleName QNDAzure
@@ -363,56 +403,77 @@ Function GetLogRules
 		exit 1	
 	}
 
+    try
+    {
+        if($proxy) {
+            Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Proxy is not currently supported {0}" -f $proxy) $TRACE_WARNING
+        }
+        $pwd = ConvertTo-SecureString $ADPassword -AsPlainText -Force
+        $cred = New-Object System.Management.Automation.PSCredential ($ADUserName, $pwd)
+        $authority = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
+        $connection = $authority.CreateAuthorizationHeader()
+    }
+    catch {
+        Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
+        exit 1	
+    }
 try
 {
-	if($proxy) {
-		Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Proxy is not currently supported {0}" -f $proxy) $TRACE_WARNING
-	}
-	$pwd = ConvertTo-SecureString $ADPassword -AsPlainText -Force
-	$cred = New-Object System.Management.Automation.PSCredential ($ADUserName, $pwd)
-	$authority = Get-AdalAuthentication -resourceURI $resourcebaseAddress -authority $authBaseAddress -clientId $clientId -credential $cred
-	$connection = $authority.CreateAuthorizationHeader()
-}
-catch {
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Cannot get Azure AD connection aborting $Error") $TRACE_ERROR
-	Throw-KeepDiscoveryInfo
-	exit 1	
-}
-
-try {
-	$timeout=300
-	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
 
 	$error.clear() #let's use this like a catch all
 	$rules=@()
 	#first discover metrics
-	$rules = GetMetricsRule -SubscriptionId $SubscriptionId -timeout $timeout -connection $connection
-
+	#$rules = GetMetricsRule -SubscriptionId $SubscriptionId -timeout $timeout -connection $connection
 	#then discovery Activity Log Alerts
-	$rules += GetActivityLogRules -SubscriptionId $SubscriptionId -timeout $timeout -connection $connection
-
+	#$rules += GetActivityLogRules -SubscriptionId $SubscriptionId -timeout $timeout -connection $connection
 	#last discover Log rules
-	$rules += GetLogRules -SubscriptionId $SubscriptionId -timeout $timeout -ResourceBaseAddress $ResourceBaseAddress -connection $connection
+	#$rules += GetLogRules -SubscriptionId $SubscriptionId -timeout $timeout -ResourceBaseAddress $ResourceBaseAddress -connection $connection
 
-	foreach($rule in $rules) {
-		Discover-AlertRule -Id $rule.id -AlertName $rule.Name -AlertDescription $rule.Description -AlertType $rule.Type -AlertKind $rule.Kind -Location $rule.Location -SubscriptionId $SubscriptionId
-	}
-	
-	$discoveryData
-	If ($traceLevel -eq $TRACE_DEBUG)
-	{
-		#just for debug proposes when launched from command line does nothing when run inside OpsMgr Agent	
-		#it breaks in exception when run insde OpsMgr and POSH IDE	
-		$g_API.Return($discoveryData)
-	}
-	if($error) {throw $Error[0]}
-	Log-Event $STOP_EVENT_ID $EVENT_TYPE_INFORMATION ("$SCRIPT_NAME has completed successfully in " + ((Get-Date)- ($dtstart)).TotalSeconds + " seconds.") $TRACE_INFO
+    #now get all the alerts
+    $api='2018-05-05-preview'
+    $uri = '{0}/subscriptions/{1}/providers/Microsoft.AlertsManagement/alerts?api-version={2}' -f $ResourceBaseAddress, $SubscriptionId, $api
+	$nextLink=$null
+    $alerts=@()
+	do {
+		$result=invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout -Verbose:($PSBoundParameters['Verbose'] -eq $true)	
+        write-verbose ('Got {0} alerts' -f $result.values.count)
+        $alerts+=$result.Values
+	} while ($nextLink)	
+
+    foreach($alert in $alerts) {
+        if($alert.properties.monitorService -ieq 'Log Analytics') {
+            #get correlation id
+            $uri = '{0}/{1}?api-version={2}' -f $ResourceBaseAddress, $alert.id, $api 
+            $result=invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout -Verbose:($PSBoundParameters['Verbose'] -eq $true)	
+            if($result.Values.count -gt 0) {
+                $detail = $result.Values[0].properties.payload               
+                $ruleKey = 'subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.OperationalInsights/workspaces/{2}/savedSearches/{3}/schedules/{4}' `
+                    -f $SubscriptionId, $detail.TargetResourceGroup, $detail.TargetResourceName, $detail.SavedSearchId, $detail.ScheduledSearchId
+            }
+        }
+        else {
+            $ruleKey = $alert.properties.sourceCreatedId
+        }
+
+        $returnBag = @{
+            RuleId = $ruleKey
+            State = $alert.properties.State
+            AlertState = $alert.properties.AlertState
+            monitorCondition = $alert.properties.monitorCondition
+        }
+
+        Return-Bag -object $returnBag -key RuleId 
+    }
+
+    if($traceLevel -eq $TRACE_DEBUG) {
+        write-warning 'Exception expected if run inside powershell ISE'
+        $g_API.ReturnItems()
+    }
+
+	Log-Event -eventID $EVENT_ID_STOP -eventType $EVENT_TYPE_INFORMATION -msg ('{0} has completed successfully in {1} seconds.' -f $SCRIPT_NAME, ((Get-Date)- ($dtstart)).TotalSeconds) -level $TRACE_INFO
 }
 Catch [Exception] {
-	Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ("Main " + $Error) $TRACE_WARNING	
+	Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_ERROR -msg ("Main got error: {0} for {1}" -f $Error[0],$SubscriptionId) -level $TRACE_ERROR	
 	write-Verbose $("TRAPPED: " + $_.Exception.GetType().FullName); 
 	Write-Verbose $("TRAPPED: " + $_.Exception.Message); 
 }
-
-
-
