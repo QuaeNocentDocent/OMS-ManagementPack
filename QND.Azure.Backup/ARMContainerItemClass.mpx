@@ -79,15 +79,15 @@
         <Category>Discovery</Category>
         <DataSources>
           <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
-            <IntervalSeconds>43200</IntervalSeconds>
+            <IntervalSeconds>3603</IntervalSeconds>
           </DataSource>
         </DataSources>
         <WriteActions>
           <WriteAction ID="WriteEvent" TypeID="QNDA!QND.DiscoveryEvent.WAT">
             <LogName>Operations Manager</LogName>
-            <SourceName>OMS Discovery</SourceName>
+            <SourceName>QND Discovery</SourceName>
             <EventId>1</EventId>
-            <Message>QND</Message>
+            <Message>QND Recovery Container</Message>
             <Key>RecoveryContainer $Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Key>
           </WriteAction>
         </WriteActions>
@@ -96,16 +96,16 @@
         <Category>Discovery</Category>
         <DataSources>
           <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
-            <IntervalSeconds>43200</IntervalSeconds>
+            <IntervalSeconds>3603</IntervalSeconds>
           </DataSource>
         </DataSources>
         <WriteActions>
           <WriteAction ID="WriteEvent" TypeID="QNDA!QND.DiscoveryEvent.WAT">
             <LogName>Operations Manager</LogName>
-            <SourceName>OMS Discovery</SourceName>
+            <SourceName>QND Discovery</SourceName>
             <EventId>1</EventId>
-            <Message>QND</Message>
-            <Key>RecoveryContainer $Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Key>
+            <Message>QND Recovery Item</Message>
+            <Key>ProtectedItem $Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Key>
           </WriteAction>
         </WriteActions>
       </Rule>      
@@ -118,7 +118,7 @@
 
         <!-- QND.OMS.Backup.Conatiner -->
         <DisplayString ElementID="QND.OMS.Recovery.Vault.Container">
-          <Name>QND - OMS Recovery Container</Name>
+          <Name>QND - Azure Recovery Container</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Vault.Container" SubElementID="Id">
@@ -136,7 +136,7 @@
 
         <!-- QND.OMS.Backup.Item -->
         <DisplayString ElementID="QND.OMS.Recovery.Vault.ProtectedItem">
-          <Name>QND - OMS Recovery Protected Item</Name>
+          <Name>QND - Azure Recovery Protected Item</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Vault.ProtectedItem" SubElementID="Id">
@@ -170,29 +170,29 @@
         <!-- Relkationships -->
 
         <DisplayString ElementID="QND.OMS.Recovery.VaultContainsContainer">
-          <Name>QND - OMS Recovery Vault contains Container</Name>
+          <Name>QND - Azure Recovery Vault contains Container</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.ContainerContainsItem">
-          <Name>QND - OMS Recovery Container contains Protected Item</Name>
+          <Name>QND - Azure Recovery Container contains Protected Item</Name>
           <Description></Description>
         </DisplayString>
         
         <!-- disocveries -->
         <DisplayString ElementID="QND.OMS.Recovery.Container.Discovery">
-          <Name>QND - OMS Recovery Container Discovery</Name>
+          <Name>QND - Azure Recovery Container Discovery</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.ProtectedItem.Discovery">
-          <Name>QND - OMS Recovery Protected Item Discovery</Name>
+          <Name>QND - Azure Recovery Protected Item Discovery</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Container.DiscoveryTrigger.Rule">
-          <Name>QND - OMS Recovery Container Discovery Rule</Name>
+          <Name>QND - Azure Recovery Container Discovery Rule</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.ProtectedItem.DiscoveryTrigger.Rule">
-          <Name>QND - OMS Recovery Protected Item Discovery Rule</Name>
+          <Name>QND - Azure Recovery Protected Item Discovery Rule</Name>
           <Description></Description>
         </DisplayString>
       </DisplayStrings>

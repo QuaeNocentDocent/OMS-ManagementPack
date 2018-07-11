@@ -57,7 +57,7 @@
                         </ValueExpression>
                         <Operator>Equal</Operator>
                         <ValueExpression>
-                          <Value Type="String">OMS Discovery</Value>
+                          <Value Type="String">QND Discovery</Value>
                         </ValueExpression>
                       </SimpleExpression>
                     </Expression>
@@ -205,7 +205,7 @@
                         </ValueExpression>
                         <Operator>Equal</Operator>
                         <ValueExpression>
-                          <Value Type="String">OMS Discovery</Value>
+                          <Value Type="String">QND Discovery</Value>
                         </ValueExpression>
                       </SimpleExpression>
                     </Expression>
@@ -216,7 +216,7 @@
                         </ValueExpression>
                         <Operator>Equal</Operator>
                         <ValueExpression>
-                          <Value Type="String">RecoveryContainer $Config/ResourceURI$</Value>
+                          <Value Type="String">ProtectedItem $Config/ResourceURI$</Value>
                         </ValueExpression>
                       </SimpleExpression>
                     </Expression>

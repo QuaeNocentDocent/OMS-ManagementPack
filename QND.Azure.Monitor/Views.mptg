@@ -1,0 +1,32 @@
+<TemplateGroup>
+  <Instances>
+    <Instance ID="Instanceaac2f41d1cd940b795894c063f089c83" Type="Microsoft.SystemCenter.Authoring.CodeGeneration.Monitoring.CustomView" Version="1.0.0.0">
+      <CustomViewConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <ViewFolder>QND.Azure.Monitor.Folder</ViewFolder>
+        <ViewType>SC!Microsoft.SystemCenter.StateViewType</ViewType>
+        <ViewConfiguration />
+        <Visible>true</Visible>
+        <Accessibility>Internal</Accessibility>
+        <Id>Monitor.View</Id>
+        <DisplayName>Monitor accounts</DisplayName>
+        <Description>Description for the new view</Description>
+        <Target>QND.Azure.Monitor.Class</Target>
+        <Category>Operations</Category>
+      </CustomViewConfig>
+    </Instance>
+    <Instance ID="Instancecabe841af6b24535b4fc2e4b0937f3ff" Type="Microsoft.SystemCenter.Authoring.CodeGeneration.Monitoring.CustomView" Version="1.0.0.0">
+      <CustomViewConfig xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <ViewFolder>QND.Azure.Monitor.Folder</ViewFolder>
+        <ViewType>SC!Microsoft.SystemCenter.StateViewType</ViewType>
+        <ViewConfiguration />
+        <Visible>true</Visible>
+        <Accessibility>Internal</Accessibility>
+        <Id>AlertRules.View</Id>
+        <DisplayName>Alert Rules</DisplayName>
+        <Description>Description for the new view</Description>
+        <Target>QND.Azure.Monitor.AlertRule.Class</Target>
+        <Category>Operations</Category>
+      </CustomViewConfig>
+    </Instance>
+  </Instances>
+</TemplateGroup>

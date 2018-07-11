@@ -3,7 +3,7 @@
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
         <DisplayString ElementID="QND.OMS.Backup">
-          <Name>QND - OMS Backup</Name>
+          <Name>QND - Azure Backup</Name>
           <Description>Community based Azure OMS Backup monitoring</Description>
         </DisplayString>
       </DisplayStrings>
@@ -12,7 +12,7 @@
           <MamlContent>
             <section xmlns="http://schemas.microsoft.com/maml/2004/10">
               <title>Summary</title>
-              <para>This management pack monitors the OMS Azure Backup service.</para>
+              <para>This management pack monitors the Azure Backup service.</para>
               <para>The management pack checks for:</para>
               <list>
                 <listItem>

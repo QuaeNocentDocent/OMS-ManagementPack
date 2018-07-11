@@ -45,7 +45,7 @@ param([int]$traceLevel=2,
 [Parameter (Mandatory=$true)][string]$ADUserName,
 [Parameter (Mandatory=$true)][string]$ADPassword,
 [Parameter (Mandatory=$true)][string]$resourceURI,
-[string]$APIVersion='2016-05-01',
+[string]$APIVersion='2018-01-10',
 [double]$Tolerance=0.5,
 [Parameter (Mandatory=$false)] [int]$LookbackDays=8,
 [Parameter (Mandatory=$false)] [int]$LastNJobs=5,
@@ -192,6 +192,40 @@ param($SourceId, $ManagedEntityId)
 
 #endregion
 
+
+Function Return-Bag
+{
+    param($object, [string] $key)
+    try {    
+		$bag = $g_api.CreatePropertyBag()
+        foreach($property in $object.Keys) {
+		    $bag.AddValue($property, $object[$property])
+        }
+        $bag
+
+		if($traceLevel -eq $TRACE_DEBUG) {
+			$g_API.AddItem($bag)
+			$object.Keys | %{write-verbose ('{0}={1}' -f $_,$object[$_]) -Verbose}
+		}
+		
+
+		$bag=''
+		$object.Keys | %{$bag+=('{0}={1}///' -f $_,$object[$_])}
+		Log-Event -eventID $EVENT_ID_DETAILS -eventType $EVENT_TYPE_INFORMATION `
+			-msg ('Returned status bag: {0} ' `
+				-f $bag) `
+			-level $TRACE_VERBOSE 	
+    }
+    catch {
+		Log-Event -eventID $EVENT_ID_FAILURE -eventType $EVENT_TYPE_WARNING `
+			-msg ('{0} - error creating status bag {1}' `
+				-f $object[$key]), $_.Message `
+			-level $TRACE_VERBOSE 
+    }
+}
+#endregion
+
+
 Function Format-Time
 {
 	[OutputType([String])]
@@ -273,15 +307,12 @@ try
 	$connection = $authority.CreateAuthorizationHeader()
 }
 catch {
-	Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_ERROR -msg ("Cannot logon to AzureAD error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR	
-	Throw-KeepDiscoveryInfo
+	Log-Event -eventID $FAILURE_EVENT_ID -eventType $EVENT_TYPE_ERROR -msg ("Cannot logon to AzureAD error: {0} for {2} on Subscription {1}" -f $Error[0], $SubscriptionId, $resourceURI) -level $TRACE_ERROR		
 	exit 1	
 }
 #endregion
 
 try {
-
-
 
 	$uris =@(
 		('{0}{1}/backupProtectedItems?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
@@ -290,37 +321,6 @@ try {
 	)
 	$items = Get-OMSRecItems -uris $uris -connection $connection
 
-<#
-
-ContainerId: /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/Windows;pre
-             -subca.pre.lab
-# MAB + FileFolder
-
-id         : /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/Windows;PRE
-             -SUBCA.PRE.LAB/protectedItems/FileFolder;C
-name       : C
-type       : Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems
-properties : @{friendlyName=C:\; computerName=PRE-SUBCA.PRE.LAB; protectedItemType=MabFileFolderProtectedItem; backupManagementType=MAB; workloadType=FileFolder; containerName=PRE-SUBCA.PRE.LAB; 
-             lastRecoveryPoint=2016-05-12T09:16:43.0837478Z} 
-#>
-
-<#
-
-ContainerId: /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/IaasVMConta
-             iner;iaasvmcontainer;pre-infrastructure;pre-adsync
-
-AzureIaasVM + VM
-id         : /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupFabrics/Azure/protectionContainers/IaasVMConta
-             iner;iaasvmcontainer;pre-infrastructure;pre-adsync/protectedItems/VM;iaasvmcontainer;pre-infrastructure;pre-adsync
-name       : iaasvmcontainer;pre-infrastructure;pre-adsync
-type       : Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems
-properties : @{friendlyName=pre-adsync; virtualMachineId=/subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/Pre-Infrastructure/providers/Microsoft.ClassicCompute/virtualMachines/pre-adsync; 
-             protectionStatus=Healthy; protectionState=IRPending; lastBackupStatus=; lastBackupTime=2001-01-01T00:00:00Z; protectedItemType=Microsoft.ClassicCompute/virtualMachines; 
-             backupManagementType=AzureIaasVM; workloadType=VM; containerName=iaasvmcontainer;pre-infrastructure;pre-adsync; 
-             policyId=/Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupPolicies/VMLab1; policyName=VMLab1}
- 
-#>
-
 	$now = Format-Time -utcTime ((Get-Date).ToUniversalTime())
 	$then = Format-Time -utcTime (((Get-Date).ToUniversalTime()).AddDays(-$LookbackDays))
 	$uris=@(
@@ -328,12 +328,12 @@ properties : @{friendlyName=pre-adsync; virtualMachineId=/subscriptions/ec2b2ab8
 	)
 
 <#
-Job dump
-id         : /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupJobs/8c62074b-4657-418f-a0d0-a225666f5015
-name       : 8c62074b-4657-418f-a0d0-a225666f5015
-type       : Microsoft.RecoveryServices/vaults/backupJobs
-properties : @{jobType=AzureIaaSVMJob; duration=02:05:37.9565506; actionsInfo=System.Object[]; virtualMachineVersion=Compute; entityFriendlyName=precentos1; backupManagementType=AzureIaasVM; 
-             operation=Backup; status=Completed; startTime=2016-05-08T05:34:50.0304135Z; endTime=2016-05-08T07:40:27.9869641Z; activityId=d48c5135-8309-47db-a277-6fe44ec0bd7a} 
+	Job dump
+	id         : /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupJobs/8c62074b-4657-418f-a0d0-a225666f5015
+	name       : 8c62074b-4657-418f-a0d0-a225666f5015
+	type       : Microsoft.RecoveryServices/vaults/backupJobs
+	properties : @{jobType=AzureIaaSVMJob; duration=02:05:37.9565506; actionsInfo=System.Object[]; virtualMachineVersion=Compute; entityFriendlyName=precentos1; backupManagementType=AzureIaasVM; 
+				operation=Backup; status=Completed; startTime=2016-05-08T05:34:50.0304135Z; endTime=2016-05-08T07:40:27.9869641Z; activityId=d48c5135-8309-47db-a277-6fe44ec0bd7a} 
 #>
 
 
@@ -343,24 +343,24 @@ properties : @{jobType=AzureIaaSVMJob; duration=02:05:37.9565506; actionsInfo=Sy
 		('{0}{1}/backupPolicies?api-version={2}' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
 	)
 <#
-backupManagementType : AzureWorkload
-workLoadType         : SQLDataBase
-settings             : @{timeZone=UTC; issqlcompression=False}
-subProtectionPolicy  : {@{policyType=Full; schedulePolicy=; retentionPolicy=}, @{policyType=Log; schedulePolicy=; retentionPolicy=}}
-protectedItemsCount  : 0
+	backupManagementType : AzureWorkload
+	workLoadType         : SQLDataBase
+	settings             : @{timeZone=UTC; issqlcompression=False}
+	subProtectionPolicy  : {@{policyType=Full; schedulePolicy=; retentionPolicy=}, @{policyType=Log; schedulePolicy=; retentionPolicy=}}
+	protectedItemsCount  : 0
 
- [DBG]>> $pol.properties.subProtectionPolicy
+	[DBG]>> $pol.properties.subProtectionPolicy
 
-policyType schedulePolicy                                                                                                                      retentionPolicy                                                 
----------- --------------                                                                                                                      ---------------                                                 
-Full       @{schedulePolicyType=SimpleSchedulePolicy; scheduleRunFrequency=Daily; scheduleRunTimes=System.Object[]; scheduleWeeklyFrequency=0} @{retentionPolicyType=LongTermRetentionPolicy; dailySchedule=}  
-Log        @{schedulePolicyType=LogSchedulePolicy; scheduleFrequencyInMins=60}                                                                 @{retentionPolicyType=SimpleRetentionPolicy; retentionDuration=}
+	policyType schedulePolicy                                                                                                                      retentionPolicy                                                 
+	---------- --------------                                                                                                                      ---------------                                                 
+	Full       @{schedulePolicyType=SimpleSchedulePolicy; scheduleRunFrequency=Daily; scheduleRunTimes=System.Object[]; scheduleWeeklyFrequency=0} @{retentionPolicyType=LongTermRetentionPolicy; dailySchedule=}  
+	Log        @{schedulePolicyType=LogSchedulePolicy; scheduleFrequencyInMins=60}                                                                 @{retentionPolicyType=SimpleRetentionPolicy; retentionDuration=}
 
- [DBG]>> $pol.properties.subProtectionPolicy[0].schedulePolicy
+	[DBG]>> $pol.properties.subProtectionPolicy[0].schedulePolicy
 
-schedulePolicyType   scheduleRunFrequency scheduleRunTimes       scheduleWeeklyFrequency
-------------------   -------------------- ----------------       -----------------------
-SimpleSchedulePolicy Daily                {2017-11-27T22:30:00Z}                       0
+	schedulePolicyType   scheduleRunFrequency scheduleRunTimes       scheduleWeeklyFrequency
+	------------------   -------------------- ----------------       -----------------------
+	SimpleSchedulePolicy Daily                {2017-11-27T22:30:00Z}                       0
 
 #>
 	if($AutoMaxAgeHours -eq 0) {
@@ -392,18 +392,18 @@ SimpleSchedulePolicy Daily                {2017-11-27T22:30:00Z}                
 	}
 
 <#
-Policy Dump
-id         : /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupPolicies/DefaultPolicy
-name       : DefaultPolicy
-type       : Microsoft.RecoveryServices/vaults/backupPolicies
-properties : @{backupManagementType=AzureIaasVM; schedulePolicy=; retentionPolicy=; protectedItemsCount=0}
-backupManagementType : AzureIaasVM
-schedulePolicy       : @{schedulePolicyType=SimpleSchedulePolicy; scheduleRunFrequency=Daily; scheduleRunTimes=System.Object[]}
-retentionPolicy      : @{retentionPolicyType=LongTermRetentionPolicy; dailySchedule=}
-protectedItemsCount  : 0
-schedulePolicyType   : SimpleSchedulePolicy
-scheduleRunFrequency : Daily
-scheduleRunTimes     : {2016-02-24T16:30:00} 
+	Policy Dump
+	id         : /Subscriptions/ec2b2ab8-ba74-41a0-bf54-39cc0716f414/resourceGroups/LabReggioInfra/providers/Microsoft.RecoveryServices/vaults/backupARMLabRE/backupPolicies/DefaultPolicy
+	name       : DefaultPolicy
+	type       : Microsoft.RecoveryServices/vaults/backupPolicies
+	properties : @{backupManagementType=AzureIaasVM; schedulePolicy=; retentionPolicy=; protectedItemsCount=0}
+	backupManagementType : AzureIaasVM
+	schedulePolicy       : @{schedulePolicyType=SimpleSchedulePolicy; scheduleRunFrequency=Daily; scheduleRunTimes=System.Object[]}
+	retentionPolicy      : @{retentionPolicyType=LongTermRetentionPolicy; dailySchedule=}
+	protectedItemsCount  : 0
+	schedulePolicyType   : SimpleSchedulePolicy
+	scheduleRunFrequency : Daily
+	scheduleRunTimes     : {2016-02-24T16:30:00} 
 #>
 
 	foreach($item in $items) {      
@@ -415,7 +415,15 @@ scheduleRunTimes     : {2016-02-24T16:30:00}
 				-level $TRACE_VERBOSE   
 
 			$lastRecPointDate='2015-01-01'
-			if($item.properties.lastRecoveryPoint) {$lastRecPointDate = $item.properties.lastRecoveryPoint}
+			switch ($item.properties.protectedItemType) {
+				'AzureVmWorkloadSQLDatabase' {  
+					if($item.properties.lastBackupStatus -ieq 'Healthy') {$lastRecPointDate=$item.properties.lastBackupTime}
+				}
+				Default {
+					if($item.properties.lastRecoveryPoint) {$lastRecPointDate = $item.properties.lastRecoveryPoint}
+				}
+			}
+			
 			$lastRecoveryPointAgeHours = ((Get-Date) - [datetime]$lastRecPointDate).TotalHours
 
 			#getting jobs only for workloads with a policy defined
@@ -424,30 +432,33 @@ scheduleRunTimes     : {2016-02-24T16:30:00}
 			$selectedJobs=$null
 			$lastjobDurationHours=-1
 			$lastJobSizeGB=-1
-			$lastJobStatus='Success'
+			$failures=-1
+			$lastJobDetails=$null			
+			if($item.properties.lastBackupStatus -in @('Completed','Healthy')) {$lastJobStatus='Success'} else {$lastJobStatus='Failed'}
 			if (! [String]::IsNullOrEmpty($item.properties.policyId)) {
-				if ($LastNJobs -gt 1) {
+				if ($LastNJobs -gt 0) {
 					$itemJobs=@($jobs | where {$_.properties.entityFriendlyName -ieq $item.properties.friendlyName})
-					$lastJob = $itemjobs | where {$_.properties.status -ieq 'Completed'} | Select-Object -First 1
-					$selectedJobs = @($itemJobs | Select-Object -First $LastNJobs)
-					$failures = @($selectedJobs | where {$_.properties.status -match $FailureCondition}).Count
-					if ($lastJob) {						
-						$uri=('{0}{1}?api-version={2}' -f $ResourceBaseAddress,$lastJob.Id,$APIVersion)
-						$lastJobDetails = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken $connection -nextLink $null -TimeoutSeconds $timeoutSeconds
-						if($lastJobDetails.StatusCode -eq 200) { $lastJobDetails=$lastJobDetails.Values[0]}
-						else {$lastJobDetails=$null}
+					if($itemJobs.count -gt 0) {
+						$lastJobStatus = $itemJobs[0].properties.status
+						$lastJob = $itemjobs | where {$_.properties.status -ieq 'Completed'} | Select-Object -First 1 #last completed job
+						$selectedJobs = @($itemJobs | Select-Object -First $LastNJobs)
+						$failures = @($selectedJobs | where {$_.properties.status -match $FailureCondition}).Count
+						if ($lastJob) {						
+							$uri=('{0}{1}?api-version={2}' -f $ResourceBaseAddress,$lastJob.Id,$APIVersion)
+							$lastJobDetails = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken $connection -nextLink $null -TimeoutSeconds $timeoutSeconds
+							if($lastJobDetails.StatusCode -eq 200) { $lastJobDetails=$lastJobDetails.Values[0]}
+							else {$lastJobDetails=$null}
+						}
 					}
 				}
 
 				#get last job stats
 				$lastjobDurationHours=-1
 				$lastJobSizeGB=-1
-				$lastJobStatus='Success'
 				if($lastJobDetails) {
 					if ($lastJobDetails.properties) {
-						try {
-							$lastJobStatus = $lastJobDetails.properties.status
-							$lastjobDurationHours = (([datetime]$lastJobDetails.properties.duration).TimeOfDay).TotalHours
+						try {							
+							$lastjobDurationHours = ([datetime]$lastJobDetails.properties.endTime -  [datetime]$lastJobDetails.properties.startTime).TotalHours
 							$lastJobSizeGB = ([int]($lastJobDetails.properties.extendedInfo.propertyBag.'Backup Size').Replace(' MB',''))/1024
 						}
 						catch {
@@ -462,8 +473,9 @@ scheduleRunTimes     : {2016-02-24T16:30:00}
 			{
 				'Microsoft.Compute/virtualMachines' {$ageMode='Auto'}
 				'Microsoft.ClassicCompute/virtualMachines' { $ageMode='Auto'}	
+				'AzureVmWorkloadSQLDatabase' { $ageMode='Auto'}	
 				'MabFileFolderProtectedItem' { $ageMode='Fixed' }
-				'DPMProtectedItem' {$ageMode='Fixed';}
+				'DPMProtectedItem' {$ageMode='Fixed'}
 				default { 
 					if ([String]::IsNullOrEmpty($item.properties.policyName)) {$ageMode='Fixed'} else {$ageMode='Auto'}
 					Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unrecognized Item Type {0}' -f $item.properties.protectedItemType) $TRACE_WARNING	
@@ -494,33 +506,28 @@ scheduleRunTimes     : {2016-02-24T16:30:00}
 					default {$ageError=($lastRecoveryPointAgeHours -gt ($FixedMaxAgeHours*(1+$Tolerance))).ToString()}
 					}
 			}
-			$bag = $g_api.CreatePropertyBag()
-			$bag.AddValue('ItemId', $item.Id)
-			$bag.AddValue('ProtectionState', $item.properties.protectionState)
-			if($item.properties.protectionStatus) {$bag.AddValue('ProtectionStatus', $item.properties.protectionStatus)} else {$bag.AddValue('ProtectionStatus', 'Healthy')}
-			if($item.properties.HealthStatus) {$bag.AddValue('HealthStatus', $item.properties.HealthStatus)} else {$bag.AddValue('HealthStatus', 'Passed')}
 
 			#return calculated status and input parameters
-			$execError=($failures -gt $MaxFailures).ToString()
+			$returnValue=@{
+				ItemId=$Item.Id
+				ProtectionState= $item.properties.protectionState
+				ProtectionStatus=if($item.properties.protectionStatus) { $item.properties.protectionStatus} else {'Healthy'}
+				HealthStatus=if($item.properties.HealthStatus) { $item.properties.HealthStatus} else {'Passed'}
+				'JobsReturned'= $itemJobs.Count
+				'JobsSelected'= $selectedJobs.Count
+				'Failures'= $failures
+				'LastJobDurationHours'= $lastjobDurationHours
+				'LastJobSizeGB'= $lastJobSizeGB
+				'LastJobStatus'= $lastJobStatus
+				'LastRecoveryPointDate'= $lastRecPointDate
+				'LastRecoveryPointAge'= $lastRecoveryPointAgeHours
+				'ExecError'= ($failures -gt $MaxFailures).ToString()
+				'AgeError'= $ageError
+				'MaxFailures'= $MaxFailures
+				'MaxAgeHours'= $specificAge
+			}
 
-			$bag.AddValue('JobsReturned', $itemJobs.Count)
-			$bag.AddValue('JobsSelected', $selectedJobs.Count)
-			$bag.AddValue('Failures', $failures)
-			$bag.AddValue('LastJobDurationHours', $lastjobDurationHours)
-			$bag.AddValue('LastJobSizeGB', $lastJobSizeGB)
-			$bag.AddValue('LastJobStatus', $lastJobStatus)
-			$bag.AddValue('LastRecoveryPointDate', $lastRecPointDate)
-			$bag.AddValue('LastRecoveryPointAge', $lastRecoveryPointAgeHours)
-
-			$bag.AddValue('ExecError', $execError)
-			$bag.AddValue('AgeError', $ageError)
-
-			$bag.AddValue('MaxFailures', $MaxFailures)
-			$bag.AddValue('MaxAgeHours', $specificAge)
-
-
-			if($traceLevel -eq $TRACE_DEBUG) {$g_API.AddItem($bag)}
-			$bag
+			Return-Bag -object $returnValue -key 'ItemId'
 
 			Log-Event -eventID $SUCCESS_EVENT_ID -eventType $EVENT_TYPE_INFORMATION `
 				-msg ('{0} - retunred jobs {1} selected jobs {2} failures {3} last job status {4} last job duration {5} last recovery point {6} last recovery point age {7}' `

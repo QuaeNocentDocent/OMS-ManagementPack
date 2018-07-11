@@ -28,7 +28,7 @@
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <Type>Microsoft.RecoveryServices/vaults</Type>
           <ClassId>$MPElement[Name='QND.OMS.Recovery.Vault']$</ClassId>
-          <ApiVersion>2017-07-01</ApiVersion>
+          <ApiVersion>2018-01-10</ApiVersion>
           <EventID>1</EventID>
           <EventPublisher>QND Discovery</EventPublisher>
           <EventParam>RecoveryVault $Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</EventParam>
@@ -61,7 +61,7 @@
 
 <!-- QND.OMS.Recovery.Vault -->
         <DisplayString ElementID="QND.OMS.Recovery.Vault">
-          <Name>QND - OMS Recovery Services Vault</Name>
+          <Name>QND - Azure Recovery Services Vault</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Vault" SubElementID="SkuName">
@@ -76,10 +76,10 @@
 
         <!-- discoveries -->        
         <DisplayString ElementID="QND.OMS.Recovery.Vault.Discovery">
-          <Name>QND - OMS Recovery Services Vault discovery</Name>
+          <Name>QND - Azure Recovery Services Vault discovery</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.RecoveryVault.DiscoveryTrigger.Rule">
-          <Name>QND - OMS Recovery Vault discovery trigger</Name>
+          <Name>QND - Azure Recovery Vault discovery trigger</Name>
         </DisplayString>
       </DisplayStrings>
       

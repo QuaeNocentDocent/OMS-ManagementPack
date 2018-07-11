@@ -33,9 +33,21 @@
       <Alias>SC</Alias>
       <PackageToBundle>false</PackageToBundle>
     </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.MicrosoftAzure">
+      <HintPath>C:\Users\grandinid\OneDrive\Dev\OpsMgr\GIT\QND.OMS\References\Microsoft.SystemCenter.MicrosoftAzure.mpb</HintPath>
+      <Alias>Azure</Alias>
+      <MinVersion>1.3.18.0</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.Windows.Library">
       <Alias>Windows</Alias>
       <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="QND.AzureMPIntegration">
+      <HintPath>C:\Users\grandinid\OneDrive\Dev\OpsMgr\GIT\QND.OMS\References\QND.AzureMPIntegration.mpb</HintPath>
+      <Alias>QNDA</Alias>
+      <MinVersion>2.0.0.59</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="System.Health.Library">
       <Alias>Health</Alias>
@@ -51,9 +63,39 @@
     </ManagementPackReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlertClass.mpx">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ManagementPack.mpx">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Modules.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MonitorClass.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Presentation.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views.mptg.mpx">
+      <SubType>Code</SubType>
+      <DependentUpon>Views.mptg</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Scripts" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\Get-MonitorAlertRules.ps1" />
+    <EmbeddedResource Include="Scripts\GetAlertStatus.ps1" />
+    <EmbeddedResource Include="Scripts\GetSummary.ps1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views.mptg">
+      <SubType>Content</SubType>
+      <Generator>FragmentGenerator</Generator>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>

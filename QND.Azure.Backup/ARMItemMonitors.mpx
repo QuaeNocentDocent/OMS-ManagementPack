@@ -22,7 +22,7 @@
         <Configuration>
           <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
 
-          <IntervalSeconds>21600</IntervalSeconds>
+          <IntervalSeconds>1800</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>3</TraceLevel>
@@ -160,7 +160,7 @@
         <Configuration>
           <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
 
-          <IntervalSeconds>86400</IntervalSeconds>
+          <IntervalSeconds>1807</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>3</TraceLevel>
@@ -207,7 +207,7 @@
         <Configuration>
           <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
 
-          <IntervalSeconds>86400</IntervalSeconds>
+          <IntervalSeconds>1807</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>3</TraceLevel>
@@ -254,7 +254,7 @@
         <Configuration>
           <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
 
-          <IntervalSeconds>86400</IntervalSeconds>
+          <IntervalSeconds>1817</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>3</TraceLevel>
@@ -298,7 +298,7 @@
           <Name>Last Backup Job Result</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Item.LastJobStatus.Monitor.AlertMessage">
-          <Name>QND - OMS Backup Job failed</Name>
+          <Name>QND - Azure Backup Job failed</Name>
           <Description>The last backup job failed {0}. The jub run time has been {1} hours. The most recent recovery point is {2}.
               More details in the alert context
           </Description>
@@ -308,7 +308,7 @@
           <Name>Recovery Point Age</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Item.RecoveryPointAge.Monitor.AlertMessage">
-          <Name>QND - OMS Backup recovery point is too old</Name>
+          <Name>QND - Azure Backup recovery point is too old</Name>
           <Description>The most receent recovery point is too old. The recovery point date is {1} the age in hours is {0}.
               More details in the alert context
           </Description>
@@ -318,7 +318,7 @@
           <Name>Jobs failure rate</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Item.JobFailureRate.Monitor.AlertMessage">
-          <Name>QND - OMS Backup the job failure rate is too high</Name>
+          <Name>QND - Azure Backup the job failure rate is too high</Name>
           <Description>
             The error rate is {1} jobs on {0} runs.
             More details in the alert context
@@ -326,7 +326,7 @@
         </DisplayString>
 
         <DisplayString ElementID="QND.OMS.Recovery.Item.StatusGeneric.Monitor.AlertMessage">
-          <Name>QND - OMS Backup protected item is unhealthy</Name>
+          <Name>QND - Azure Backup protected item is unhealthy</Name>
           <Description>The current value for {1} is {0}</Description>
         </DisplayString>
 
