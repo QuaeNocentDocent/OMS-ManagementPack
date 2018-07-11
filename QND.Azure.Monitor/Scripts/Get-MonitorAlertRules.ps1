@@ -235,7 +235,7 @@ Function GetMetricsRule
 		write-verbose ('Got {0} metric rules' -f $result.values.count)
 		foreach($rule in $result.Values) {
 			if($rule.properties.Enabled) {
-				$rules+= New-Object -TypeName [PSCustomObject] -Property @{
+				$rules+= New-Object -TypeName PSCustomObject -Property @{
 					Id = $rule.Id
 					Name=$rule.Name
 					Type=$rule.Type
@@ -269,7 +269,7 @@ Function GetActivityLogRules
 		write-verbose ('Got {0} activity log rules' -f $result.values.count)
 		foreach($rule in $result.Values) {
 			if($rule.properties.Enabled) {
-				$rules+= New-Object -TypeName [PSCustomObject] -Property @{
+				$rules+= New-Object -TypeName PSCustomObject -Property @{
 					Id = $rule.Id
 					Name=$rule.Name
 					Type=$rule.Type
@@ -327,7 +327,7 @@ Function GetLogRules
 									$alertType='Standard'
 									try { if($action.properties.Threshold.MetricsTrigger) {$alertType='MetricBased'}} catch {}
 									if ([String]::IsNullOrEmpty($action.properties.Description)) {$AlertDescription='n.a.'} else {$alertDescription=$action.properties.Description}
-									$rules+= New-Object -TypeName [PSCustomObject] -Property @{
+									$rules+= New-Object -TypeName PSCustomObject -Property @{
 										Id = $schedule.Values[0].id
 										Name=$action.properties.Name
 										Type='Microsoft.OperationalInsights'

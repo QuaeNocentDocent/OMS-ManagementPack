@@ -295,6 +295,7 @@ catch {
 }
 
 try {
+	$apiVersion='2018-01-10'
 	$timeoutSeconds=300
 	$discoveryData = $g_api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
 

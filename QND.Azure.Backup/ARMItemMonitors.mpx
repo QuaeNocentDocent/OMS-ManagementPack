@@ -22,7 +22,7 @@
         <Configuration>
           <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
 
-          <IntervalSeconds>21600</IntervalSeconds>
+          <IntervalSeconds>1800</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>3</TraceLevel>
@@ -160,7 +160,7 @@
         <Configuration>
           <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
 
-          <IntervalSeconds>86400</IntervalSeconds>
+          <IntervalSeconds>1807</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>3</TraceLevel>
@@ -207,7 +207,7 @@
         <Configuration>
           <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
 
-          <IntervalSeconds>86400</IntervalSeconds>
+          <IntervalSeconds>1807</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>3</TraceLevel>
@@ -254,7 +254,7 @@
         <Configuration>
           <ItemId>$Target/Property[Type="QND.OMS.Recovery.Vault.ProtectedItem"]/Id$</ItemId>
 
-          <IntervalSeconds>86400</IntervalSeconds>
+          <IntervalSeconds>1817</IntervalSeconds>
           <SyncTime></SyncTime>
           <TimeoutSeconds>900</TimeoutSeconds>
           <TraceLevel>3</TraceLevel>

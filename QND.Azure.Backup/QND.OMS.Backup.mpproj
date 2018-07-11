@@ -139,6 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Scripts" />
+    <Folder Include="Scripts\deprecated" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Scripts\Get-OMSRecoveryContainer.ps1" />

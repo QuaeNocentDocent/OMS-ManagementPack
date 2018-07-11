@@ -49,7 +49,7 @@
         <Category>Discovery</Category>
         <DataSources>
           <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
-            <IntervalSeconds>14400</IntervalSeconds>
+            <IntervalSeconds>28893</IntervalSeconds>
           </DataSource>
         </DataSources>
         <WriteActions>

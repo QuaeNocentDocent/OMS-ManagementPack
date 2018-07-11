@@ -79,15 +79,15 @@
         <Category>Discovery</Category>
         <DataSources>
           <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
-            <IntervalSeconds>43200</IntervalSeconds>
+            <IntervalSeconds>3603</IntervalSeconds>
           </DataSource>
         </DataSources>
         <WriteActions>
           <WriteAction ID="WriteEvent" TypeID="QNDA!QND.DiscoveryEvent.WAT">
             <LogName>Operations Manager</LogName>
-            <SourceName>OMS Discovery</SourceName>
+            <SourceName>QND Discovery</SourceName>
             <EventId>1</EventId>
-            <Message>QND</Message>
+            <Message>QND Recovery Container</Message>
             <Key>RecoveryContainer $Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Key>
           </WriteAction>
         </WriteActions>
@@ -96,16 +96,16 @@
         <Category>Discovery</Category>
         <DataSources>
           <DataSource ID="DS" TypeID="QNDA!QND.DiscoveryEventScheduler.DS">
-            <IntervalSeconds>43200</IntervalSeconds>
+            <IntervalSeconds>3603</IntervalSeconds>
           </DataSource>
         </DataSources>
         <WriteActions>
           <WriteAction ID="WriteEvent" TypeID="QNDA!QND.DiscoveryEvent.WAT">
             <LogName>Operations Manager</LogName>
-            <SourceName>OMS Discovery</SourceName>
+            <SourceName>QND Discovery</SourceName>
             <EventId>1</EventId>
-            <Message>QND</Message>
-            <Key>RecoveryContainer $Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Key>
+            <Message>QND Recovery Item</Message>
+            <Key>ProtectedItem $Target/Property[Type="QNDA!QND.Azure.GenericService"]/ServiceId$</Key>
           </WriteAction>
         </WriteActions>
       </Rule>      
