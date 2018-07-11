@@ -171,7 +171,7 @@
           <Name>Containers</Name>
         </DisplayString> -->
         <DisplayString ElementID="QND.OMS.Recovery.Vault.Connectivity.Monitor.AlertMessage">
-          <Name>QND - OMS Backup Vault is not monitored</Name>
+          <Name>QND - Azure Backup Vault is not monitored</Name>
           <Description>The backup vault is not being monitored. Ivestigate the issue immediately.</Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Vault.Connectivity.Monitor">

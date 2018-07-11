@@ -76,6 +76,7 @@ $EVENT_ID_SUCCESS = 1101
 $EVENT_ID_START = 1102
 $EVENT_ID_STOP = 1103
 $EVENT_ID_DETAILS = 1104
+$EVENT_ID_CONNECTIVITY= 1110
 
 #TypedPropertyBag
 $AlertDataType = 0
@@ -330,7 +331,7 @@ try
         write-warning 'Exception expected if run inside powershell ISE'
         $g_API.ReturnItems()
     }
-
+		Create-Event -eventID $EVENT_ID_CONNECTIVITY -eventType $EVENT_TYPE_INFORMATION -level -1 -msg ('{0} running for subscription {1}' -f $SCRIPT_NAME, $SubscriptionId) -parameters @($SubscriptionId)
 	Log-Event -eventID $EVENT_ID_STOP -eventType $EVENT_TYPE_INFORMATION -msg ('{0} has completed successfully in {1} seconds.' -f $SCRIPT_NAME, ((Get-Date)- ($dtstart)).TotalSeconds) -level $TRACE_INFO
 }
 Catch [Exception] {

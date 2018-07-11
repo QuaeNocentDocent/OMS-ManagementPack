@@ -136,7 +136,7 @@
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
         <DisplayString ElementID="QND.OMS.Backup.Agent">
-          <Name>QND - OMS Azure Backup Monitor</Name>
+          <Name>QND - Azure Backup Monitor</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Backup.Agent.Discovery">
@@ -144,7 +144,7 @@
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Backup.Agent.Policy">
-          <Name>QND - OMS Azure Backup Policy</Name>
+          <Name>QND - Azure Backup Policy</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Backup.Agent.Policy" SubElementID="PolicyName">

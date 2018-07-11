@@ -64,7 +64,7 @@
       </Rule>
     </Rules>
     <Monitors>
-      <UnitMonitor ID="QND.Azure.Monitor.Summary.Monitor" Accessibility="Public" Enabled="true" Target="QND.Azure.Monitor.Class"
+      <UnitMonitor ID="QND.Azure.Monitor.Summary.Monitor" Accessibility="Public" Enabled="false" Target="QND.Azure.Monitor.Class"
                          ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="QND.Azure.Monitor.Summary.MT" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="QND.Azure.Monitor.Summary.AlertMessage">

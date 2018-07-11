@@ -61,7 +61,7 @@
 
 <!-- QND.OMS.Recovery.Vault -->
         <DisplayString ElementID="QND.OMS.Recovery.Vault">
-          <Name>QND - OMS Recovery Services Vault</Name>
+          <Name>QND - Azure Recovery Services Vault</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.Recovery.Vault" SubElementID="SkuName">
@@ -76,10 +76,10 @@
 
         <!-- discoveries -->        
         <DisplayString ElementID="QND.OMS.Recovery.Vault.Discovery">
-          <Name>QND - OMS Recovery Services Vault discovery</Name>
+          <Name>QND - Azure Recovery Services Vault discovery</Name>
         </DisplayString>
         <DisplayString ElementID="QND.OMS.RecoveryVault.DiscoveryTrigger.Rule">
-          <Name>QND - OMS Recovery Vault discovery trigger</Name>
+          <Name>QND - Azure Recovery Vault discovery trigger</Name>
         </DisplayString>
       </DisplayStrings>
       
