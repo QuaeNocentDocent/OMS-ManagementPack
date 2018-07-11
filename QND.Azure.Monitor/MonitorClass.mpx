@@ -145,7 +145,7 @@
                     <XPathQuery Type="String">Params/Param[1]</XPathQuery>
                   </ValueExpression>
                   <Operator>MatchesWildcard</Operator>
-                  <Pattern>GetAzureMonitorSummary*</Pattern>
+                  <Pattern>GetAzureMonitor*</Pattern>
                 </RegExExpression>
               </Expression>
               <Expression>
@@ -193,7 +193,7 @@
                     <XPathQuery Type="String">Params/Param[1]</XPathQuery>
                   </ValueExpression>
                   <Operator>MatchesWildcard</Operator>
-                  <Pattern>GetAzureMonitorSummary*</Pattern>
+                  <Pattern>GetAzureMonitor*</Pattern>
                 </RegExExpression>
               </Expression>
               <Expression>
