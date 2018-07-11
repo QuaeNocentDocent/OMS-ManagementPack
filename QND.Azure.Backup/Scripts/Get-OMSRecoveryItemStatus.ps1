@@ -473,9 +473,9 @@ try {
 			{
 				'Microsoft.Compute/virtualMachines' {$ageMode='Auto'}
 				'Microsoft.ClassicCompute/virtualMachines' { $ageMode='Auto'}	
-				'Microsoft.ClassicCompute/virtualMachines' { $ageMode='Auto'}	
+				'AzureVmWorkloadSQLDatabase' { $ageMode='Auto'}	
 				'MabFileFolderProtectedItem' { $ageMode='Fixed' }
-				'AzureVmWorkloadSQLDatabase' {$ageMode='Fixed'}
+				'DPMProtectedItem' {$ageMode='Fixed'}
 				default { 
 					if ([String]::IsNullOrEmpty($item.properties.policyName)) {$ageMode='Fixed'} else {$ageMode='Auto'}
 					Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unrecognized Item Type {0}' -f $item.properties.protectedItemType) $TRACE_WARNING	
