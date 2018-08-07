@@ -299,7 +299,7 @@ try
 	do {
 		$result=invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout -Verbose:($PSBoundParameters['Verbose'] -eq $true)	
         write-verbose ('Got {0} alerts' -f $result.values.count)
-        $alerts+=$result.Values
+        if($result.gotValue) {$alerts+=$result.Values}
 	} while ($nextLink)	
 
     foreach($alert in $alerts) {

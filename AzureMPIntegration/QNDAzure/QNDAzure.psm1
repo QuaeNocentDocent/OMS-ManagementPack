@@ -121,7 +121,8 @@ param(
         $StatusCode=$result.StatusCode
     }
     catch {	
-        Write-Error ('Exception processing query {0}' -f $_.GetType().FullName)
+        $message= ('Exception processing query {0} Type: {1}' -f $_.ErrorDetails.Message, $_.GetType().FullName)
+        Write-Error $message
         Write-Verbose $_
         $nl=$null
         if ($result) {$StatusCode=$result.StatusCode;$lastContent=$result}
