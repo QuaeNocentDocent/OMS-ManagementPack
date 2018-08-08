@@ -220,6 +220,7 @@ Function Discover-AlertRule
 
 Function GetMetricsRule
 {
+	[OutputType([array])]
 	param(
 		$SubscriptionId,
 		$timeout,
@@ -232,18 +233,23 @@ Function GetMetricsRule
 	$body=$null
 	do {
 		$result=invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $body -TimeoutSeconds $timeout -Verbose:($PSBoundParameters['Verbose'] -eq $true)	
+		if($result.StatusCode -ne 200) {
+			Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Error getting Metric Rules $Error") $TRACE_ERROR
+		}
 		write-verbose ('Got {0} metric rules' -f $result.values.count)
-		foreach($rule in $result.Values) {
-			if($rule.properties.Enabled) {
-				$rules+= New-Object -TypeName PSCustomObject -Property @{
-					Id = $rule.Id
-					Name=$rule.Name
-					Type=$rule.Type
-					Description = $rule.properties.Description
-					Kind = 'unknown'
-					Location = $rule.Location
+		if($result.GotValue) {
+			foreach($rule in $result.Values) {
+				if($rule.properties.Enabled) {
+					$rules+= New-Object -TypeName PSCustomObject -Property @{
+						Id = $rule.Id
+						Name=$rule.Name
+						Type=$rule.Type
+						Description = $rule.properties.Description
+						Kind = 'unknown'
+						Location = $rule.Location
+					}
+					#Discover-AlertRule -Id $rule.Id -AlertName $rule.Name -AlertType $rule.Type -AlertDescription $rule.properties.Description -AlertKind 'unknown' -Location $rule.Location -SubscriptionId $SubscriptionId
 				}
-				#Discover-AlertRule -Id $rule.Id -AlertName $rule.Name -AlertType $rule.Type -AlertDescription $rule.properties.Description -AlertKind 'unknown' -Location $rule.Location -SubscriptionId $SubscriptionId
 			}
 		}
 	} while ($nextLink)	
@@ -252,6 +258,7 @@ Function GetMetricsRule
 
 Function GetActivityLogRules
 {	
+	[OutputType([array])]
 	param(
 		$SubscriptionId,
 		$timeout,
@@ -266,16 +273,21 @@ Function GetActivityLogRules
 	$body=$null
 	do {
 		$result=invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $body -TimeoutSeconds $timeout -Verbose:($PSBoundParameters['Verbose'] -eq $true)
+		if($result.StatusCode -ne 200) {
+			Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_ERROR ("Error getting activity log Rules $Error") $TRACE_ERROR
+		}
 		write-verbose ('Got {0} activity log rules' -f $result.values.count)
-		foreach($rule in $result.Values) {
-			if($rule.properties.Enabled) {
-				$rules+= New-Object -TypeName PSCustomObject -Property @{
-					Id = $rule.Id
-					Name=$rule.Name
-					Type=$rule.Type
-					Description = $rule.properties.Description
-					Kind = $rule.Kind
-					Location = $rule.Location
+		if($result.GotValue) {		
+			foreach($rule in $result.Values) {
+				if($rule.properties.Enabled) {
+					$rules+= New-Object -TypeName PSCustomObject -Property @{
+						Id = $rule.Id
+						Name=$rule.Name
+						Type=$rule.Type
+						Description = $rule.properties.Description
+						Kind = $rule.Kind
+						Location = $rule.Location
+					}
 				}
 			}
 		}
@@ -285,6 +297,7 @@ Function GetActivityLogRules
 
 Function GetLogRules
 {
+	[OutputType([array])]
 	param(
 		$SubscriptionId,
 		$timeout,
@@ -386,13 +399,13 @@ try {
 	$error.clear() #let's use this like a catch all
 	$rules=@()
 	#first discover metrics
-	$rules = GetMetricsRule -SubscriptionId $SubscriptionId -timeout $timeout -connection $connection
+	[array] $rules = [array] (GetMetricsRule -SubscriptionId $SubscriptionId -timeout $timeout -connection $connection)
 
 	#then discovery Activity Log Alerts
-	$rules += GetActivityLogRules -SubscriptionId $SubscriptionId -timeout $timeout -connection $connection
+	$rules += [array] (GetActivityLogRules -SubscriptionId $SubscriptionId -timeout $timeout -connection $connection)
 
 	#last discover Log rules
-	$rules += GetLogRules -SubscriptionId $SubscriptionId -timeout $timeout -ResourceBaseAddress $ResourceBaseAddress -connection $connection
+	$rules += [array] (GetLogRules -SubscriptionId $SubscriptionId -timeout $timeout -ResourceBaseAddress $ResourceBaseAddress -connection $connection)
 
 	foreach($rule in $rules) {
 		Discover-AlertRule -Id $rule.id -AlertName $rule.Name -AlertDescription $rule.Description -AlertType $rule.Type -AlertKind $rule.Kind -Location $rule.Location -SubscriptionId $SubscriptionId

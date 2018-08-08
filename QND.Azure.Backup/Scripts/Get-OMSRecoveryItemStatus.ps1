@@ -387,7 +387,7 @@ try {
 					Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unknown schedule policy {0}' -f (convertto-json $pol.properties)) $TRACE_WARNING	
 				}
 			}
-			$policySLA.Add($pol.name,$slaHours)
+			$policySLA.Add($pol.id,$slaHours)
 		}
 	}
 
@@ -418,6 +418,9 @@ try {
 			switch ($item.properties.protectedItemType) {
 				'AzureVmWorkloadSQLDatabase' {  
 					if($item.properties.lastBackupStatus -ieq 'Healthy') {$lastRecPointDate=$item.properties.lastBackupTime}
+				}
+				'AzureFileShareProtectedItem' {
+					if($item.properties.lastBackupStatus -ieq 'Completed') {$lastRecPointDate=$item.properties.lastBackupTime}
 				}
 				Default {
 					if($item.properties.lastRecoveryPoint) {$lastRecPointDate = $item.properties.lastRecoveryPoint}
@@ -459,7 +462,14 @@ try {
 					if ($lastJobDetails.properties) {
 						try {							
 							$lastjobDurationHours = ([datetime]$lastJobDetails.properties.endTime -  [datetime]$lastJobDetails.properties.startTime).TotalHours
-							$lastJobSizeGB = ([int]($lastJobDetails.properties.extendedInfo.propertyBag.'Backup Size').Replace(' MB',''))/1024
+							#grrr the API is inconsistent so
+							switch ($lastJobDetails.properties.jobType) {
+								'AzureStorageJob' {$lastJobSizeGB=-1}
+								Default {
+									$lastJobSizeGB = ([int]($lastJobDetails.properties.extendedInfo.propertyBag.'Backup Size').Replace(' MB',''))/1024
+								}
+							}
+
 						}
 						catch {
 							Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Issue getting last job details for {0} - {1}' -f $item.name, $uri) $TRACE_WARNING	
@@ -476,6 +486,7 @@ try {
 				'AzureVmWorkloadSQLDatabase' { $ageMode='Auto'}	
 				'MabFileFolderProtectedItem' { $ageMode='Fixed' }
 				'DPMProtectedItem' {$ageMode='Fixed'}
+				'AzureFileShareProtectedItem' {$ageMode='Auto'}
 				default { 
 					if ([String]::IsNullOrEmpty($item.properties.policyName)) {$ageMode='Fixed'} else {$ageMode='Auto'}
 					Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unrecognized Item Type {0}' -f $item.properties.protectedItemType) $TRACE_WARNING	
@@ -486,8 +497,8 @@ try {
 				$specificAge=$AutoMaxAgeHours
 				switch ($AutoMaxAgeHours) {
 					0 {
-						if ($policySLA.ContainsKey($item.properties.policyName)) {
-							$specificAge=$policySLA[$item.properties.policyName]
+						if ($policySLA.ContainsKey($item.properties.policyId)) {
+							$specificAge=$policySLA[$item.properties.policyId]
 							$ageError=($lastRecoveryPointAgeHours -gt $specificAge).ToString()
 						} 
 						else {

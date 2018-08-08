@@ -292,7 +292,9 @@ try
     $uri = '{0}/subscriptions/{1}/providers/Microsoft.AlertsManagement/alertsSummary?api-version={2}' -f $ResourceBaseAddress, $SubscriptionId, $api
     $nextLink = $null
     $result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection) -nextLink $nextLink -data $null -TimeoutSeconds $timeout -Verbose:($PSBoundParameters['Verbose'] -eq $true)
-
+    if(! $result.GotValue) {
+       throw ('Error getting status summary: {0}' -f $result.LastContent)	
+    }
     $sevHash = ConvertTo-HashTable -object $result.Values[0].properties.summaryBySeverity
     $returnValue=@{
         'Type' = 'Severity'

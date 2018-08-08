@@ -305,6 +305,7 @@ try {
 		('{0}{1}/backupProtectionContainers?api-version={2}&$filter=backupManagementType eq ''AzureWorkload''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
 		('{0}{1}/backupProtectionContainers?api-version={2}&$filter=backupManagementType eq ''DPM''' -f $ResourceBaseAddress,$resourceURI,$apiVersion),
 		('{0}{1}/backupProtectionContainers?api-version={2}&$filter=backupManagementType eq ''AzureBackupServer''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)
+		('{0}{1}/backupProtectionContainers?api-version={2}&$filter=backupManagementType eq ''AzureStorage''' -f $ResourceBaseAddress,$resourceURI,$apiVersion)		
 	)	
 
 	foreach($uri in $uris) {
