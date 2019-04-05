@@ -618,7 +618,7 @@ Month week day occurrence:
 
 		$lastjobs | % {Write-Verbose ('{0} -{1}' -f $_.Name, $_.properties.status)}
 
-        $failures = ($lastJobs | where {$_.properties.status -imatch $failureCondition}).count
+        $failures = @($lastJobs | where {$_.properties.status -imatch $failureCondition}).count
 		#get last completed job
         $lastCompletedJob=$null
 		$runningJob=$null
