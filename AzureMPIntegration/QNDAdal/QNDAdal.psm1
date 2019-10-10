@@ -1,3 +1,18 @@
+#*************************************************************************
+# Script Name - 
+# Author	  -  Daniele Grandini - QND
+# Version	  - 1.1 04.10.2019
+
+# Version History
+#	  1.0 06.08.2010 DG First Release
+#	  1.1 04.10.2019 FG fixed assembly version mismatch
+#
+# (c) Copyright 2019, Progel srl, All Rights Reserved
+# Proprietary and confidential to Progel srl              
+#
+#*************************************************************************
+
+
 
 param(
     [bool] $install=$true,
@@ -14,27 +29,43 @@ param(
     [bool] $latest=$true
 )
 
+    $reqver =[System.Version]::new($requiredVersion)
+    $reqFromsver = $reqver
+
     $searchDirs=@("$PSScriptRoot","$((Get-Module QNDAdal).ModuleBase)")
     $SCOMResPath = (get-itemproperty -path 'HKLM:\system\currentcontrolset\services\healthservice\Parameters' -Name 'State Directory' -ErrorAction SilentlyContinue).'State Directory' + '\Resources'
     if ($SCOMResPath) {$searchDirs+=$SCOMResPath}
     if ($searchPath) {$searchDirs+=$searchPath}
 
-    $adal=[AppDomain]::CurrentDomain.GetAssemblies() |Where-Object { $_.FullName -match "Microsoft.IdentityModel.Clients.ActiveDirectory, Version=(.*), Culture=neutral, PublicKeyToken=31bf3856ad364e35"}
-    if ($adal) {
-        $adalVersion= $Matches[1]
-        if ($adalVersion -lt $requiredVersion) {$adal=$null}
+    $adalList=[AppDomain]::CurrentDomain.GetAssemblies() |Where-Object { $_.ManifestModule.Name -eq "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"}
+
+    $adal = $null
+    foreach ($AdalItem in $adalList){
+	if ($AdalItem.GetName().Version -ge $reqver)
+	{
+		$adal = $AdalItem
+		$reqver = $AdalItem.GetName().Version
+	}
     }
+
+    if ($adal)
+    {
+	Add-Type -path $adal.Location | out-Null
+    }
+    
+    $adalPackage = @()
+    $adalWindowsForms = @()
     If (!($adal))
     {
 	    Write-verbose 'Microsoft.IdentityModel.Clients.ActiveDirectory not loaded...'
 	    Try {
             foreach ($dir in $searchDirs) {
-				write-verbose ('Seraching in {0}' -f $dir)
-                $adalPackage = @(Get-ChildItem -Path ($dir) -Filter "Microsoft.IdentityModel.Clients.ActiveDirectory.dll" -Recurse)[0]
-				$adalWindowsForms = @(Get-ChildItem -Path ($dir) -Filter "Microsoft.IdentityModel.Clients.ActiveDirectory.WindowsForms.dll" -Recurse)[0] #this one is optional used only for UI
+		write-verbose ('Seraching in {0}' -f $dir)
+                $adalPackage += @(Get-ChildItem -Path ($dir) -Filter "Microsoft.IdentityModel.Clients.ActiveDirectory.dll" -Recurse)
+		$adalWindowsForms += @(Get-ChildItem -Path ($dir) -Filter "Microsoft.IdentityModel.Clients.ActiveDirectory.WindowsForms.dll" -Recurse) #this one is optional used only for UI
                 if ($adalPackage) {
 				#$adalPackage
-					write-verbose ('Found in {0}' -f $dir)
+				write-verbose ('Found in {0}' -f $dir)
                     break
                 }
             }
@@ -65,22 +96,72 @@ param(
                 }               
                 $nugetDownloadExpression = (join-Path $nugetFolder 'nuget.exe') + " install Microsoft.IdentityModel.Clients.ActiveDirectory -Version $version -NonInteractive -OutputDirectory " + $workingDir + "\Nugets | out-null"
                 Invoke-Expression $nugetDownloadExpression
-                $adalPackage = @(Get-ChildItem -Path ($workingDir) -Filter "Microsoft.IdentityModel.Clients.ActiveDirectory.dll" -Recurse)[0]
-				$adalWindowsForms = @(Get-ChildItem -Path ($workingDir) -Filter "Microsoft.IdentityModel.Clients.ActiveDirectory.WindowsForms.dll" -Recurse)[0] #this one is optional used only for UI
+                $adalPackage += @(Get-ChildItem -Path ($workingDir) -Filter "Microsoft.IdentityModel.Clients.ActiveDirectory.dll" -Recurse)
+		$adalWindowsForms += @(Get-ChildItem -Path ($workingDir) -Filter "Microsoft.IdentityModel.Clients.ActiveDirectory.WindowsForms.dll" -Recurse) #this one is optional used only for UI
 
             }
             if ($adalPackage) {
-                Add-Type -path $adalPackage.FullName | out-Null
-				if ($adalWindowsForms) {
-					Add-Type -path $adalWindowsForms.FullName | out-Null				
-				}
-				else {
-					Write-Warning 'Could not load ADAL Windows Form Assembly, won''t be able to show logon UI'
-				}
+                $adal  = $null
+                foreach($adalFile in $adalPackage)
+                {
+                    try {
+		        $AdalItem = [System.Reflection.Assembly]::ReflectionOnlyLoadFrom($adalFile.FullName)
+                        if ($AdalItem.GetName().version -ge $reqver)
+                        {
+		            $adal = $AdalItem
+		            $reqver = $AdalItem.GetName().Version
+                        }
+                    }
+                    catch
+                    {
+                        Write-Verbose "ReflectionOnlyLoadFrom $($adalFile.FullName) Failed"
+                        Write-Verbose $_
+                    }
+                }
+		
+                if ($adal)
+                {
+                    Add-Type -path $adal.Location | out-Null
+                } else {
+                    Throw 'Could not load ADAL'
+                }
+    
             }
             else {
                 Throw 'Could not load ADAL'
             }
+
+            if ($adalWindowsForms) {
+                $adalForms = $null
+                foreach($adalFormsFile in $adalWindowsForms)
+                {
+                    try {
+                        $AdalFormsItem = [System.Reflection.Assembly]::ReflectionOnlyLoadFrom($adalFormsFile.FullName)
+                        if ($AdalFormsItem.GetName().version -ge $reqFromsver)
+                        {
+		            $adalForms = $AdalFormsItem
+		            $reqFromsver = $AdalItem.GetName().Version
+                        }
+                    }
+                    catch
+                    {
+                        Write-Verbose "ReflectionOnlyLoadFrom $($adalFormsFile.FullName) Failed"
+                        Write-Verbose $_
+                    }
+		}
+
+                if ($adalForms)
+                {
+                    Add-Type -path $adalForms.Location | out-Null
+                } else {
+                    Write-Warning 'Could not load ADAL Windows Form Assembly, won''t be able to show logon UI'
+                }
+
+            }
+            else {
+		Write-Warning 'Could not load ADAL Windows Form Assembly, won''t be able to show logon UI'
+            }
+
         }
         Catch {
             Write-Verbose $_
@@ -105,14 +186,28 @@ param(
   #$resourceAppIdURI = $resourceURI #v1.0/ "https://graph.windows.net/"
   #$authority += "https://login.windows.net/" + $tenant
 
-  $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority #,$false
+    $reqver =[System.Version]::new('0.0.0.0')
+
+    $adalList=[AppDomain]::CurrentDomain.GetAssemblies() |Where-Object { $_.ManifestModule.Name -eq "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"}
+
+    $adal = $null
+    foreach ($AdalItem in $adalList){
+	if ($AdalItem.GetName().Version -ge $reqver)
+	{
+		$adal = $AdalItem
+		$reqver = $AdalItem.GetName().Version
+	}
+    }
+
+
+  $authContext = New-Object $adal.GetType('Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext').AssemblyQualifiedName -ArgumentList $authority #,$false
   if ($credential) {
     if($credential.UserName -eq $clientId) { #Service Principal
-        $clientCredential = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.ClientCredential" -ArgumentList $clientId, $credential.Password
+        $clientCredential = New-Object $adal.GetType('Microsoft.IdentityModel.Clients.ActiveDirectory.ClientCredential').AssemblyQualifiedName -ArgumentList $clientId, $credential.Password
         $authResult = $authContext.AcquireToken($resourceURI,$clientCredential)
     }
     else {
-  	    $AADcredential = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserCredential" -ArgumentList $credential.UserName,$credential.Password
+  	    $AADcredential = New-Object $adal.GetType('Microsoft.IdentityModel.Clients.ActiveDirectory.UserCredential').AssemblyQualifiedName -ArgumentList $credential.UserName,$credential.Password
         $authResult = $authContext.AcquireToken($resourceURI,$clientId,$AADcredential)
     }
   }

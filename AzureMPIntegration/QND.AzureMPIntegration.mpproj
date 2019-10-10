@@ -6,7 +6,7 @@
     <RootNamespace>QND.AzureMPIntegration</RootNamespace>
     <Name>QND.AzureMPIntegration</Name>
     <ManagementPackName>QND.AzureMPIntegration</ManagementPackName>
-    <Version>2.0.0.0</Version>
+    <Version>2.0.1.0</Version>
     <MpFrameworkVersion>v7.0.2</MpFrameworkVersion>
     <MpFrameworkProfile>OM</MpFrameworkProfile>
     <ProductVersion>1.1.0.0</ProductVersion>
@@ -18,7 +18,7 @@
     <Company>Quae Nocent Docent</Company>
     <Copyright>Copyright (c) QND. All rights reserved.</Copyright>
     <DelaySigning>False</DelaySigning>
-    <AssemblyOriginatorKeyFile>..\..\..\Firma\QND1.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>C:\buckmuu\OneDrive\GitHub\Tools\QND.Signature\QND1.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugSymbols>false</DebugSymbols>
@@ -42,7 +42,7 @@
     </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.Windows.Library">
       <Alias>Windows</Alias>
-      <PackageToBundle>false</PackageToBundle>
+      <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="System.Health.Library">
       <Alias>Health</Alias>
@@ -50,11 +50,11 @@
     </ManagementPackReference>
     <ManagementPackReference Include="System.Library">
       <Alias>System</Alias>
-      <PackageToBundle>false</PackageToBundle>
+      <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.SystemCenter.Visualization.Library">
       <Alias>Visualization</Alias>
-      <PackageToBundle>false</PackageToBundle>
+      <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
   </ItemGroup>
   <ItemGroup>
@@ -98,14 +98,14 @@
     <EmbeddedResource Include="QNDAdal\Microsoft.IdentityModel.Clients.ActiveDirectory.dll">
       <SubType>Content</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="QNDAdal\QNDAdal.psm1">
-      <SubType>Content</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="QNDAzure\QNDAzure.psm1">
       <SubType>Content</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="QNDAdal\QNDAdal.psm1">
+      <SubType>Content</SubType>
+    </EmbeddedResource>
     <Content Include="Views.mptg">
       <SubType>Content</SubType>
       <Generator>FragmentGenerator</Generator>
