@@ -1,11 +1,12 @@
 #*************************************************************************
 # Script Name - 
 # Author	  -  Daniele Grandini - QND
-# Version	  - 1.1 04.10.2019
+# Version	  - 1.2 04.10.2019
 
 # Version History
 #	  1.0 06.08.2010 DG First Release
 #	  1.1 04.10.2019 FG fixed assembly version mismatch
+#	  1.2 07.10.2019 FG fixed replaced ReflectionOnlyLoadFrom with GetAssemblyName to avoid conflicts
 #
 # (c) Copyright 2019, Progel srl, All Rights Reserved
 # Proprietary and confidential to Progel srl              
@@ -105,23 +106,23 @@ param(
                 foreach($adalFile in $adalPackage)
                 {
                     try {
-		        $AdalItem = [System.Reflection.Assembly]::ReflectionOnlyLoadFrom($adalFile.FullName)
-                        if ($AdalItem.GetName().version -ge $reqver)
+		        $AdalItem = [System.Reflection.AssemblyName]::GetAssemblyName($adalFile.FullName)
+                        if ($AdalItem.version -ge $reqver)
                         {
-		            $adal = $AdalItem
-		            $reqver = $AdalItem.GetName().Version
+		            $adal = $adalFile
+		            $reqver = $AdalItem.Version
                         }
                     }
                     catch
                     {
-                        Write-Verbose "ReflectionOnlyLoadFrom $($adalFile.FullName) Failed"
+                        Write-Verbose "GetAssemblyName $($adalFile.FullName) Failed"
                         Write-Verbose $_
                     }
                 }
 		
                 if ($adal)
                 {
-                    Add-Type -path $adal.Location | out-Null
+                    Add-Type -path $adal.FullName | out-Null
                 } else {
                     Throw 'Could not load ADAL'
                 }
@@ -136,23 +137,23 @@ param(
                 foreach($adalFormsFile in $adalWindowsForms)
                 {
                     try {
-                        $AdalFormsItem = [System.Reflection.Assembly]::ReflectionOnlyLoadFrom($adalFormsFile.FullName)
-                        if ($AdalFormsItem.GetName().version -ge $reqFromsver)
+                        $AdalFormsItem = [System.Reflection.AssemblyName]::GetAssemblyName($adalFormsFile.FullName)
+                        if ($AdalFormsItem.version -ge $reqFromsver)
                         {
-		            $adalForms = $AdalFormsItem
-		            $reqFromsver = $AdalItem.GetName().Version
+		            $adalForms = $adalFormsFile
+		            $reqFromsver = $AdalItem.Version
                         }
                     }
                     catch
                     {
-                        Write-Verbose "ReflectionOnlyLoadFrom $($adalFormsFile.FullName) Failed"
+                        Write-Verbose "GetAssemblyName $($adalFormsFile.FullName) Failed"
                         Write-Verbose $_
                     }
 		}
 
                 if ($adalForms)
                 {
-                    Add-Type -path $adalForms.Location | out-Null
+                    Add-Type -path $adalForms.FullName | out-Null
                 } else {
                     Write-Warning 'Could not load ADAL Windows Form Assembly, won''t be able to show logon UI'
                 }

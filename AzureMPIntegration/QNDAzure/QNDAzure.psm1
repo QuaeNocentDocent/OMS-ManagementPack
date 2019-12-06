@@ -109,8 +109,8 @@ param(
                     [array]$returnValues = $json
                     if($json.value -ne $null){
 						[array]$returnValues = $json.value
-						$gotValue=$true
 					}
+					$gotValue=$true
                 }
             }
         }
