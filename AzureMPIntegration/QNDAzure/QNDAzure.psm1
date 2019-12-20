@@ -99,6 +99,12 @@ param(
         write-verbose ($result)
         $statusCode=$result.StatusCode
         $lastContent=$result.Content
+		# Possibile return are:
+        #
+        # Empty content     '{"value":[]}'
+        # one item          '{"id":"..", "prop":"..", ..}'
+        # more item         '{"value":[{"id":"..", "prop":"..", ..}, {"id":"..", "prop":"..", ..}, {"id":"..", "prop":"..", ..}]}'
+        #
         if($result.StatusCode -ge 200 -and $result.StatusCode -le 399){        
             Write-Verbose "Query successfully executed $($result.StatusCode)."
             if($result.Content -ne $null){
@@ -107,10 +113,8 @@ param(
                     $nl = [System.Web.HttpUtility]::UrlDecode($json.nextLink)
                     if ($nl) {$nl=$nl.Replace($restUri,'')}
                     [array]$returnValues = $json
-                    if($json.value -ne $null){
-						[array]$returnValues = $json.value
-						$gotValue=$true
-					}
+                    if ($json.value -ne $null) {[array]$returnValues = $json.value}
+					if (@($json.value).count -gt 0) {$gotValue = $true}
                 }
             }
         }
