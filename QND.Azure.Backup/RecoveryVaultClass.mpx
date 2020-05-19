@@ -28,7 +28,7 @@
           <AADPassword>$RunAs[Name="Azure!Microsoft.SystemCenter.MicrosoftAzure.RunAsProfile.ADCredentials"]/Password$</AADPassword>
           <Type>Microsoft.RecoveryServices/vaults</Type>
           <ClassId>$MPElement[Name='QND.OMS.Recovery.Vault']$</ClassId>
-          <ApiVersion>2018-01-10</ApiVersion>
+          <ApiVersion>2019-05-13</ApiVersion>
           <EventID>1</EventID>
           <EventPublisher>QND Discovery</EventPublisher>
           <EventParam>RecoveryVault $Target/Property[Type="Azure!Microsoft.SystemCenter.MicrosoftAzure.Subscription"]/SubscriptionId$</EventParam>

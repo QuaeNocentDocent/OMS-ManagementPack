@@ -18,7 +18,7 @@
     <Company>Quae Nocent Docent</Company>
     <Copyright>Copyright (c) QND. All rights reserved.</Copyright>
     <DelaySigning>False</DelaySigning>
-    <AssemblyOriginatorKeyFile>..\..\QND.Signature\QND1.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\..\QND\QND1.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugSymbols>false</DebugSymbols>
