@@ -24,8 +24,9 @@
 # Status
 #
 # Version History
-#	  1.0 06.08.2010 DG First Release
-#     1.5 15.02.2014 DG minor cosmetics
+#	  1.0 06.08.2010 [DG] - First Release
+#     1.1 15.02.2014 [DG] - Minor cosmetics
+#	  1.2 19.05.2020 [FG] - Set ERRORACTION Stop on REST API request
 #
 # (c) Copyright 2010, Progel srl, All Rights Reserved
 # Proprietary and confidential to Progel srl              
@@ -56,7 +57,7 @@ param([int]$traceLevel=2,
 #region Constants	
 #Constants used for event logging
 $SCRIPT_NAME			= "Get-OMSRecoveryItems"
-$SCRIPT_VERSION = "1.0"
+$SCRIPT_VERSION = "1.2"
 
 #Trace Level Costants
 $TRACE_NONE 	= 0
@@ -332,7 +333,7 @@ try {
 	foreach($uri in $uris) {
 		$nextLink=$null
 		do {
-			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -TimeoutSeconds $timeoutSeconds
+			$result = invoke-QNDAzureRestRequest -uri $uri -httpVerb GET -authToken ($connection.CreateAuthorizationHeader()) -nextLink $nextLink -TimeoutSeconds $timeoutSeconds -ErrorAction Stop
 			$nextLink = $result.NextLink
 			if($result.gotValue) {	
 				foreach($item in $result.Values) {

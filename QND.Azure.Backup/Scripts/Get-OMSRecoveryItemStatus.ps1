@@ -26,8 +26,12 @@
 # Status
 #
 # Version History
-#	  1.0 06.08.2010 DG First Release
-#     1.5 15.02.2014 DG minor cosmetics
+#	  1.0 06.08.2010 [DG] - First Release
+#     1.1 15.02.2014 [DG] - Minor cosmetics
+#	  1.2 13.11.2019 [FGa] - Change ApiVersion from 2018-01-10 to 2019.05-13
+#	  1.3 18.05.2020 [FG] - Include lastRecoveryPoint Item property
+#	  1.4 19.05.2020 [FG] - Incluce null check on $item.properties.policyId
+#	  1.5 19.05.2020 [FG] - Incluce AzureStorage on policy type
 #
 # (c) Copyright 2010, Progel srl, All Rights Reserved
 # Proprietary and confidential to Progel srl              
@@ -63,7 +67,7 @@ param([int]$traceLevel=2,
 #region Constants	
 #Constants used for event logging
 $SCRIPT_NAME	= "Get-OMSRecoveryItemStatus"
-$SCRIPT_VERSION = "1.0"
+$SCRIPT_VERSION = "1.5"
 
 #Trace Level Costants
 $TRACE_NONE 	= 0
@@ -363,21 +367,42 @@ try {
 	SimpleSchedulePolicy Daily                {2017-11-27T22:30:00Z}                       0
 
 #>
-	if($AutoMaxAgeHours -eq 0) {
-		$policySLA=@{}
+	if ($AutoMaxAgeHours -eq 0)
+	{
+		$policySLA = @{}
 		$policies = Get-OMSRecItems -uris $uris -connection $connection
-		foreach($pol in $policies) {
-			switch($pol.properties.backupManagementType) {
-				'AzureWorkload' {
-					#'let's take the Full policy for SQLDB
-					$fullPolicy= $pol.properties.subProtectionPolicy | where {$_.policyType -ieq 'Full'}
-					if ($fullPOlicy) {
-						$scheduleFreq=$fullPOlicy.schedulePolicy.scheduleRunFrequency
+		foreach ($pol in $policies)
+		{
+			switch ($pol.properties.backupManagementType)
+			{
+				'AzureWorkload'
+				{
+					# Let's take the Full policy for SQLDB
+					$fullPolicy = $pol.properties.subProtectionPolicy | where {$_.policyType -ieq 'Full'}
+
+					if ($fullPOlicy)
+					{
+						$scheduleFreq = $fullPOlicy.schedulePolicy.scheduleRunFrequency
 					}
-					else {$scheduleFreq='Daily'}
+					else
+					{
+						$scheduleFreq = 'Daily'
+					}
+
+					break
 				}
-				'AzureIaasVM' {$scheduleFreq=$pol.properties.schedulePolicy.scheduleRunFrequency}
+				'AzureIaasVM'
+				{
+					$scheduleFreq = $pol.properties.schedulePolicy.scheduleRunFrequency
+					break
+				}
+				'AzureStorage'
+				{
+					$scheduleFreq = $pol.properties.schedulePolicy.scheduleRunFrequency
+					break
+				}
 			}
+
 			switch ($scheduleFreq) 
 			{
 				'Daily' {$slaHours=24*(1+$Tolerance)}
@@ -414,10 +439,13 @@ try {
 					-f $item.Name, $item.properties.backupManagementType.ToString()) `
 				-level $TRACE_VERBOSE   
 
+			$itemUris = @(('{0}{1}?api-version={2}' -f $ResourceBaseAddress, $item.Id, $apiVersion))
+            $itemD = Get-OMSRecItems -uris $itemUris -connection $connection
+
 			$lastRecPointDate='2015-01-01'
 			switch ($item.properties.protectedItemType) {
 				'AzureVmWorkloadSQLDatabase' {  
-					if($item.properties.lastBackupStatus -ieq 'Healthy') {$lastRecPointDate=$item.properties.lastBackupTime}
+					if($item.properties.lastBackupStatus -ieq 'Healthy') {if ($itemD.properties.lastRecoveryPoint) {$lastRecPointDate = $itemD.properties.lastRecoveryPoint} else {$lastRecPointDate = $item.properties.lastBackupTime}}
 				}
 				'AzureFileShareProtectedItem' {
 					if($item.properties.lastBackupStatus -ieq 'Completed') {$lastRecPointDate=$item.properties.lastBackupTime}
@@ -478,44 +506,75 @@ try {
 				}
 			}
 			#if MaxAAgeHours==0 then let's go dynaminc and try to infer the SLA from the policy
-			$ageError='False'
+			$ageError = 'False'
 			switch ($item.properties.protectedItemType)
 			{
-				'Microsoft.Compute/virtualMachines' {$ageMode='Auto'}
-				'Microsoft.ClassicCompute/virtualMachines' { $ageMode='Auto'}	
-				'AzureVmWorkloadSQLDatabase' { $ageMode='Auto'}	
-				'MabFileFolderProtectedItem' { $ageMode='Fixed' }
-				'DPMProtectedItem' {$ageMode='Fixed'}
-				'AzureFileShareProtectedItem' {$ageMode='Auto'}
+				'Microsoft.Compute/virtualMachines' {$ageMode = 'Auto'; break}
+				'Microsoft.ClassicCompute/virtualMachines' {$ageMode = 'Auto'; break}	
+				'AzureVmWorkloadSQLDatabase' {$ageMode = 'Auto'; break}	
+				'MabFileFolderProtectedItem' {$ageMode = 'Fixed'; break}
+				'DPMProtectedItem' {$ageMode = 'Fixed'; break}
+				'AzureFileShareProtectedItem' {$ageMode = 'Auto'; break}
 				default { 
 					if ([String]::IsNullOrEmpty($item.properties.policyName)) {$ageMode='Fixed'} else {$ageMode='Auto'}
 					Log-Event $FAILURE_EVENT_ID $EVENT_TYPE_WARNING ('Unrecognized Item Type {0}' -f $item.properties.protectedItemType) $TRACE_WARNING	
 				}
 			}
-					
-			if($ageMode -eq 'Auto') {
-				$specificAge=$AutoMaxAgeHours
-				switch ($AutoMaxAgeHours) {
-					0 {
-						if ($policySLA.ContainsKey($item.properties.policyId)) {
-							$specificAge=$policySLA[$item.properties.policyId]
-							$ageError=($lastRecoveryPointAgeHours -gt $specificAge).ToString()
-						} 
-						else {
-							$specificage=-1
-							$ageError=$false
+
+			if ($ageMode -eq 'Auto')
+			{
+				$specificAge = $AutoMaxAgeHours
+				switch ($AutoMaxAgeHours)
+				{
+					0
+					{
+						if ($item.properties.policyId)
+						{
+							if ($policySLA.ContainsKey($item.properties.policyId))
+							{
+								$specificAge = $policySLA[$item.properties.policyId]
+								$ageError = ($lastRecoveryPointAgeHours -gt $specificAge).ToString()
+							}
+							else
+							{
+								$specificage = -1
+								$ageError = $false
+							}
 						}
-						break;
+						else
+						{
+								$specificage = -1
+								$ageError = $false
+						}
+						break
 					}
-					-1 {$ageError='False'; break;}
-					default {$ageError=($lastRecoveryPointAgeHours -gt $AutoMaxAgeHours).ToString()}
+					-1
+					{
+						$ageError = 'False'
+						break
+					}
+					default
+					{
+						$ageError = ($lastRecoveryPointAgeHours -gt $AutoMaxAgeHours).ToString()
+						break
+					}
 				}
 			}
-			else {
-					switch ($FixedMaxAgeHours) {
-					-1 {$ageError='False'; break;}
-					default {$ageError=($lastRecoveryPointAgeHours -gt ($FixedMaxAgeHours*(1+$Tolerance))).ToString()}
+			else
+			{
+				switch ($FixedMaxAgeHours)
+				{
+					-1
+					{
+						$ageError = 'False'
+						break
 					}
+					default
+					{
+						$ageError = ($lastRecoveryPointAgeHours -gt ($FixedMaxAgeHours*(1+$Tolerance))).ToString()
+						break
+					}
+				}
 			}
 
 			#return calculated status and input parameters

@@ -6,7 +6,7 @@
     <RootNamespace>QND.OMS.Backup</RootNamespace>
     <Name>QND.OMS.Backup</Name>
     <ManagementPackName>QND.OMS.Backup</ManagementPackName>
-    <Version>2.0.0.0</Version>
+    <Version>2.0.0.35</Version>
     <MpFrameworkVersion>v7.0</MpFrameworkVersion>
     <MpFrameworkProfile>OM</MpFrameworkProfile>
     <ProductVersion>1.1.0.0</ProductVersion>
@@ -18,7 +18,7 @@
     <Company>Quae Nocent Docent</Company>
     <Copyright>Copyright (c) QND. All rights reserved.</Copyright>
     <DelaySigning>False</DelaySigning>
-    <AssemblyOriginatorKeyFile>..\..\QND.Signature\QND1.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\..\QND\QND1.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugSymbols>false</DebugSymbols>
@@ -78,7 +78,7 @@
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.SystemCenter.MicrosoftAzure">
-      <HintPath>C:\buckmuu\OneDrive\GitHub\QND\References\Microsoft.SystemCenter.MicrosoftAzure.mpb</HintPath>
+      <HintPath>S:\A-Team\Automation\Online\GitHub\OMS-ManagementPack\References\Microsoft.SystemCenter.MicrosoftAzure.mpb</HintPath>
       <Alias>Azure</Alias>
       <MinVersion>1.3.18.0</MinVersion>
       <PackageToBundle>False</PackageToBundle>
@@ -96,9 +96,9 @@
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="QND.AzureMPIntegration">
-      <HintPath>C:\buckmuu\OneDrive\GitHub\QND\References\QND.AzureMPIntegration.mpb</HintPath>
+      <HintPath>S:\A-Team\Automation\Online\GitHub\OMS-ManagementPack\References\QND.AzureMPIntegration.mpb</HintPath>
       <Alias>QNDA</Alias>
-      <MinVersion>2.0.0.0</MinVersion>
+      <MinVersion>2.0.1.0</MinVersion>
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="System.AdminItem.Library">
